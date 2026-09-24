@@ -115,6 +115,7 @@
     .search-panel { grid-template-columns: 1fr 1fr auto; align-items: center; }
   }
   .field label { display: none; }
+  .search-field input { width: 100%; }
   .field input, .field select {
     width: 100%;
     padding: 13px 16px;
@@ -524,6 +525,9 @@
       <span class="listings-count" id="countLabel"></span>
     </div>
     <div class="filter-row">
+      <div class="field search-field" style="min-width:220px;">
+        <input id="jobsSearch" type="text" placeholder="Search job titles, companies..." oninput="renderJobs()">
+      </div>
       <div class="field" style="min-width:170px;">
         <select id="cat" onchange="renderJobs()">
           <option value="">All categories</option>
@@ -634,7 +638,7 @@ function renderPreview() {
     const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = j.category;
     const h3 = document.createElement('h3'); h3.textContent = j.title;
     const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = j.company;
-    const loc = document.createElement('div'); loc.className = 'loc-line'; loc.textContent = '\ud83d\udccd ' + j.location;
+    const loc = document.createElement('div'); loc.className = 'loc-line'; loc.textContent = j.location;
     const sal = document.createElement('div'); sal.className = 'salary'; sal.textContent = formatSalary(j.salary_min, j.salary_max, j.country);
     info.append(tag, h3, meta, loc, sal);
     const btn = document.createElement('button');
@@ -677,7 +681,7 @@ function renderJobs() {
     if (a) a.textContent = sym;
     if (b) b.textContent = sym;
   }
-  const q = document.getElementById('q').value.trim().toLowerCase();
+  const q = (document.getElementById('jobsSearch')?.value || document.getElementById('q').value).trim().toLowerCase();
   const cat = document.getElementById('cat').value;
   const list = document.getElementById('jobList');
   const empty = document.getElementById('emptyState');
@@ -716,7 +720,7 @@ function renderJobs() {
     const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = j.category;
     const h3 = document.createElement('h3'); h3.textContent = j.title;
     const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = j.company;
-    const loc = document.createElement('div'); loc.className = 'loc-line'; loc.textContent = '\ud83d\udccd ' + j.location;
+    const loc = document.createElement('div'); loc.className = 'loc-line'; loc.textContent = j.location;
     const sal = document.createElement('div'); sal.className = 'salary'; sal.textContent = formatSalary(j.salary_min, j.salary_max, j.country);
     info.append(tag, h3, meta, loc, sal);
     const btn = document.createElement('button');

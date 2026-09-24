@@ -353,7 +353,7 @@
   .view-all-link { display: inline-block; margin-top: 8px; color: var(--pink); font-weight: 600; text-decoration: none; font-size: 14px; }
   .hint-note { font-size: 13px; color: var(--text-soft); margin-top: 20px; }
 
-  .neon-person { width: 64px; height: 54px; flex: none; display: block; }
+  .neon-person { width: 150px; max-width: 30vw; height: 54px; flex: 1 1 auto; display: block; }
   .neon-person .npart { fill: none; stroke: var(--glow); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(22,166,114,0.9)) drop-shadow(0 0 8px rgba(22,166,114,0.55)); }
   .neon-person .nboard { fill: none; stroke: var(--glow); stroke-width: 1.6; opacity: 0.85; filter: drop-shadow(0 0 4px rgba(22,166,114,0.8)); }
   .neon-person .nscreen { fill: rgba(22,166,114,0.12); stroke: var(--glow); stroke-width: 1.4; filter: drop-shadow(0 0 4px rgba(22,166,114,0.7)); }
@@ -377,8 +377,14 @@
     100% { opacity: 0; }
   }
 
-  .leg-l { transform-origin: 22px 34px; animation: legSwingL 0.7s ease-in-out infinite; }
-  .leg-r { transform-origin: 22px 34px; animation: legSwingR 0.7s ease-in-out infinite; }
+  .walk-mover { animation: walkAcross 12s linear infinite; }
+  @keyframes walkAcross {
+    0% { transform: translateX(0); }
+    30% { transform: translateX(110px); }
+    30.1%, 100% { transform: translateX(0); }
+  }
+  .leg-l { transform-origin: 20px 34px; animation: legSwingL 0.55s ease-in-out infinite; }
+  .leg-r { transform-origin: 20px 34px; animation: legSwingR 0.55s ease-in-out infinite; }
   @keyframes legSwingL { 0%, 100% { transform: rotate(18deg); } 50% { transform: rotate(-18deg); } }
   @keyframes legSwingR { 0%, 100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
   .arm-l { transform-origin: 22px 20px; animation: armSwingL 0.7s ease-in-out infinite; }
@@ -389,7 +395,7 @@
   .type-hand { animation: typeBob 0.35s ease-in-out infinite; }
   @keyframes typeBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.6px); } }
 
-  .write-hand { transform-origin: 55px 18px; animation: writeMove 1.1s ease-in-out infinite; }
+  .write-hand { transform-origin: 86px 20px; animation: writeMove 1.1s ease-in-out infinite; }
   @keyframes writeMove { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
 
   @media (max-width: 640px) { .neon-person { display: none; } }
@@ -500,37 +506,45 @@
       <div class="wordmark">Forever<span>Careers</span></div>
       <div class="tagline-small">Live UK jobs, all in one place</div>
     </div>
-    <svg class="neon-person" viewBox="0 0 70 54" xmlns="http://www.w3.org/2000/svg">
+    <svg class="neon-person" viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg">
       <g class="pose-walk">
-        <circle class="npart" cx="22" cy="8" r="4"></circle>
-        <line class="npart" x1="22" y1="12" x2="22" y2="26"></line>
-        <line class="npart arm-l" x1="22" y1="16" x2="16" y2="24"></line>
-        <line class="npart arm-r" x1="22" y1="16" x2="28" y2="22"></line>
-        <line class="npart leg-l" x1="22" y1="26" x2="15" y2="42"></line>
-        <line class="npart leg-r" x1="22" y1="26" x2="29" y2="42"></line>
+        <g class="walk-mover">
+          <circle class="npart" cx="20" cy="8" r="4"></circle>
+          <line class="npart" x1="20" y1="12" x2="20" y2="26"></line>
+          <line class="npart arm-l" x1="20" y1="16" x2="14" y2="24"></line>
+          <line class="npart arm-r" x1="20" y1="16" x2="26" y2="22"></line>
+          <line class="npart leg-l" x1="20" y1="26" x2="13" y2="42"></line>
+          <line class="npart leg-r" x1="20" y1="26" x2="27" y2="42"></line>
+        </g>
       </g>
       <g class="pose-sit">
-        <circle class="npart" cx="22" cy="8" r="4"></circle>
-        <line class="npart" x1="22" y1="12" x2="22" y2="23"></line>
-        <line class="npart" x1="22" y1="23" x2="16" y2="27"></line>
-        <line class="npart" x1="16" y1="27" x2="16" y2="40"></line>
-        <line class="npart" x1="22" y1="23" x2="28" y2="27"></line>
-        <line class="npart" x1="28" y1="27" x2="28" y2="40"></line>
-        <line class="npart type-hand" x1="22" y1="15" x2="34" y2="22"></line>
-        <rect class="nscreen" x="33" y="10" width="16" height="12" rx="1.5"></rect>
-        <line class="npart" x1="33" y1="22" x2="49" y2="22"></line>
+        <line class="nboard" x1="66" y1="44" x2="94" y2="44"></line>
+        <line class="nboard" x1="70" y1="44" x2="70" y2="24"></line>
+        <line class="nboard" x1="90" y1="44" x2="90" y2="24"></line>
+        <line class="nboard" x1="70" y1="24" x2="90" y2="24"></line>
+        <line class="nboard" x1="70" y1="44" x2="66" y2="50"></line>
+        <line class="nboard" x1="90" y1="44" x2="94" y2="50"></line>
+        <circle class="npart" cx="80" cy="8" r="4"></circle>
+        <line class="npart" x1="80" y1="12" x2="80" y2="24"></line>
+        <line class="npart" x1="80" y1="24" x2="76" y2="28"></line>
+        <line class="npart" x1="76" y1="28" x2="76" y2="43"></line>
+        <line class="npart" x1="80" y1="24" x2="84" y2="28"></line>
+        <line class="npart" x1="84" y1="28" x2="84" y2="43"></line>
+        <line class="npart type-hand" x1="80" y1="16" x2="92" y2="21"></line>
+        <rect class="nscreen" x="91" y="9" width="16" height="12" rx="1.5"></rect>
+        <line class="npart" x1="91" y1="21" x2="107" y2="21"></line>
       </g>
       <g class="pose-write">
-        <circle class="npart" cx="22" cy="8" r="4"></circle>
-        <line class="npart" x1="22" y1="12" x2="22" y2="26"></line>
-        <line class="npart" x1="22" y1="26" x2="17" y2="42"></line>
-        <line class="npart" x1="22" y1="26" x2="27" y2="42"></line>
-        <line class="npart" x1="22" y1="16" x2="28" y2="20"></line>
-        <line class="npart write-hand" x1="28" y1="20" x2="56" y2="17"></line>
-        <rect class="nboard" x="54" y="4" width="16" height="26" rx="1"></rect>
-        <line class="nboard" x1="57" y1="10" x2="66" y2="10"></line>
-        <line class="nboard" x1="57" y1="15" x2="63" y2="15"></line>
-        <line class="nboard" x1="57" y1="20" x2="65" y2="20"></line>
+        <circle class="npart" cx="80" cy="8" r="4"></circle>
+        <line class="npart" x1="80" y1="12" x2="80" y2="26"></line>
+        <line class="npart" x1="80" y1="26" x2="75" y2="42"></line>
+        <line class="npart" x1="80" y1="26" x2="85" y2="42"></line>
+        <line class="npart" x1="80" y1="16" x2="86" y2="20"></line>
+        <line class="npart write-hand" x1="86" y1="20" x2="114" y2="17"></line>
+        <rect class="nboard" x="112" y="4" width="16" height="26" rx="1"></rect>
+        <line class="nboard" x1="115" y1="10" x2="124" y2="10"></line>
+        <line class="nboard" x1="115" y1="15" x2="121" y2="15"></line>
+        <line class="nboard" x1="115" y1="20" x2="123" y2="20"></line>
       </g>
     </svg>
     <div class="account" id="accountArea"></div>

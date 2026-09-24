@@ -357,6 +357,8 @@
   .account .badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--glow); color: #fff; white-space: nowrap; }
   .account .badge.off { background: var(--bg-card); color: var(--text-soft); border: 1px solid var(--line); }
   .link-btn { background: none; border: 1px solid var(--line); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; }
+  .signup-btn { background: var(--glow); border-color: transparent; color: #fff; margin-left: 8px; }
+  .signup-btn:hover { filter: brightness(1.1); }
   .link-btn:hover { border-color: var(--pink); }
   .notice { display: none; margin: 18px auto 0; max-width: 1080px; padding: 0 28px; }
   .notice div { background: var(--bg-card); border: 1px solid var(--line); border-left: 3px solid var(--pink); border-radius: 10px; padding: 14px 16px; font-size: 14px; }
@@ -376,6 +378,15 @@
   .nav-tabs button { background: none; border: none; color: var(--text-soft); font: inherit; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; text-shadow: 0 0 8px rgba(255,255,255,0.55); }
   .nav-tabs button.active { color: #fff; background: var(--bg-card); }
   .nav-star { color: #FFD24C; animation: navStarGlow 2.2s ease-in-out infinite; }
+  .nav-cv-icon {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.02em;
+    color: #4DA3FF; border: 1px solid #4DA3FF; border-radius: 4px; padding: 1px 4px;
+    animation: navCvGlow 2.2s ease-in-out infinite;
+  }
+  @keyframes navCvGlow {
+    0%, 100% { box-shadow: 0 0 2px rgba(77,163,255,0.2); opacity: 0.7; }
+    50% { box-shadow: 0 0 10px rgba(77,163,255,0.95), 0 0 18px rgba(77,163,255,0.5); opacity: 1; }
+  }
   @keyframes navStarGlow {
     0%, 100% { text-shadow: 0 0 3px rgba(255,210,76,0.3); }
     50% { text-shadow: 0 0 12px rgba(255,210,76,0.95), 0 0 22px rgba(255,210,76,0.6); }
@@ -459,6 +470,24 @@
   }
   .cv-widget-icon { display: none; }
   .cv-widget h2 { font-size: 20px; font-weight: 700; margin: 0 0 6px; line-height: 1.2; }
+  .cv-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .cv-score-wrap { position: relative; width: 52px; height: 52px; flex: none; }
+  .cv-score-ring { width: 52px; height: 52px; transform: rotate(-90deg); }
+  .cv-score-track { fill: none; stroke: var(--line); stroke-width: 5; }
+  .cv-score-fill {
+    fill: none; stroke: var(--glow); stroke-width: 5; stroke-linecap: round;
+    stroke-dasharray: 175.93; stroke-dashoffset: 175.93;
+    transition: stroke-dashoffset 1s ease-out;
+  }
+  .cv-score-label {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .cv-recs { margin-top: 14px; }
+  .cv-recs strong { display: block; margin-bottom: 6px; font-size: 13px; }
+  .cv-recs ul { margin: 0; padding-left: 18px; }
+  .cv-recs li { font-size: 13px; color: var(--text-soft); margin-bottom: 4px; }
+
   .cv-widget p.sub { color: var(--text-soft); font-size: 13px; margin: 0 0 16px; }
   .cv-widget textarea {
     width: 100%; min-height: 90px; background: var(--bg); border: 1px solid var(--line);
@@ -596,7 +625,7 @@
     <div class="nav-tabs">
       <button id="navHome" class="active" onclick="showView('home')">Home</button>
       <button id="navJobs" onclick="showView('jobs')">Browse all roles</button>
-      <button id="navCvo" onclick="showView('home'); setTimeout(() => document.getElementById('cvoTop').scrollIntoView({behavior:'smooth'}), 50);"><span class="nav-star">&#9733;</span> CV Optimisation</button>
+      <button id="navCvo" onclick="showView('home'); setTimeout(() => document.getElementById('cvoTop').scrollIntoView({behavior:'smooth'}), 50);"><span class="nav-cv-icon">CV</span> CV Optimisation</button>
       <button id="navTesti" onclick="showView('home'); setTimeout(() => document.getElementById('testiTop').scrollIntoView({behavior:'smooth'}), 50);"><span class="nav-star">&#9733;</span> Testimonials</button>
     </div>
   </div>
@@ -638,7 +667,16 @@
       <div class="cv-widget-glow"></div>
       <div class="cv-widget-inner">
         <div class="cv-widget-icon">&#10024;</div>
-        <h2>What's your CV worth today?</h2>
+        <div class="cv-heading-row">
+          <h2>What's your CV worth today?</h2>
+          <div class="cv-score-wrap">
+            <svg class="cv-score-ring" viewBox="0 0 64 64">
+              <circle class="cv-score-track" cx="32" cy="32" r="28"></circle>
+              <circle class="cv-score-fill" id="cvScoreFill" cx="32" cy="32" r="28"></circle>
+            </svg>
+            <div class="cv-score-label" id="cvScoreLabel">--</div>
+          </div>
+        </div>
         <p class="sub">Drop it in. See your strongest matches in seconds, no account needed.</p>
         <textarea id="cvText" placeholder="Paste your CV text here..."></textarea>
         <div class="cv-controls">
@@ -944,7 +982,9 @@ function renderAccount() {
   if (!token()) {
     const b = document.createElement('button'); b.className = 'link-btn'; b.textContent = 'Sign in';
     b.onclick = () => openPaywall(null, 'login');
-    area.append(b);
+    const su = document.createElement('button'); su.className = 'link-btn signup-btn'; su.textContent = 'Sign up';
+    su.onclick = () => openPaywall(null, 'signup');
+    area.append(b, su);
     return;
   }
   const email = document.createElement('span'); email.className = 'acct-email'; email.textContent = read(EMAIL_KEY) || '';
@@ -1137,12 +1177,30 @@ function extractTextFromFile(file, cb) {
   reader.readAsText(file);
 }
 
+function setCvScore(pct) {
+  const circumference = 175.93;
+  const offset = circumference * (1 - pct / 100);
+  document.getElementById('cvScoreFill').style.strokeDashoffset = offset;
+  document.getElementById('cvScoreLabel').textContent = pct + '%';
+}
+
+function buildCvRecommendations(text, bestHits) {
+  const recs = [];
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount < 150) recs.push('Your CV reads quite short. Most roles expect more detail on what you actually did day to day.');
+  if (!/\d/.test(text)) recs.push('Add a few numbers where you can, team size, results, percentages. Recruiters and filters both look for them.');
+  if (bestHits < 3) recs.push('Try working in more of the specific terms used in the job titles you want, rather than general wording.');
+  if (recs.length === 0) recs.push('This reads like a solid, detailed CV for the categories it matched.');
+  return recs.slice(0, 3);
+}
+
 function analyseCV() {
   const fileInput = document.getElementById('cvFile');
   const runAnalysis = (text) => {
     text = (text || '').trim();
     const results = document.getElementById('cvResults');
     if (text.length < 30) {
+      setCvScore(5);
       results.innerHTML = '<div class="cv-note">Paste a bit more of your CV, or upload a .txt file, so we have enough to match against.</div>';
       results.classList.add('show');
       return;
@@ -1154,12 +1212,20 @@ function analyseCV() {
     }).filter(r => r.count > 0).sort((a, b) => b.count - a.count);
 
     if (scored.length === 0) {
+      const wc = text.trim().split(/\s+/).filter(Boolean).length;
+      setCvScore(Math.max(10, Math.min(35, Math.round(wc / 10))));
       document.getElementById('cvResults').innerHTML = '<div class="cv-note">We could not match your CV to any of today\'s live categories from the keywords alone. That does not mean there is no fit, just that our simple keyword check did not find an overlap. Feel free to browse all roles directly.</div>';
       document.getElementById('cvResults').classList.add('show');
       return;
     }
 
     const top = scored.slice(0, 3);
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    const bestHits = top[0].count;
+    const score = Math.min(100, Math.round((Math.min(bestHits, 6) / 6) * 60 + Math.min(wordCount / 400, 1) * 40));
+    setCvScore(score);
+    const recs = buildCvRecommendations(text, bestHits);
+
     let html = '<div><strong>Your strongest matches:</strong></div><div style="margin-top:10px;">';
     top.forEach(t => { html += '<span class="cv-strength">' + t.cat + '</span>'; });
     html += '</div>';
@@ -1172,7 +1238,8 @@ function analyseCV() {
         html += '<div class="cv-match-row"><b>' + j.title + '</b><br>' + j.company + ' &middot; ' + j.location + '</div>';
       });
     }
-    html += '<div class="cv-note">This is a simple keyword match, not an AI assessment, so use it as a starting point rather than a verdict.</div>';
+    html += '<div class="cv-recs"><strong>A couple of quick, free pointers:</strong><ul>' + recs.map(r => '<li>' + r + '</li>').join('') + '</ul></div>';
+    html += '<div class="cv-note">This is a simple keyword match, not an AI assessment, so use the score and pointers as a starting point rather than a verdict.</div>';
     html += '<div style="margin-top:16px;"><button class="cv-btn" onclick="openPaywall(null, \'signup\')">Sign up to see full matches and apply</button></div>';
 
     document.getElementById('cvResults').innerHTML = html;

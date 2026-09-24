@@ -10,16 +10,16 @@
 <style>
   :root {
     box-sizing: border-box;
-    --bg: #08080C;
-    --bg-elevated: #0F0F16;
-    --bg-card: #16161F;
-    --text: #F5F5F8;
-    --text-soft: #9C9CAA;
-    --line: rgba(245,245,248,0.10);
-    --pink: #22FFB0;
-    --purple: #0AAE75;
-    --blue: #00C6A2;
-    --glow: linear-gradient(135deg, #00FFA3 0%, #00C6A2 50%, #007A5E 100%);
+    --bg: #0A0D0C;
+    --bg-elevated: #101412;
+    --bg-card: #141917;
+    --text: #F2F4F3;
+    --text-soft: #8B948F;
+    --line: rgba(242,244,243,0.09);
+    --pink: #1F9D6E;
+    --purple: #16A672;
+    --blue: #16A672;
+    --glow: #16A672;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -49,72 +49,29 @@
 
   .hero {
     position: relative;
-    padding: 80px 0 60px;
+    padding: 120px 0 100px;
     overflow: hidden;
   }
-  .glow-scene { position: absolute; inset: -40px; z-index: 0; overflow: hidden; background: #050A08; }
-  .glow-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    mix-blend-mode: screen;
-    will-change: transform, opacity;
-  }
-  .glow-blob.b1 {
-    width: 520px; height: 520px; top: -120px; right: -80px;
-    background: radial-gradient(circle, rgba(34,255,176,0.85) 0%, rgba(0,198,162,0.35) 55%, transparent 75%);
-    animation: driftA 16s ease-in-out infinite;
-  }
-  .glow-blob.b2 {
-    width: 380px; height: 380px; top: 120px; right: 160px;
-    background: radial-gradient(circle, rgba(0,255,163,0.6) 0%, transparent 70%);
-    animation: driftB 20s ease-in-out infinite;
-  }
-  .glow-blob.b3 {
-    width: 300px; height: 300px; top: 40px; right: -20px;
-    background: radial-gradient(circle, rgba(10,174,117,0.55) 0%, transparent 70%);
-    animation: driftC 24s ease-in-out infinite;
-  }
-  @keyframes driftA {
-    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.85; }
-    50% { transform: translate(-40px, 30px) scale(1.12); opacity: 1; }
-  }
-  @keyframes driftB {
-    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
-    50% { transform: translate(30px, -25px) scale(0.9); opacity: 0.95; }
-  }
-  @keyframes driftC {
-    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
-    50% { transform: translate(-20px, -30px) scale(1.15); opacity: 0.85; }
-  }
-  .glow-vignette {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 65% 30%, transparent 0%, transparent 35%, rgba(5,10,8,0.55) 75%, #050A08 100%);
-    pointer-events: none;
-  }
-  .glow-grain {
-    position: absolute; inset: 0;
-    opacity: 0.18;
-    mix-blend-mode: overlay;
-    pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
+  .glow-scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--bg); }
+  .glow-blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.12; }
+  .glow-blob.b1 { width: 560px; height: 560px; top: -160px; right: -160px; background: var(--glow); }
+  .glow-blob.b2, .glow-blob.b3 { display: none; }
+  .glow-vignette { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, var(--bg) 100%); pointer-events: none; }
+  .glow-grain { display: none; }
   .hero-content { position: relative; z-index: 1; max-width: 640px; }
   .hero .kicker {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text);
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-soft);
     font-weight: 600;
-    margin-bottom: 22px;
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    padding: 6px 14px 6px 10px;
-    border-radius: 20px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
   }
   .hero .kicker .dot {
-    width: 8px; height: 8px; border-radius: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: var(--glow);
     flex: none;
   }
@@ -168,11 +125,11 @@
     outline-offset: 1px;
   }
   .btn-search {
-    padding: 13px 26px;
+    padding: 14px 28px;
     background: var(--glow);
-    color: #fff;
+    color: #06110D;
     border: none;
-    border-radius: 9px;
+    border-radius: 6px;
     font-family: inherit;
     font-weight: 600;
     font-size: 15px;
@@ -187,7 +144,7 @@
     margin-top: 16px;
   }
 
-  section.listings { padding: 16px 0 64px; position: relative; z-index: 1; }
+  section.listings { padding: 32px 0 88px; position: relative; z-index: 1; }
   .listings-head {
     display: flex;
     align-items: baseline;
@@ -216,11 +173,11 @@
     display: inline-block;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.02em;
-    color: #fff;
-    background: var(--glow);
-    padding: 4px 10px;
-    border-radius: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--glow);
+    background: transparent;
+    padding: 0;
     margin-bottom: 10px;
   }
   .job-row h3 { font-size: 17px; font-weight: 600; margin: 0 0 4px; color: var(--text); }
@@ -374,7 +331,7 @@
   .filter-row .sal-field { display: flex; align-items: center; gap: 6px; background: var(--bg-card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
   .filter-row .sal-field input { width: 78px; background: transparent; border: none; color: var(--text); font: inherit; font-size: 14px; }
   .filter-row .sal-field input:focus { outline: none; }
-  .type-chip { background: var(--bg-card); border: 1px solid var(--line); color: var(--text-soft); font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .type-chip { background: var(--bg-card); border: 1px solid var(--line); color: var(--text-soft); font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .type-chip.on { color: #fff; border-color: transparent; background: var(--glow); }
 
   .job-row .loc-line { font-size: 13px; color: var(--text-soft); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
@@ -386,29 +343,16 @@
   @media (min-width: 900px) { .hero-grid { grid-template-columns: 1.05fr 0.95fr; gap: 32px; } }
 
   .cv-widget { position: relative; z-index: 1; }
-  .cv-widget-glow {
-    position: absolute; inset: -2px; border-radius: 22px;
-    background: var(--glow);
-    filter: blur(1px);
-    opacity: 0.85;
-    animation: cvPulse 4s ease-in-out infinite;
-  }
-  @keyframes cvPulse {
-    0%, 100% { opacity: 0.65; transform: scale(1); }
-    50% { opacity: 0.95; transform: scale(1.01); }
-  }
+  .cv-widget-glow { display: none; }
   .cv-widget-inner {
     position: relative;
     background: var(--bg-card);
-    border-radius: 20px;
-    padding: 26px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 32px;
     z-index: 1;
   }
-  .cv-widget-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 12px;
-    background: var(--glow); font-size: 18px; margin-bottom: 12px;
-  }
+  .cv-widget-icon { display: none; }
   .cv-widget h2 { font-size: 20px; font-weight: 700; margin: 0 0 6px; line-height: 1.2; }
   .cv-widget p.sub { color: var(--text-soft); font-size: 13px; margin: 0 0 16px; }
   .cv-widget textarea {
@@ -437,19 +381,21 @@
   .cv-note { font-size: 12px; color: var(--text-soft); margin-top: 12px; }
   .cv-fine-print { font-size: 11px; color: var(--text-soft); margin-top: 14px; opacity: 0.75; }
 
-  section.testimonials { padding: 32px 0 40px; position: relative; z-index: 1; }
-  .testi-carousel { position: relative; max-width: 480px; min-height: 150px; }
+  section.testimonials { padding: 88px 0 72px; border-bottom: 1px solid var(--line); position: relative; z-index: 1; }
+  .testi-label { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 28px; }
+  .testi-carousel { position: relative; max-width: 720px; min-height: 160px; }
   .testi-slide {
-    background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
-    position: absolute; inset: 0; opacity: 0; transform: translateX(16px);
-    transition: opacity 0.5s ease, transform 0.5s ease; pointer-events: none;
+    position: absolute; inset: 0; opacity: 0; transform: translateY(8px);
+    transition: opacity 0.6s ease, transform 0.6s ease; pointer-events: none;
   }
-  .testi-slide.active { opacity: 1; transform: translateX(0); position: relative; pointer-events: auto; }
-  .testi-stars { color: #FFB020; font-size: 18px; letter-spacing: 2px; margin-bottom: 10px; }
-  .testi-slide .role { color: var(--text-soft); font-size: 13px; margin-top: 14px; }
-  .testi-dots { display: flex; gap: 8px; margin-top: 16px; }
-  .testi-dots button { width: 8px; height: 8px; border-radius: 50%; border: none; background: var(--line); cursor: pointer; padding: 0; }
-  .testi-dots button.active { background: var(--pink); width: 22px; border-radius: 4px; }
+  .testi-slide.active { opacity: 1; transform: translateY(0); position: relative; pointer-events: auto; }
+  .testi-quote-mark { font-family: 'Space Grotesk', sans-serif; font-size: 56px; line-height: 1; color: var(--glow); margin-bottom: 8px; }
+  .testi-quote-text { font-family: 'Space Grotesk', sans-serif; font-size: clamp(22px, 3vw, 30px); font-weight: 500; line-height: 1.4; letter-spacing: -0.01em; color: var(--text); max-width: 640px; }
+  .testi-stars { color: var(--glow); font-size: 14px; letter-spacing: 3px; margin-top: 24px; }
+  .testi-slide .role { color: var(--text-soft); font-size: 14px; margin-top: 10px; }
+  .testi-dots { display: flex; gap: 8px; margin-top: 32px; }
+  .testi-dots button { width: 24px; height: 2px; border-radius: 0; border: none; background: var(--line); cursor: pointer; padding: 0; transition: background 0.2s; }
+  .testi-dots button.active { background: var(--glow); }
 </style>
 </head>
 <body>
@@ -512,6 +458,7 @@
 
 <div class="view active" id="viewHome"><section class="testimonials" id="testiTop">
   <div class="wrap">
+    <div class="testi-label">Client testimonial</div>
     <div class="testi-carousel" id="testiCarousel"></div>
     <div class="testi-dots" id="testiDots"></div>
   </div>
@@ -932,7 +879,7 @@ function renderTestimonials() {
   TESTIMONIALS.forEach((t, i) => {
     const slide = document.createElement('div');
     slide.className = 'testi-slide' + (i === 0 ? ' active' : '');
-    slide.innerHTML = '<div class="testi-stars">' + '&#9733;'.repeat(t.rating) + '</div><div>' + t.text + '</div><div class="role">' + t.role + '</div>';
+    slide.innerHTML = '<div class="testi-quote-mark">&#8220;</div><div class="testi-quote-text">' + t.text + '</div><div class="testi-stars">' + '&#9733;'.repeat(t.rating) + '</div><div class="role">' + t.role + '</div>';
     track.appendChild(slide);
     if (TESTIMONIALS.length > 1) {
       const dot = document.createElement('button');

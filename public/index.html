@@ -52,7 +52,8 @@
     0%, 100% { text-shadow: 0 0 2px rgba(22,166,114,0.15); opacity: 0.75; }
     50% { text-shadow: 0 0 18px rgba(22,166,114,0.85), 0 0 34px rgba(22,166,114,0.5); opacity: 1; }
   }
-  .tagline-small { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .tagline-small { font-size: 12px; color: var(--text-soft); margin-top: 2px; display: inline-flex; align-items: center; gap: 6px; }
+  .tagline-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; animation: kickerDotPulse 1.6s ease-in-out infinite; }
   @keyframes taglineGlow {
     0%, 100% { text-shadow: none; opacity: 0.75; }
     50% { text-shadow: 0 0 8px rgba(255,255,255,0.85), 0 0 16px rgba(255,255,255,0.4); opacity: 1; }
@@ -545,7 +546,7 @@
   <div class="wrap">
     <div>
       <div class="wordmark">Forever<span>Careers</span></div>
-      <div class="tagline-small">Live roles across the UK and US: remote, hybrid and in person</div>
+      <div class="tagline-small"><span class="tagline-dot"></span>Live roles across the UK and US</div>
     </div>
     <svg class="neon-person" viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg">
       <g class="pose-walk">
@@ -594,6 +595,7 @@
     <div class="nav-tabs">
       <button id="navHome" class="active" onclick="showView('home')">Home</button>
       <button id="navJobs" onclick="showView('jobs')">Browse all roles</button>
+      <button id="navCvo" onclick="showView('home'); setTimeout(() => document.getElementById('cvoTop').scrollIntoView({behavior:'smooth'}), 50);"><span class="nav-star">&#9733;</span> CV Optimisation</button>
       <button id="navTesti" onclick="showView('home'); setTimeout(() => document.getElementById('testiTop').scrollIntoView({behavior:'smooth'}), 50);"><span class="nav-star">&#9733;</span> Testimonials</button>
     </div>
   </div>
@@ -706,7 +708,7 @@
   </div>
 </section>
 
-<section class="cv-optimise">
+<section class="cv-optimise" id="cvoTop">
   <div class="wrap">
     <div class="cvo-label">One on one service</div>
     <h2>CV Optimisation</h2>

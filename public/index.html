@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ForeverCalculated — Find Your Next Role</title>
+<title>ForeverCareers: Find Your Next Role</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -52,7 +52,11 @@
     0%, 100% { text-shadow: 0 0 2px rgba(22,166,114,0.15); opacity: 0.75; }
     50% { text-shadow: 0 0 18px rgba(22,166,114,0.85), 0 0 34px rgba(22,166,114,0.5); opacity: 1; }
   }
-  .tagline-small { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .tagline-small { font-size: 12px; color: var(--text-soft); margin-top: 2px; animation: taglineGlow 2.4s ease-in-out infinite; }
+  @keyframes taglineGlow {
+    0%, 100% { text-shadow: none; opacity: 0.75; }
+    50% { text-shadow: 0 0 8px rgba(255,255,255,0.85), 0 0 16px rgba(255,255,255,0.4); opacity: 1; }
+  }
 
   .hero {
     position: relative;
@@ -79,8 +83,12 @@
   }
   .hero .kicker .dot {
     width: 6px; height: 6px; border-radius: 50%;
-    background: var(--glow);
     flex: none;
+    animation: kickerDotPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes kickerDotPulse {
+    0%, 100% { background: var(--glow); box-shadow: 0 0 3px rgba(22,166,114,0.4); }
+    50% { background: #FF3B3B; box-shadow: 0 0 8px rgba(255,59,59,0.95), 0 0 16px rgba(255,59,59,0.6); }
   }
   .hero h1 {
     font-size: clamp(38px, 6vw, 64px);
@@ -115,7 +123,7 @@
     .search-panel { grid-template-columns: 1fr 1fr auto; align-items: center; }
   }
   .field label { display: none; }
-  .search-field input { width: 100%; }
+  .search-field input, .city-field input { width: 100%; }
   .field input, .field select {
     width: 100%;
     padding: 13px 16px;
@@ -504,7 +512,7 @@
   <div class="wrap">
     <div>
       <div class="wordmark">Forever<span>Careers</span></div>
-      <div class="tagline-small">Live UK jobs, all in one place</div>
+      <div class="tagline-small">Live roles across the UK and US: remote, hybrid and in person</div>
     </div>
     <svg class="neon-person" viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg">
       <g class="pose-walk">
@@ -575,7 +583,7 @@
   </div>
   <div class="wrap hero-grid">
     <div class="hero-content">
-      <div class="kicker"><span class="dot"></span>Live roles, checked by hand</div>
+      <div class="kicker"><span class="dot"></span>Live roles</div>
       <h1>Your next role<br>starts <span class="accent">here +</span></h1>
 
       <div class="search-panel">
@@ -633,10 +641,13 @@
           <option value="US">US only</option>
         </select>
       </div>
+      <div class="field city-field" style="min-width:170px;">
+        <input id="citySearch" type="text" placeholder="City (e.g. Manchester, Austin)" oninput="renderJobs()">
+      </div>
       <div class="sal-field">Min <span id="curMinSym">£</span><input id="salMin" type="number" placeholder="0" min="0" oninput="renderJobs()"></div>
       <div class="sal-field">Max <span id="curMaxSym">£</span><input id="salMax" type="number" placeholder="Any" min="0" oninput="renderJobs()"></div>
       <button class="type-chip" id="chipRemote" onclick="toggleChip('remote')">Remote</button>
-      <button class="type-chip" id="chipOnsite" onclick="toggleChip('onsite')">On-site</button>
+      <button class="type-chip" id="chipOnsite" onclick="toggleChip('onsite')">Onsite</button>
     </div>
     <div id="jobList"></div>
     <div class="empty-state" id="emptyState" style="display:none;">
@@ -784,8 +795,10 @@ function renderJobs() {
   const salMax = parseFloat(document.getElementById('salMax')?.value) || Infinity;
   const anyChip = activeChips.remote || activeChips.onsite;
 
+  const city = (document.getElementById('citySearch')?.value || '').trim().toLowerCase();
   const filtered = JOBS.filter(j => {
     const matchesQ = !q || (j.title + ' ' + j.company + ' ' + j.category).toLowerCase().includes(q);
+    const matchesCity = !city || (j.location || '').toLowerCase().includes(city);
     const matchesCat = !cat || j.category === cat;
     const top = j.salary_max || j.salary_min || 0;
     const bottom = j.salary_min || j.salary_max || 0;
@@ -794,7 +807,7 @@ function renderJobs() {
     const matchesType = !anyChip || activeChips[wt];
     const countrySel = document.getElementById('countrySel')?.value || '';
     const matchesCountry = !countrySel || (j.country || 'UK') === countrySel;
-    return matchesQ && matchesCat && matchesSalary && matchesType && matchesCountry;
+    return matchesQ && matchesCity && matchesCat && matchesSalary && matchesType && matchesCountry;
   });
   const deduped = dedupeJobs(filtered);
 

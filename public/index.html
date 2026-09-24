@@ -410,7 +410,7 @@
   .cv-note { font-size: 12px; color: var(--text-soft); margin-top: 12px; }
   .cv-fine-print { font-size: 11px; color: var(--text-soft); margin-top: 14px; opacity: 0.75; }
 
-  section.testimonials { padding: 8px 0 56px; position: relative; z-index: 1; }
+  section.testimonials { padding: 32px 0 40px; position: relative; z-index: 1; }
   .testi-carousel { position: relative; max-width: 480px; min-height: 150px; }
   .testi-slide {
     background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
@@ -477,12 +477,18 @@
     <div class="nav-tabs">
       <button id="navHome" class="active" onclick="showView('home')">Home</button>
       <button id="navJobs" onclick="showView('jobs')">Browse all roles</button>
+      <button id="navTesti" onclick="showView('home'); setTimeout(() => document.getElementById('testiTop').scrollIntoView({behavior:'smooth'}), 50);">&#9733; Testimonials</button>
     </div>
   </div>
 </header>
 <div class="notice" id="notice"><div id="noticeText"></div></div>
 
-<div class="view active" id="viewHome"><section class="hero">
+<div class="view active" id="viewHome"><section class="testimonials" id="testiTop">
+  <div class="wrap">
+    <div class="testi-carousel" id="testiCarousel"></div>
+    <div class="testi-dots" id="testiDots"></div>
+  </div>
+</section><section class="hero">
   <div class="orb"></div>
   <div class="wrap hero-grid">
     <div class="hero-content">
@@ -521,12 +527,7 @@
   </div>
 </section>
 
-<section class="testimonials">
-  <div class="wrap">
-    <div class="testi-carousel" id="testiCarousel"></div>
-    <div class="testi-dots" id="testiDots"></div>
-  </div>
-</section>
+
 </div>
 <div class="view" id="viewJobs"><section class="listings">
   <div class="wrap">

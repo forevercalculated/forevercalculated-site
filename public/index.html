@@ -43,8 +43,15 @@
     border-bottom: 1px solid var(--line);
   }
   header.site .wrap { display: flex; align-items: center; justify-content: space-between; }
-  .wordmark { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
-  .wordmark span { background: var(--glow); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .wordmark { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+  .wordmark span {
+    color: var(--glow);
+    animation: wordmarkGlow 2.2s ease-in-out infinite;
+  }
+  @keyframes wordmarkGlow {
+    0%, 100% { text-shadow: 0 0 2px rgba(22,166,114,0.15); opacity: 0.75; }
+    50% { text-shadow: 0 0 18px rgba(22,166,114,0.85), 0 0 34px rgba(22,166,114,0.5); opacity: 1; }
+  }
   .tagline-small { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
 
   .hero {

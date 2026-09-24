@@ -355,27 +355,74 @@
   .preview-list .job-row { margin-bottom: 8px; }
   .view-all-link { display: inline-block; margin-top: 8px; color: var(--pink); font-weight: 600; text-decoration: none; font-size: 14px; }
 
-  section.cv-tool { padding: 8px 0 56px; position: relative; z-index: 1; }
-  .cv-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
-  .cv-card h2 { font-size: 22px; font-weight: 600; margin: 0 0 6px; }
-  .cv-card p.sub { color: var(--text-soft); font-size: 14px; margin: 0 0 18px; }
-  .cv-card textarea { width: 100%; min-height: 110px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font: inherit; font-size: 14px; padding: 12px; resize: vertical; box-sizing: border-box; }
-  .cv-card .cv-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; align-items: center; }
-  .cv-card input[type=file] { color: var(--text-soft); font-size: 13px; }
-  .cv-btn { padding: 12px 22px; background: var(--glow); color: #fff; border: none; border-radius: 9px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .hero-grid { display: grid; grid-template-columns: 1fr; gap: 36px; align-items: start; }
+  @media (min-width: 900px) { .hero-grid { grid-template-columns: 1.05fr 0.95fr; gap: 32px; } }
+
+  .cv-widget { position: relative; z-index: 1; }
+  .cv-widget-glow {
+    position: absolute; inset: -2px; border-radius: 22px;
+    background: var(--glow);
+    filter: blur(1px);
+    opacity: 0.85;
+    animation: cvPulse 4s ease-in-out infinite;
+  }
+  @keyframes cvPulse {
+    0%, 100% { opacity: 0.65; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.01); }
+  }
+  .cv-widget-inner {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 26px;
+    z-index: 1;
+  }
+  .cv-widget-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--glow); font-size: 18px; margin-bottom: 12px;
+  }
+  .cv-widget h2 { font-size: 20px; font-weight: 700; margin: 0 0 6px; line-height: 1.2; }
+  .cv-widget p.sub { color: var(--text-soft); font-size: 13px; margin: 0 0 16px; }
+  .cv-widget textarea {
+    width: 100%; min-height: 90px; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 10px; color: var(--text); font: inherit; font-size: 14px; padding: 12px;
+    resize: vertical; box-sizing: border-box; transition: border-color 0.15s;
+  }
+  .cv-widget textarea:focus { outline: none; border-color: var(--pink); }
+  .cv-controls { display: flex; align-items: center; gap: 10px; margin: 12px 0 14px; }
+  .cv-file-btn {
+    background: var(--bg); border: 1px dashed var(--line); color: var(--text-soft);
+    font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  }
+  .cv-file-btn:hover { border-color: var(--pink); color: var(--text); }
+  .cv-file-name { font-size: 12px; color: var(--text-soft); }
+  .cv-btn { padding: 12px 22px; background: var(--glow); color: #fff; border: none; border-radius: 9px; font-weight: 600; font-size: 15px; cursor: pointer; transition: filter 0.15s, transform 0.1s; }
+  .cv-btn:hover { filter: brightness(1.1); }
+  .cv-btn:active { transform: scale(0.98); }
   .cv-btn:disabled { opacity: 0.5; cursor: default; }
-  .cv-results { margin-top: 22px; display: none; }
+  .cv-btn-full { width: 100%; }
+  .cv-results { margin-top: 18px; display: none; }
   .cv-results.show { display: block; }
-  .cv-strength { display: inline-block; background: var(--glow); color: #fff; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 20px; margin: 0 8px 8px 0; }
-  .cv-match-row { padding: 12px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .cv-strength { display: inline-block; background: var(--glow); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: 20px; margin: 0 6px 6px 0; }
+  .cv-match-row { padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
   .cv-match-row b { font-weight: 600; }
-  .cv-note { font-size: 12px; color: var(--text-soft); margin-top: 14px; }
+  .cv-note { font-size: 12px; color: var(--text-soft); margin-top: 12px; }
+  .cv-fine-print { font-size: 11px; color: var(--text-soft); margin-top: 14px; opacity: 0.75; }
 
   section.testimonials { padding: 8px 0 56px; position: relative; z-index: 1; }
-  .testi-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 26px; max-width: 460px; }
+  .testi-carousel { position: relative; max-width: 480px; min-height: 150px; }
+  .testi-slide {
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 26px;
+    position: absolute; inset: 0; opacity: 0; transform: translateX(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease; pointer-events: none;
+  }
+  .testi-slide.active { opacity: 1; transform: translateX(0); position: relative; pointer-events: auto; }
   .testi-stars { color: #FFB020; font-size: 18px; letter-spacing: 2px; margin-bottom: 10px; }
-  .testi-card .name { font-weight: 700; margin-top: 12px; }
-  .testi-card .role { color: var(--text-soft); font-size: 13px; }
+  .testi-slide .role { color: var(--text-soft); font-size: 13px; margin-top: 14px; }
+  .testi-dots { display: flex; gap: 8px; margin-top: 16px; }
+  .testi-dots button { width: 8px; height: 8px; border-radius: 50%; border: none; background: var(--line); cursor: pointer; padding: 0; }
+  .testi-dots button.active { background: var(--pink); width: 22px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -437,7 +484,7 @@
 
 <div class="view active" id="viewHome"><section class="hero">
   <div class="orb"></div>
-  <div class="wrap">
+  <div class="wrap hero-grid">
     <div class="hero-content">
       <div class="kicker"><span class="dot"></span>Live roles, checked by hand</div>
       <h1>Your next role<br>starts <span class="accent">here +</span></h1>
@@ -460,33 +507,30 @@
       <div class="preview-list" id="previewList" style="margin-top:28px;"></div>
       <a href="#" class="view-all-link" onclick="showView('jobs'); return false;">View all roles &rarr;</a>
     </div>
-  </div>
-</section>
 
-
-<section class="cv-tool">
-  <div class="wrap">
-    <div class="cv-card">
-      <h2>Not sure what fits? Check your CV</h2>
-      <p class="sub">Paste your CV text or upload a .txt file. We scan it for real skills and match it against today's live categories, no account needed. This is straightforward keyword matching, not magic AI, so treat it as a starting point.</p>
-      <textarea id="cvText" placeholder="Paste your CV text here..."></textarea>
-      <div class="cv-controls">
-        <input type="file" id="cvFile" accept=".txt" />
-        <button class="cv-btn" id="cvBtn" onclick="analyseCV()">Check my CV</button>
+    <div class="cv-widget">
+      <div class="cv-widget-glow"></div>
+      <div class="cv-widget-inner">
+        <div class="cv-widget-icon">&#10024;</div>
+        <h2>What's your CV worth today?</h2>
+        <p class="sub">Drop it in. See your strongest matches in seconds, no account needed.</p>
+        <textarea id="cvText" placeholder="Paste your CV text here..."></textarea>
+        <div class="cv-controls">
+          <label class="cv-file-btn">Upload .txt<input type="file" id="cvFile" accept=".txt" style="display:none" onchange="document.querySelector('.cv-file-name').textContent = this.files[0]?.name || ''"></label>
+          <span class="cv-file-name"></span>
+        </div>
+        <button class="cv-btn cv-btn-full" id="cvBtn" onclick="analyseCV()">Check my CV &rarr;</button>
+        <div class="cv-results" id="cvResults"></div>
+        <div class="cv-fine-print">Straightforward keyword matching against today's live roles, not AI. A starting point, not a verdict.</div>
       </div>
-      <div class="cv-results" id="cvResults"></div>
     </div>
   </div>
 </section>
 
 <section class="testimonials">
   <div class="wrap">
-    <div class="testi-card">
-      <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-      <div>Rated ForeverCalculated <strong>10 out of 10</strong> for the job search support she received.</div>
-      <div class="name">Ruth</div>
-      <div class="role">ForeverCalculated client</div>
-    </div>
+    <div class="testi-carousel" id="testiCarousel"></div>
+    <div class="testi-dots" id="testiDots"></div>
   </div>
 </section>
 </div>
@@ -813,6 +857,42 @@ renderAccount();
 renderJobs();
 refreshMembership().then(handleReturnFromStripe);
 renderPreview();
+
+const TESTIMONIALS = [
+  { rating: 5, text: "Rated ForeverCalculated 10 out of 10 for the job search support received.", role: "Verified ForeverCalculated client" }
+];
+
+let testiIndex = 0;
+function renderTestimonials() {
+  const track = document.getElementById('testiCarousel');
+  const dots = document.getElementById('testiDots');
+  track.innerHTML = '';
+  dots.innerHTML = '';
+  TESTIMONIALS.forEach((t, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'testi-slide' + (i === 0 ? ' active' : '');
+    slide.innerHTML = '<div class="testi-stars">' + '&#9733;'.repeat(t.rating) + '</div><div>' + t.text + '</div><div class="role">' + t.role + '</div>';
+    track.appendChild(slide);
+    if (TESTIMONIALS.length > 1) {
+      const dot = document.createElement('button');
+      dot.className = i === 0 ? 'active' : '';
+      dot.onclick = () => goToTesti(i);
+      dots.appendChild(dot);
+    }
+  });
+}
+function goToTesti(i) {
+  const slides = document.querySelectorAll('.testi-slide');
+  const dots = document.querySelectorAll('.testi-dots button');
+  slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+  testiIndex = i;
+}
+renderTestimonials();
+if (TESTIMONIALS.length > 1) {
+  setInterval(() => goToTesti((testiIndex + 1) % TESTIMONIALS.length), 6000);
+}
+
 
 const CATEGORY_KEYWORDS = {
   "Customer Service": ["customer service","call centre","complaints","helpdesk","support advisor","client care","telephone","crm"],

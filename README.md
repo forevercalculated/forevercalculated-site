@@ -1,7 +1,7 @@
-# ForeverCalculated
+# Forever Careers
 
-Job search site for forevercalculated.com, hosted on Netlify.
+Job search + membership site for forevercareers.co.uk, hosted on Netlify.
 
-- Static site: `index.html` (publish directory is the repo root, no build command).
-- Lead capture uses Netlify Forms (form name: `leads`).
-- Subscriptions use Stripe Payment Links.
+- `public/index.html` — the site itself
+- `netlify/functions/` — auth, membership check, job-link unlocking
+- Stripe secret key and session secret are set as Netlify environment variables, never committed

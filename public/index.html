@@ -260,6 +260,7 @@
   .cvo-sub { color: var(--text-soft); max-width: 56ch; font-size: 16px; margin: 0 0 20px; }
   .cvo-price { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 28px; }
   .cvo-price span { font-size: 14px; font-weight: 500; color: var(--text-soft); margin-left: 6px; }
+  .cvo-turnaround { color: var(--text-soft); font-size: 14px; margin: -18px 0 24px; }
   .cvo-form { display: grid; gap: 12px; max-width: 460px; }
   .cvo-form input[type="text"], .cvo-form input[type="email"] {
     padding: 14px 16px; border: 1px solid var(--line); background: var(--bg-card);
@@ -714,6 +715,7 @@
     <h2>CV Optimisation</h2>
     <p class="cvo-sub">Send your CV once. We tailor it into three separate versions, each rewritten for an industry you choose, done by hand rather than software.</p>
     <div class="cvo-price">&pound;75 <span>for 3 tailored CVs</span></div>
+    <p class="cvo-turnaround">You'll receive your 3 tailored CVs within 24 hours of your order being confirmed.</p>
 
     <form class="cvo-form" id="cvoForm" name="cv-optimisation" method="POST" data-netlify="true" enctype="multipart/form-data" netlify-honeypot="cvo-bot-field" onsubmit="return submitCvo(event)">
       <input type="hidden" name="form-name" value="cv-optimisation" />
@@ -734,7 +736,7 @@
     </form>
 
     <div class="cvo-pay" id="cvoPay" style="display:none;">
-      <p>Got it. Now complete payment to confirm your order.</p>
+      <p>Got it. Now complete payment to confirm your order. Your 3 tailored CVs will be with you within 24 hours of payment.</p>
       <a class="cvo-pay-btn" href="https://buy.stripe.com/9B67sN5WH7zc8qQ1Xhcs803" target="_blank" rel="noopener">Pay &pound;75 securely</a>
     </div>
   </div>

@@ -2291,6 +2291,13 @@
   /* ===== v45: first and last name on sign up ===== */
   .auth-names { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .auth-names input { min-width: 0; }
+
+  /* ===== v46: launch offer + referral banners ===== */
+  .fc-launch, .fc-ref { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 12px; margin: 0 0 12px; max-width: 760px; }
+  .fc-launch { background: rgba(95,201,191,0.10); border: 1px solid rgba(95,201,191,0.55); }
+  .fc-launch b { color: #5FC9BF; font-size: 14px; } .fc-launch span { color: #E6E9ED; font-size: 14.5px; } .fc-launch em { font-style: normal; font-weight: 700; color: #fff; }
+  .fc-ref { background: rgba(196,181,253,0.08); border: 1px solid rgba(196,181,253,0.40); margin-bottom: 22px; }
+  .fc-ref b { color: #C4B5FD; font-size: 14px; } .fc-ref span { color: #C9D0D7; font-size: 14px; line-height: 1.5; }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -2327,11 +2334,11 @@
 
 
 <form hidden method='post' name='new-signup' data-netlify='true'><input type='hidden' name='form-name' value='new-signup' /><input name="first_name"><input name="last_name"><input type="email" name="email"><input name="signed_up_at"></form>
-<form enctype='multipart/form-data' hidden method='post' name='career-services'><input type='hidden' name='form-name' value='career-services' />
-  <input name="bot-field"><input name="service"><input name="name"><input type="email" name="email"><input type="file" name="cv"><input name="linkedin_url"><textarea name="details"></textarea>
+<form enctype='multipart/form-data' hidden method='post' name='career-services' data-netlify='true'><input type='hidden' name='form-name' value='career-services' />
+  <input name="bot-field"><input name="service"><input name="name"><input type="email" name="email"><input type="file" name="cv"><input name="linkedin_url"><textarea name="details"></textarea><input name="referred_by">
 </form>
-<form enctype='multipart/form-data' hidden method='post' name='cv-optimisation'><input type='hidden' name='form-name' value='cv-optimisation' />
-  <input name="cvo-bot-field"><input name="name"><input type="email" name="email"><input type="file" name="cv"><input name="package"><input name="industry_1"><input name="industry_2"><input name="industry_3">
+<form enctype='multipart/form-data' hidden method='post' name='cv-optimisation' data-netlify='true'><input type='hidden' name='form-name' value='cv-optimisation' />
+  <input name="cvo-bot-field"><input name="name"><input type="email" name="email"><input type="file" name="cv"><input name="package"><input name="industry_1"><input name="industry_2"><input name="industry_3"><input name="referred_by">
 </form>
 <header class="site">
   <svg class="fc-logo" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg" aria-label="Forever Careers logo" role="img">
@@ -2884,15 +2891,17 @@
 
       <details><summary>4. Free account</summary><p>Your Forever Careers account is free. There is no subscription and no card is needed to browse or apply for roles. You can ask us to delete your account at any time.</p></details>
 
-      <details><summary>5. Refund policy</summary><p>Once a payment has been made, it is final and non-refundable. This applies to CV Optimisation, career services, CV Snake games and any other paid service. By purchasing, you confirm you'd like your service to begin straight away and understand this means you give up the standard 14 day cancellation right under UK consumer law once the service has started.</p></details>
+      <details><summary>5. Refund policy</summary><p>If we do not deliver the service you paid for, you are entitled to a full refund. Once your service has been delivered (for example, your tailored CV has been sent, or your Forever Careers Agent period has started and roles are being sent to you), payments are non refundable, because the work has been carried out at your request. If you believe something has not been delivered as described, email forevercalculated@gmail.com and we will put it right or refund you. This does not affect your statutory rights.</p></details>
 
-      <details><summary>6. CV Optimisation delivery</summary><p>We aim to deliver your tailored CV or CVs within 24 hours of your order being confirmed. Delivery times can occasionally vary. As above, this service is non-refundable once your order has been placed and work has begun.</p></details>
+      <details><summary>6. CV Optimisation delivery</summary><p>We aim to deliver your tailored CV or CVs within 24 hours of your order being confirmed. Delivery times can occasionally vary. If we cannot deliver your CV, you will receive a full refund.</p></details>
 
       <details><summary>7. Acceptable use</summary><p>We treat every client with respect, and we expect the same in return. We do not tolerate abuse, harassment or disrespect toward our team in any form. We reserve the right to suspend or permanently revoke access to our services, without refund, for anyone who breaches this.</p></details>
 
       <details><summary>8. No guarantee of employment</summary><p>We provide career support, CV help and access to live roles. We do not guarantee that you'll be offered an interview or a job. Outcomes depend on many factors outside our control.</p></details>
 
       <details><summary>9. Changes to these terms</summary><p>We may update these terms from time to time. The current version will always be available on this page.</p></details>
+
+      <details><summary>12. Refer a friend</summary><p>If someone you refer pays for any Forever Careers service and names you in the "Referred by a friend" box when ordering, we will pay you &pound;20 by bank transfer within 14 days of their service being delivered. There is no limit to how many friends you can refer. Rewards are not paid for refunded orders or for referring yourself. We may change or end the scheme at any time, but will always honour referrals made before a change.</p></details>
 
       <details><summary>11. Your data and privacy</summary><p>When you create an account we store your email address, when you joined and when you last visited. When you tap Apply on a role while signed in, we record the role and the time so we can show you your application history and improve our service. If you tick the box to save your CV in the free CV checker, we store the CV text and your score in your account so we can help with your search. We never sell your data. You can ask us to see or delete your data at any time by emailing forevercalculated@gmail.com.</p></details>
 
@@ -2902,7 +2911,7 @@
     <div class="legal-panel" id="legalFaq" style="display:none;">
       <details open><summary>Is browsing roles really free?</summary><p>Yes. Browsing, the free CV checker and applying for roles are all free. You only need a free account to open the apply links.</p></details>
       <details><summary>Do I have to pay to apply for jobs?</summary><p>No. Applying for every role on Forever Careers is free with an account. We only charge for optional extras like CV Optimisation.</p></details>
-      <details><summary>Do you offer refunds?</summary><p>No. All payments, including CV Optimisation, are final once made. Please see our refund policy above for the full details.</p></details>
+      <details><summary>Do you offer refunds?</summary><p>Yes, if we do not deliver the service you paid for, you will get a full refund. Once a service has been delivered, it is non refundable. See our refund policy above for the full details.</p></details>
       <details><summary>How long does CV Optimisation take?</summary><p>We aim to deliver your tailored CV or CVs within 24 hours of your order being confirmed.</p></details>
       <details><summary>Which countries do you cover?</summary><p>We list live roles across 19 countries, including the UK, US, Canada, Australia, New Zealand, Singapore, South Africa, India and much of Europe and Latin America. Some roles can only be opened by people located in that country.</p></details>
       <details><summary>What if I need visa sponsorship?</summary><p>Let us know in the job readiness questionnaire. We'll take this into account when an agent contacts you.</p></details>
@@ -3023,7 +3032,7 @@
 
       <ul class="cvo-feats">
         <li><span class="cvo-ic">&#9670;</span><div><strong>One or three industry versions</strong><span>Each CV rewritten around the roles you actually want.</span></div></li>
-        <li><span class="cvo-ic">&#9670;</span><div><strong>Written by a person</strong><span>Every line reviewed and tailored by hand, not generated.</span></div></li>
+        <li><span class="cvo-ic">&#9670;</span><div><strong>Tailored by a careers specialist</strong><span>Every CV is reviewed and refined line by line by a person before it reaches you.</span></div></li>
         <li><span class="cvo-ic">&#9670;</span><div><strong>Back within 24 hours</strong><span>Delivered to your inbox once your order is confirmed.</span></div></li>
         <li><span class="cvo-ic">&#9670;</span><div><strong>Secure checkout</strong><span>Payment handled safely through Stripe.</span></div></li>
       </ul>
@@ -3074,6 +3083,7 @@
           </div>
           <datalist id="cvoIndList"><option value="Customer Service"><option value="Admin and Office"><option value="IT Support"><option value="Sales"><option value="Finance and Accounting"><option value="Healthcare"><option value="Marketing"><option value="HR"><option value="Warehouse and Logistics"><option value="Hospitality"><option value="Education"></datalist>
         </div>
+        <div class="cvo-field"><label>Referred by a friend? (optional)</label><input type="text" name="referred_by" placeholder="Their name, email or Instagram" maxlength="100" /></div>
         <button type="submit" class="cvo-submit">Continue to payment &rarr;</button>
         <div class="cvo-fine">&#128274; Your CV is only used to create your tailored versions.</div>
       </form>
@@ -3094,6 +3104,8 @@
       <h2>Career <span class="svc-accent">services</span></h2>
       <p class="svc-sub">Pick the help you need. One payment each, no subscriptions, priced in your currency.</p>
     </div>
+    <div class="fc-launch" id="fcLaunch" style="display:none"><b>Launch offer</b><span>Forever Careers Agent for <em class="fc-lp"></em> instead of <s class="fc-lw"></s>, until 11 October.</span></div>
+    <div class="fc-ref"><b>Refer a friend, get &pound;20</b><span>For every friend who pays for any service. They just add your name or Instagram in the "Referred by a friend" box when ordering.</span></div>
     <div class="svc-grid">
       <div class="svc-card svc-feature" data-svc="agent">
         <div class="svc-tag">Most support</div>
@@ -3150,6 +3162,7 @@
         <label>Your current CV<input type="file" name="cv" accept=".pdf,.doc,.docx" required></label>
         <label id="svcLinkedWrap" style="display:none">LinkedIn profile link<input type="url" name="linkedin_url" placeholder="https://www.linkedin.com/in/yourname"></label>
         <label><span id="svcDetailsLabel">Details</span><textarea name="details" id="svcDetails" rows="4" required></textarea></label>
+        <label>Referred by a friend? (optional)<input type="text" name="referred_by" placeholder="Their name, email or Instagram" maxlength="100"></label>
         <button type="submit" class="svc-submit">Continue to payment &rarr;</button>
         <p class="svc-fine" id="svcFine">We don't guarantee interviews or job offers, but we'll give every application our best.</p>
       </form>
@@ -5138,8 +5151,11 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
     BR:{agent:'R$699',cover:'R$89',linkedin:'R$139',review:'R$69',interview:'R$139'},
     MX:{agent:'MX$2,499',cover:'MX$329',linkedin:'MX$499',review:'MX$249',interview:'MX$499'}};
   var EU=['DE','FR','NL','ES','IT','BE','AT','IE'];
-  var cc=window.FC_COUNTRY||'UK'; var row=SP[EU.indexOf(cc)>-1?'EU':cc]||SP.UK;
-  var LINK={agent:'https://buy.stripe.com/7sYeVfgBlcTw6iI45pcs80f',cover:'https://buy.stripe.com/dRm00l3OzbPscH6cBVcs80b',
+  var cc=window.FC_COUNTRY||'UK'; var rkey=EU.indexOf(cc)>-1?'EU':cc; var row=SP[rkey]||SP.UK;
+  var LAUNCH=Date.now()<Date.parse('2026-10-11T22:59:00Z');
+  var LP={UK:'£149',US:'$189',CA:'C$259',AU:'A$289',NZ:'NZ$309',SG:'S$259',ZA:'R1,899',IN:'₹5,999',EU:'€169',CH:'CHF 169',PL:'529 zł',BR:'R$529',MX:'MX$1,899'};
+  var WAS=row.agent; if (LAUNCH) { row=Object.assign({},row); row.agent=LP[rkey]||LP.UK; }
+  var LINK={agent:(LAUNCH?'https://buy.stripe.com/5kQdRb5WH3iW0Yo45pcs80g':'https://buy.stripe.com/7sYeVfgBlcTw6iI45pcs80f'),cover:'https://buy.stripe.com/dRm00l3OzbPscH6cBVcs80b',
     linkedin:'https://buy.stripe.com/6oU4gB1Gr2eS8qQ31lcs80c',review:'https://buy.stripe.com/eVq9AVfxh1aOdLa45pcs80d',
     interview:'https://buy.stripe.com/5kQeVfacX3iW9uU31lcs80e'};
   var DET={agent:'Roles you want, locations, remote, hybrid or on site, and your target salary',
@@ -5147,7 +5163,8 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
     linkedin:'Which roles are you targeting?',
     review:'Which roles are you applying for? Anything specific you want feedback on?',
     interview:'Role and company you are interviewing for, plus three times that suit you (with your time zone)'};
-  document.querySelectorAll('.px-svc').forEach(function(el){ var k=el.getAttribute('data-k'); if (row[k]) el.textContent=row[k]; });
+  document.querySelectorAll('.px-svc').forEach(function(el){ var k=el.getAttribute('data-k'); if (row[k]) el.textContent=row[k]; if (LAUNCH && k==='agent') el.innerHTML='<s style="opacity:.55;font-size:.6em;margin-right:6px">'+WAS+'</s>'+row.agent; });
+  if (LAUNCH) { var lb=document.getElementById('fcLaunch'); if (lb) { lb.style.display=''; lb.querySelector('.fc-lp').textContent=row.agent; lb.querySelector('.fc-lw').textContent=WAS; } var tg=document.querySelector('.svc-feature .svc-tag'); if (tg) tg.textContent='Launch price until 11 Oct'; }
   window.svcSync=function(){
     var sel=document.getElementById('svcSel'); if (!sel) return; var k=sel.value;
     document.getElementById('svcPriceNow').textContent=row[k];

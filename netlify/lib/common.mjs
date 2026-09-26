@@ -70,21 +70,14 @@ async function stripeGet(path) {
 // Looks up every Stripe customer with this email and returns the active
 // subscription to our job-access product that runs the longest.
 export async function getMembership(email) {
-  const customers = await stripeGet(`customers?email=${encodeURIComponent(email)}&limit=20`);
-  let best = null;
-  for (const c of customers.data || []) {
-    const subs = await stripeGet(`subscriptions?customer=${c.id}&status=all&limit=20`);
-    for (const s of subs.data || []) {
-      if (!["active", "trialing"].includes(s.status)) continue;
-      const item = s.items?.data?.[0];
-      if (item?.price?.product !== PRODUCT_ID) continue;
-      const end = s.current_period_end ?? item?.current_period_end ?? 0;
-      if (!best || end > best.end) {
-        best = { end, plan: item?.price?.nickname || "Member", cancels: !!s.cancel_at_period_end };
-      }
-    }
-  }
-  return best
-    ? { active: true, plan: best.plan, access_until: new Date(best.end * 1000).toISOString(), cancels: best.cancels }
-    : { active: false };
+  // Job board is free for everyone with an account (subscriptions retired Sept 2026)
+  return { active: true, free: true, plan: "Free account" };
+}
+
+// ---- founder admin helpers ----
+export function adminOk(req) {
+  const key = process.env.ADMIN_KEY || "";
+  const got = req.headers.get("x-admin-key") || new URL(req.url).searchParams.get("k") || "";
+  if (!key || got.length !== key.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(got), Buffer.from(key));
 }

@@ -17,8 +17,12 @@ async function handle(req) {
 
   if (body.action === "signup") {
     if (existing) return json({ error: "An account with this email already exists. Sign in instead." }, 409);
+    const clean = (v) => String(v || "").replace(/\s+/g, " ").trim().slice(0, 50);
+    const firstName = clean(body.firstName), lastName = clean(body.lastName);
+    if (!firstName || !lastName) return json({ error: "Please enter your first and last name." }, 400);
+    if (!/^[\p{L}' .-]+$/u.test(firstName + lastName)) return json({ error: "Names can only contain letters, spaces, hyphens and apostrophes." }, 400);
     const { salt, hash } = await hashPassword(password);
-    await store.setJSON(key, { email, salt, hash, createdAt: new Date().toISOString() });
+    await store.setJSON(key, { email, firstName, lastName, salt, hash, createdAt: new Date().toISOString() });
   } else if (body.action === "login") {
     if (!existing || !(await verifyPassword(password, existing.salt, existing.hash))) {
       return json({ error: "Email or password is incorrect." }, 401);
@@ -26,7 +30,8 @@ async function handle(req) {
   } else {
     return json({ error: "Invalid request." }, 400);
   }
-  return json({ token: signToken(email), email });
+  const rec = body.action === "signup" ? await store.get(key, { type: "json" }) : existing;
+  return json({ token: signToken(email), email, firstName: (rec && rec.firstName) || "" });
 }
 
 export default async (req) => {

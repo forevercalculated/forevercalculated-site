@@ -1,9 +1,19 @@
-import { json, emailFromRequest, getMembership } from "../lib/common.mjs";
+import { getStore } from "@netlify/blobs";
+import { json, emailFromRequest, getMembership, userKey } from "../lib/common.mjs";
 
 async function handle(req) {
   const email = emailFromRequest(req);
   if (!email) return json({ error: "Please sign in again." }, 401);
   try {
+    try {
+      const act = getStore({ name: "activity", consistency: "strong" });
+      const k = userKey(email);
+      const prev = await act.get(k, { type: "json" });
+      const now = Date.now();
+      if (!prev || !prev.lastSeen || now - Date.parse(prev.lastSeen) > 30 * 60 * 1000) {
+        await act.setJSON(k, { ...(prev || {}), email, lastSeen: new Date(now).toISOString(), visits: ((prev && prev.visits) || 0) + 1 });
+      }
+    } catch (e) { console.error("activity", e); }
     return json({ email, ...(await getMembership(email)) });
   } catch (err) {
     console.error(err);

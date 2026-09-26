@@ -9,7 +9,7 @@ async function handle(req) {
   catch (err) { console.error(err); return json({ error: "We couldn't check your plan just now." }, 503); }
   if (!membership.active) return json({ error: "No active plan." }, 402);
   const urls = {};
-  jobs.forEach((j, i) => { urls[i] = j.url; });
+  jobs.forEach((j) => { urls[j.id] = j.url; });
   return json({ urls });
 }
 

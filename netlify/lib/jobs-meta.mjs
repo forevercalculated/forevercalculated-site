@@ -1,0 +1,1 @@
+export default {"refreshed": "2026-09-26T08:21:16Z", "source": "Adzuna", "total": 3200, "per_country": {"UK": 600, "US": 500, "CA": 200, "AU": 200, "NZ": 150, "SG": 100, "ZA": 100, "IN": 150, "DE": 150, "FR": 150, "NL": 100, "ES": 100, "IT": 100, "BE": 100, "AT": 100, "CH": 100, "PL": 100, "BR": 100, "MX": 100}, "newest_posted": "2026-09-26", "oldest_posted": "2026-09-25"};

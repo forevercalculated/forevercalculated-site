@@ -65,7 +65,8 @@ export default async (req) => {
       const got = await getStore({ name: "cv-files", consistency: "strong" }).getWithMetadata(k, { type: "arrayBuffer" });
       if (!got) return json({ error: "No CV" }, 404);
       const nm = (got.metadata && got.metadata.name) || "cv";
-      return new Response(got.data, { headers: { "content-type": (got.metadata && got.metadata.type) || "application/octet-stream", "content-disposition": `attachment; filename="${nm.replace(/"/g, "")}"`, "cache-control": "no-store" } });
+      const ascii = nm.normalize("NFKD").replace(/[\u2012-\u2015]/g, "-").replace(/[^\x20-\x7E]/g, "").replace(/["\\]/g, "").trim() || "cv";
+      return new Response(got.data, { headers: { "content-type": (got.metadata && got.metadata.type) || "application/octet-stream", "content-disposition": `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(nm)}`, "cache-control": "no-store" } });
     }
     const wantPay = view === "summary" || view === "payments";
     const [users, activity, applies, cvs, payments] = await Promise.all([all("users"), all("activity"), all("apply-log"), all("cvs"), wantPay ? stripePayments().catch(() => []) : Promise.resolve([])]);

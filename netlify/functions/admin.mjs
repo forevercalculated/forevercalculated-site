@@ -42,7 +42,9 @@ export default async (req) => {
     const nameOf = (k) => { const u = users[k] || {}; return { first_name: u.firstName || "", last_name: u.lastName || "" }; };
 
     const signups = Object.entries(users).map(([k, u]) => ({
-      first_name: u.firstName || "", last_name: u.lastName || "", email: u.email, joined: u.createdAt || "", last_active: (activity[k] && activity[k].lastSeen) || "",
+      first_name: u.firstName || "", last_name: u.lastName || "", email: u.email, joined: u.createdAt || "",
+      looking_in: [u.city, ({ ANY: "Anywhere (remote)", OTHER: "Other country" })[u.country] || u.country].filter(Boolean).join(", "), industry: u.industry || "", work_pref: ({ remote: "Remote", hybrid: "Hybrid", onsite: "On site", any: "Open to any" })[u.workPref] || "", urgency: ({ urgent: "Urgently (within 2 weeks)", month: "Within a month", quarter: "In 1 to 3 months", exploring: "Just exploring" })[u.urgency] || "",
+      last_active: (activity[k] && activity[k].lastSeen) || "",
       visits: (activity[k] && activity[k].visits) || 0, applications: (applies[k] && applies[k].events.length) || 0, cv_saved: cvs[k] ? "yes" : "no",
     })).sort((a, b) => String(b.joined).localeCompare(String(a.joined)));
     const events = [];
@@ -55,13 +57,13 @@ export default async (req) => {
       return json({
         signups: { total: signups.length, today: since(signups, "joined", 1), week: since(signups, "joined", 7), month: since(signups, "joined", 30) },
         applications: { total: events.length, today: since(events, "applied_at", 1), week: since(events, "applied_at", 7) },
-        active_week: since(signups, "last_active", 7), cvs: cvList.length,
+        active_week: since(signups, "last_active", 7), cvs: cvList.length, urgent: signups.filter((x) => x.urgency.startsWith("Urgently")).length,
         payments: { total: payments.length, month: since(payments, "paid_at", 30), revenue_month: Object.entries(payments.filter((p) => now - Date.parse(p.paid_at) < 30 * DAY).reduce((a, p) => { a[p.currency] = (a[p.currency] || 0) + Number(p.amount); return a; }, {})).map(([c, v]) => c + " " + v.toFixed(2)).join(", ") || "0" },
         jobs: jobsMeta,
       });
     }
     const map = {
-      signups: [signups, ["first_name", "last_name", "email", "joined", "last_active", "visits", "applications", "cv_saved"]],
+      signups: [signups, ["first_name", "last_name", "email", "joined", "looking_in", "industry", "work_pref", "urgency", "last_active", "visits", "applications", "cv_saved"]],
       applications: [events, ["first_name", "last_name", "email", "role", "company", "location", "country", "applied_at"]],
       cvs: [cvList, ["first_name", "last_name", "email", "score", "saved_at", "cv_text"]],
       payments: [payments, ["paid_at", "service", "amount", "currency", "name", "email"]],

@@ -101,7 +101,7 @@
       $('gate').style.display='none'; $('app').style.display='block';
       $('stats').innerHTML = stat(s.signups.total,'Total sign ups', s.signups.today+' today, '+s.signups.week+' this week') +
         stat(s.signups.month,'New in 30 days','') + stat(s.active_week,'Active this week','') +
-        stat(s.applications.total,'Apply taps', s.applications.week+' this week') + stat(s.cvs,'Saved CVs','') +
+        stat(s.applications.total,'Apply taps', s.applications.week+' this week') + stat(s.cvs,'Saved CVs','') + stat(s.urgent||0,'Need a job urgently','') +
         stat(s.payments.month,'Payments in 30 days', s.payments.revenue_month) +
         stat(s.jobs.total.toLocaleString('en-GB'),'Live jobs', 'Refreshed '+fmt(s.jobs.refreshed));
       $('refreshNote').textContent='Job listings last refreshed '+fmt(s.jobs.refreshed)+' from '+s.jobs.source+'. Newest role posted '+s.jobs.newest_posted+'. '+Object.keys(s.jobs.per_country).length+' countries.';
@@ -114,7 +114,7 @@
     var list=rows.filter(function(r){ return !q || JSON.stringify(r).toLowerCase().indexOf(q)>-1; });
     var h='';
     if (view==='signups') {
-      h='<tr><th>Name</th><th>Email</th><th>Joined</th><th>Last active</th><th>Visits</th><th>Apply taps</th><th>CV saved</th></tr>'+list.map(function(r){ return '<tr><td>'+esc((r.first_name+' '+r.last_name).trim()||'Not given')+'</td><td>'+esc(r.email)+'</td><td class="nowrap">'+fmt(r.joined)+'</td><td class="nowrap">'+fmt(r.last_active)+'</td><td>'+r.visits+'</td><td>'+r.applications+'</td><td><span class="tag '+(r.cv_saved==='yes'?'':'no')+'">'+r.cv_saved+'</span></td></tr>'; }).join('');
+      h='<tr><th>Name</th><th>Email</th><th>Joined</th><th>Looking in</th><th>Industry</th><th>Work</th><th>Urgency</th><th>Last active</th><th>Visits</th><th>Apply taps</th><th>CV saved</th></tr>'+list.map(function(r){ return '<tr><td>'+esc((r.first_name+' '+r.last_name).trim()||'Not given')+'</td><td>'+esc(r.email)+'</td><td class="nowrap">'+fmt(r.joined)+'</td><td>'+esc(r.looking_in)+'</td><td>'+esc(r.industry)+'</td><td>'+esc(r.work_pref)+'</td><td>'+(r.urgency.indexOf('Urgently')===0?'<span class="tag" style="border-color:#F59E8B;color:#F59E8B">'+esc(r.urgency)+'</span>':esc(r.urgency))+'</td><td class="nowrap">'+fmt(r.last_active)+'</td><td>'+r.visits+'</td><td>'+r.applications+'</td><td><span class="tag '+(r.cv_saved==='yes'?'':'no')+'">'+r.cv_saved+'</span></td></tr>'; }).join('');
     } else if (view==='applications') {
       h='<tr><th>When</th><th>Name</th><th>Email</th><th>Role</th><th>Company</th><th>Location</th><th>Country</th></tr>'+list.map(function(r){ return '<tr><td class="nowrap">'+fmt(r.applied_at)+'</td><td>'+esc((r.first_name+' '+r.last_name).trim())+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.role)+'</td><td>'+esc(r.company)+'</td><td>'+esc(r.location)+'</td><td>'+esc(r.country)+'</td></tr>'; }).join('');
     } else if (view==='payments') {

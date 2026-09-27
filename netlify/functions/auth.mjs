@@ -22,7 +22,17 @@ async function handle(req) {
     if (!firstName || !lastName) return json({ error: "Please enter your first and last name." }, 400);
     if (!/^[\p{L}' .-]+$/u.test(firstName + lastName)) return json({ error: "Names can only contain letters, spaces, hyphens and apostrophes." }, 400);
     const { salt, hash } = await hashPassword(password);
-    await store.setJSON(key, { email, firstName, lastName, salt, hash, createdAt: new Date().toISOString() });
+    const pick = (v, allowed) => (allowed.includes(String(v || "")) ? String(v) : "");
+    const COUNTRIES = ["UK","US","CA","AU","NZ","IE","SG","ZA","IN","DE","FR","NL","ES","IT","BE","AT","CH","PL","BR","MX","ANY","OTHER"];
+    const INDUSTRIES = ["Customer Service","Admin & Office","IT & Data","Healthcare & Care","Finance & Accounting","Sales & Marketing","Hospitality & Retail","Warehouse, Logistics & Driving","Engineering & Construction","Education","HR & Recruitment","Open to anything"];
+    const WORK = ["remote","hybrid","onsite","any"];
+    const URGENCY = ["urgent","month","quarter","exploring"];
+    const profile = {
+      country: pick(body.country, COUNTRIES), city: clean(body.city), industry: pick(body.industry, INDUSTRIES),
+      workPref: pick(body.workPref, WORK), urgency: pick(body.urgency, URGENCY),
+    };
+    if (!profile.country || !profile.industry || !profile.workPref || !profile.urgency) return json({ error: "Please answer the questions about the work you're looking for." }, 400);
+    await store.setJSON(key, { email, firstName, lastName, ...profile, salt, hash, createdAt: new Date().toISOString() });
   } else if (body.action === "login") {
     if (!existing || !(await verifyPassword(password, existing.salt, existing.hash))) {
       return json({ error: "Email or password is incorrect." }, 401);

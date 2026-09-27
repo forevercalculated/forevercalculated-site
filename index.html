@@ -2298,6 +2298,18 @@
   .fc-launch b { color: #5FC9BF; font-size: 14px; } .fc-launch span { color: #E6E9ED; font-size: 14.5px; } .fc-launch em { font-style: normal; font-weight: 700; color: #fff; }
   .fc-ref { background: rgba(196,181,253,0.08); border: 1px solid rgba(196,181,253,0.40); margin-bottom: 22px; }
   .fc-ref b { color: #C4B5FD; font-size: 14px; } .fc-ref span { color: #C9D0D7; font-size: 14px; line-height: 1.5; }
+
+  /* ===== v48: sign up profile questions ===== */
+  .auth-profile { display: grid; gap: 8px; margin: 4px 0 2px; }
+  .auth-profile .ap-l { font-size: 12.5px; font-weight: 700; color: #A3ACB6; margin-top: 6px; text-align: left; }
+  .auth-profile .ap-row { display: grid; grid-template-columns: 1.35fr 1fr; gap: 8px; }
+  .auth-profile select { font-family: inherit !important; letter-spacing: 0 !important; -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, #8A939E 50%), linear-gradient(135deg, #8A939E 50%, transparent 50%) !important; background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50% !important; background-size: 5px 5px, 5px 5px !important; background-repeat: no-repeat !important; padding-right: 30px !important; }
+  .auth-profile select, .auth-profile input { width: 100%; min-width: 0; box-sizing: border-box; }
+  .ap-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .ap-chips button { font: inherit; font-size: 13px; font-weight: 600; padding: 10px 4px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.16); background: transparent; color: #DDE3E8; cursor: pointer; }
+  .ap-chips button.on { background: #5FC9BF; border-color: #5FC9BF; color: #06201D; }
+  @media (max-width: 400px) { .ap-chips { grid-template-columns: 1fr 1fr; } }
+  .paywall-modal { max-height: calc(100vh - 32px); overflow-y: auto; }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -2322,6 +2334,7 @@
         <div class="auth-names" id="authNames"><input type="text" id="authFirst" placeholder="First name" autocomplete="given-name" maxlength="50"><input type="text" id="authLast" placeholder="Last name" autocomplete="family-name" maxlength="50"></div>
         <input type="email" id="authEmail" placeholder="Email address" required autocomplete="email">
         <input type="password" id="authPassword" placeholder="Password (at least 8 characters)" required minlength="8" autocomplete="new-password">
+        <div class="auth-profile" id="authProfile"><label class="ap-l">Where are you looking for work?</label><div class="ap-row"><select id="apCountry"><option value="">Country</option><option value="UK">United Kingdom</option><option value="US">United States</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="NZ">New Zealand</option><option value="IE">Ireland</option><option value="SG">Singapore</option><option value="ZA">South Africa</option><option value="IN">India</option><option value="DE">Germany</option><option value="FR">France</option><option value="NL">Netherlands</option><option value="ES">Spain</option><option value="IT">Italy</option><option value="BE">Belgium</option><option value="AT">Austria</option><option value="CH">Switzerland</option><option value="PL">Poland</option><option value="BR">Brazil</option><option value="MX">Mexico</option><option value="ANY">Anywhere (remote)</option><option value="OTHER">Another country</option></select><input type="text" id="apCity" placeholder="City (optional)" maxlength="50" autocomplete="address-level2"></div><label class="ap-l">Preferred industry</label><select id="apIndustry"><option value="">Choose an industry</option><option value="Customer Service">Customer Service</option><option value="Admin &amp; Office">Admin &amp; Office</option><option value="IT &amp; Data">IT &amp; Data</option><option value="Healthcare &amp; Care">Healthcare &amp; Care</option><option value="Finance &amp; Accounting">Finance &amp; Accounting</option><option value="Sales &amp; Marketing">Sales &amp; Marketing</option><option value="Hospitality &amp; Retail">Hospitality &amp; Retail</option><option value="Warehouse, Logistics &amp; Driving">Warehouse, Logistics &amp; Driving</option><option value="Engineering &amp; Construction">Engineering &amp; Construction</option><option value="Education">Education</option><option value="HR &amp; Recruitment">HR &amp; Recruitment</option><option value="Open to anything">Open to anything</option></select><label class="ap-l">Preferred working environment</label><div class="ap-chips" id="apWork"><button type="button" data-v="remote">Remote</button><button type="button" data-v="hybrid">Hybrid</button><button type="button" data-v="onsite">On site</button><button type="button" data-v="any">Open to any</button></div><label class="ap-l">How soon do you need a job?</label><select id="apUrgency"><option value="">Choose one</option><option value="urgent">Urgently, within 2 weeks</option><option value="month">Within a month</option><option value="quarter">In 1 to 3 months</option><option value="exploring">Just exploring</option></select></div>
         <button type="submit" class="auth-btn" id="authBtn">Create account</button>
         <div class="auth-error" id="authError"></div>
       </form>
@@ -2333,7 +2346,7 @@
 </div>
 
 
-<form hidden method='post' name='new-signup' data-netlify='true'><input type='hidden' name='form-name' value='new-signup' /><input name="first_name"><input name="last_name"><input type="email" name="email"><input name="signed_up_at"></form>
+<form hidden method='post' name='new-signup' data-netlify='true'><input type='hidden' name='form-name' value='new-signup' /><input name="first_name"><input name="last_name"><input type="email" name="email"><input name="looking_in"><input name="industry"><input name="work_pref"><input name="urgency"><input name="signed_up_at"></form>
 <form enctype='multipart/form-data' hidden method='post' name='career-services' data-netlify='true'><input type='hidden' name='form-name' value='career-services' />
   <input name="bot-field"><input name="service"><input name="name"><input type="email" name="email"><input type="file" name="cv"><input name="linkedin_url"><textarea name="details"></textarea><input name="referred_by">
 </form>
@@ -3692,6 +3705,7 @@ function setAuthMode(mode) {
   document.getElementById('authBtn').textContent = signup ? 'Create account' : 'Sign in';
   document.getElementById('authPassword').autocomplete = signup ? 'new-password' : 'current-password';
   const nm = document.getElementById('authNames'); if (nm) { nm.style.display = signup ? '' : 'none'; nm.querySelectorAll('input').forEach(i => { i.required = signup; }); }
+  const ap = document.getElementById('authProfile'); if (ap) ap.style.display = signup ? '' : 'none';
   document.getElementById('authError').textContent = '';
   const sw = document.getElementById('authSwitch');
   sw.textContent = signup ? 'Already have an account? ' : 'New here? ';
@@ -3739,13 +3753,16 @@ async function submitAuth(e) {
   const password = document.getElementById('authPassword').value;
   const firstName = ((document.getElementById('authFirst') || {}).value || '').trim(), lastName = ((document.getElementById('authLast') || {}).value || '').trim();
   if (authMode === 'signup' && (!firstName || !lastName)) { err.textContent = 'Please enter your first and last name.'; return false; }
+  const prof = { country: (document.getElementById('apCountry') || {}).value || '', city: ((document.getElementById('apCity') || {}).value || '').trim(), industry: (document.getElementById('apIndustry') || {}).value || '', workPref: ((document.querySelector('#apWork button.on') || {}).dataset || {}).v || '', urgency: (document.getElementById('apUrgency') || {}).value || '' };
+  if (authMode === 'signup' && (!prof.country || !prof.industry || !prof.workPref || !prof.urgency)) { err.textContent = 'Please tell us where you are looking, your industry, working environment and how soon you need a job.'; return false; }
   btn.disabled = true; err.textContent = '';
   const label = btn.textContent; btn.textContent = 'Please wait…';
   try {
-    const r = await api('auth', { method: 'POST', body: JSON.stringify({ action: authMode, email, password, firstName, lastName }) });
+    const r = await api('auth', { method: 'POST', body: JSON.stringify({ action: authMode, email, password, firstName, lastName, ...(authMode === 'signup' ? prof : {}) }) });
     if (!r.ok) { err.textContent = r.data.error || 'Something went wrong. Please try again.'; return false; }
     store(TOKEN_KEY, r.data.token); store(EMAIL_KEY, r.data.email);
-    if (authMode === 'signup') { try { fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': 'new-signup', first_name: firstName, last_name: lastName, email: r.data.email, signed_up_at: new Date().toISOString() }).toString() }).catch(() => {}); } catch (e) {} }
+    if (authMode === 'signup') { try { const cc = /^[A-Z]{2}$/.test(prof.country) ? prof.country : ''; const f = JSON.parse(localStorage.getItem('fc_filters') || '{}'); f.types = (prof.workPref && prof.workPref !== 'any') ? [prof.workPref] : []; f.country = cc; f.city = prof.city || ''; localStorage.setItem('fc_filters', JSON.stringify(f)); } catch (e) {} }
+    if (authMode === 'signup') { try { fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': 'new-signup', first_name: firstName, last_name: lastName, email: r.data.email, looking_in: [prof.city, prof.country].filter(Boolean).join(', '), industry: prof.industry, work_pref: prof.workPref, urgency: prof.urgency, signed_up_at: new Date().toISOString() }).toString() }).catch(() => {}); } catch (e) {} }
     document.getElementById('authPassword').value = '';
     await refreshMembership();
     if (MEMBER && MEMBER.active) {
@@ -5467,6 +5484,13 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
     } catch (e) {}
     return r;
   };
+})();
+</script>
+<script>
+(function(){ var w=document.getElementById('apWork'); if(!w) return; w.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return; w.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); }); });
+  var ap=document.getElementById('authProfile'), sel=document.getElementById('authEmail'); if (ap && typeof authMode!=='undefined' && authMode!=='signup') ap.style.display='none';
+  // copy the site's input styling onto the new selects
+  try { var ref=document.getElementById('authEmail'); var cs=getComputedStyle(ref); document.querySelectorAll('#authProfile select, #authProfile input').forEach(function(el){ ['background','border','borderRadius','color','fontSize','padding','height'].forEach(function(k){ el.style[k]=cs[k]; }); }); } catch(e){}
 })();
 </script>
 </body>

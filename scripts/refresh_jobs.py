@@ -12,7 +12,8 @@ APP_ID = os.environ.get("ADZUNA_APP_ID", "6a6b424b"); APP_KEY = os.environ.get("
 ADMIN_KEY = os.environ.get("ADMIN_KEY", ""); SITE = "https://forevercalculatedcareers.com"
 REED_KEY = os.environ.get("REED_KEY", "ccef8776-5275-4435-8fad-bc41a22464c6")
 SOURCES = os.environ.get("SOURCES", "adzuna,reed").split(",")
-REED_BUDGET = int(os.environ.get("REED_BUDGET", "60")); REED_ID_OFFSET = 10**12
+REED_BUDGET = int(os.environ.get("REED_BUDGET", "260"))
+REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(os.environ.get("MIN_PER_COUNTRY", "150")); REED_ID_OFFSET = 10**12
 MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "12000"))
 CALL_BUDGET = int(os.environ.get("CALL_BUDGET", "180")); SLEEP = 2.6
 TODAY = datetime.date.today()
@@ -82,13 +83,17 @@ def to_job(r, cc, forced_cat=None):
             "salary_min": 0 if pred else round(r.get("salary_min") or 0), "salary_max": 0 if pred else round(r.get("salary_max") or 0),
             "category": cat, "url": u, "country": tag, "remote": remote, "posted": (r.get("created") or "")[:10]}
 
+MEMBER_CITIES = collections.Counter()
+UK_CITIES = ["London","Manchester","Birmingham","Leeds","Glasgow","Liverpool","Bristol","Sheffield","Nottingham","Leicester","Newcastle","Cardiff","Edinburgh","Belfast","Southampton","Coventry","Reading","Milton Keynes"]
 reed_calls = 0
-def reed(keywords, skip=0):
+def reed(keywords, skip=0, location=None):
     """Reed.co.uk Jobseeker API (UK). Returns up to 100 results."""
     global reed_calls
     if reed_calls >= REED_BUDGET: return None
     import base64
-    q = urllib.parse.urlencode({"keywords": keywords, "resultsToTake": 100, "resultsToSkip": skip})
+    params = {"keywords": keywords, "resultsToTake": 100, "resultsToSkip": skip}
+    if location: params["locationName"] = location
+    q = urllib.parse.urlencode(params)
     req = urllib.request.Request("https://www.reed.co.uk/api/1.0/search?" + q,
         headers={"Authorization": "Basic " + base64.b64encode((REED_KEY + ":").encode()).decode(), "User-Agent": "ForeverCareers/1.0"})
     reed_calls += 1
@@ -130,6 +135,7 @@ def admin(view):
 def member_signals():
     """Industries, countries, work style from sign-ups; job-title words from uploaded CVs."""
     inds, ctys, work, cvwords = collections.Counter(), collections.Counter(), collections.Counter(), collections.Counter()
+    global MEMBER_CITIES
     su = admin("signups") or {}
     for r in su.get("rows", []):
         if re.search(r"example\.com|forevercareers-test", r.get("email", ""), re.I): continue
@@ -137,6 +143,8 @@ def member_signals():
         lc = r.get("looking_in", ""); m = re.search(r"\b([A-Z]{2})$", lc)
         if m and m.group(1) in CC: ctys[m.group(1)] += 1
         if r.get("work_pref"): work[r["work_pref"]] += 1
+        cm = re.match(r"\s*([A-Za-z .'-]{3,40}),\s*[A-Z]{2}$", lc or "")
+        if cm: MEMBER_CITIES[cm.group(1).strip().title()] += 1
     al = admin("alerts") or {}
     try:
         from pypdf import PdfReader
@@ -156,6 +164,60 @@ def member_signals():
         except Exception as e:
             print("  cv read error", str(e)[:60])
     return inds, ctys, work, cvwords
+
+ENTRY_RX = re.compile(r"\b(assistant|advisor|adviser|agent|operative|trainee|apprentice|graduate|junior|entry|associate|representative|administrator|receptionist|support worker|carer|team member|crew|cashier|picker|packer|driver|cleaner|coordinator)\b", re.I)
+SENIOR_RX = re.compile(r"\b(senior|sr\.?|lead|principal|head of|director|architect|chief|vp|partner|staff engineer|consultant surgeon)\b", re.I)
+
+def fit_scorer(inds, ctys, work, cvwords):
+    terms = []
+    for ind, _ in inds.most_common(5): terms += IND_Q.get(ind, [])
+    terms += [w for w, _ in cvwords.most_common(10)]
+    terms = [t for t in dict.fromkeys(terms) if len(t) > 2]
+    rx = re.compile("|".join(re.escape(t) for t in terms), re.I) if terms else None
+    total_c = sum(ctys.values()) or 1
+    want_remote = work.get("Remote", 0) > 0
+    newest = TODAY.toordinal()
+    def score(j):
+        t = j["title"]; sc = 0.0
+        if rx and rx.search(t + " " + j.get("category", "")): sc += 3
+        if ENTRY_RX.search(t) and not SENIOR_RX.search(t): sc += 2
+        if SENIOR_RX.search(t): sc -= 3
+        if j.get("salary_min") or j.get("salary_max"): sc += 1
+        if want_remote and j.get("remote"): sc += 1
+        sc += 1.5 * ctys.get(j.get("country"), 0) / total_c
+        try: age = newest - datetime.date.fromisoformat(j.get("posted") or "2000-01-01").toordinal()
+        except Exception: age = 30
+        sc += max(0, 1 - age / 21)
+        return sc
+    return score
+
+def dedupe(jobs, score):
+    """One listing per title + company + country; prefer Reed (salary shown more often), then higher fit."""
+    best = {}
+    for j in jobs:
+        key = (re.sub(r"[^a-z0-9]", "", j["title"].lower()), re.sub(r"[^a-z0-9]", "", j["company"].lower()), j["country"])
+        rank = (1 if j["id"] >= REED_ID_OFFSET else 0, score(j), j.get("posted") or "")
+        if key not in best or rank > best[key][0]: best[key] = (rank, j)
+    return [v[1] for v in best.values()]
+
+def select(jobs, score):
+    """Balance sources and countries, then keep the best fits up to CAP."""
+    jobs = sorted(jobs, key=score, reverse=True)
+    reed_j = [j for j in jobs if j["id"] >= REED_ID_OFFSET]; adz_j = [j for j in jobs if j["id"] < REED_ID_OFFSET]
+    reed_quota = min(len(reed_j), int(CAP * REED_SHARE)); adz_quota = CAP - reed_quota
+    chosen, per_c = [], collections.Counter()
+    # every country keeps a base selection of its best-fitting roles
+    for j in adz_j:
+        if j["country"] != "UK" and per_c[j["country"]] < MIN_PER_COUNTRY: chosen.append(j); per_c[j["country"]] += 1
+    ids = {j["id"] for j in chosen}
+    for j in adz_j:
+        if len([x for x in chosen if x["id"] < REED_ID_OFFSET]) >= adz_quota: break
+        if j["id"] not in ids: chosen.append(j); ids.add(j["id"])
+    chosen += reed_j[:reed_quota]
+    if len(chosen) < CAP:  # fill any gap with the next best of either source
+        ids = {j["id"] for j in chosen}
+        chosen += [j for j in jobs if j["id"] not in ids][:CAP - len(chosen)]
+    return chosen
 
 def load_current():
     s = open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), encoding="utf-8").read()
@@ -226,7 +288,19 @@ def main():
                     if j and j["id"] not in fresh: fresh[j["id"]] = j
                 if len(res) < 100: break
             if reed_calls >= REED_BUDGET: break
-        print("reed added:", len(fresh) - n0, "| reed calls", reed_calls, flush=True)
+        # city sweep: members' own cities first, then major UK cities, for the top member queries
+        cities = [c for c, _ in MEMBER_CITIES.most_common(5)] + UK_CITIES
+        cities = list(dict.fromkeys(cities))
+        sweep_q = list(dict.fromkeys(member_q[:6] + ["assistant", "administrator", "warehouse", "retail"]))
+        for city in cities:
+            for q in sweep_q:
+                res = reed(q, 0, city)
+                if res is None: break
+                for r in res:
+                    j = reed_job(r)
+                    if j and j["id"] not in fresh: fresh[j["id"]] = j
+            if reed_calls >= REED_BUDGET: break
+        print("reed added:", len(fresh) - n0, "| reed calls", reed_calls, "| member cities:", dict(MEMBER_CITIES.most_common(5)), flush=True)
     print("fresh pulled:", len(fresh), "| calls", calls, flush=True)
     # merge: keep current jobs that are re-listed or still recent; add fresh
     cutoff = (TODAY - datetime.timedelta(days=MAX_AGE)).isoformat()
@@ -242,7 +316,12 @@ def main():
     for jid, j in fresh.items():
         if jid not in kept: added += 1
         kept[jid] = j
-    jobs = sorted(kept.values(), key=lambda j: (j.get("posted") or ""), reverse=True)[:CAP]
+    score = fit_scorer(inds, ctys, work, cvwords)
+    pool = dedupe(list(kept.values()), score)
+    dupes = len(kept) - len(pool)
+    jobs = select(pool, score)
+    jobs.sort(key=lambda j: (j.get("posted") or ""), reverse=True)
+    print("deduped:", dupes, "| pool:", len(pool), "| selected:", len(jobs), flush=True)
     # write outputs
     data = [dict({k: j[k] for k in ("id","title","company","location","salary_min","salary_max","category","url","country")}, **({"expires": j["expires"]} if j.get("expires") else {})) for j in jobs]
     open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), "w", encoding="utf-8").write("export default " + json.dumps(data, ensure_ascii=False) + ";\n")
@@ -265,7 +344,8 @@ def main():
     h = re.sub(r"const FC_JOBS_UPDATED = '[0-9-]*';", "const FC_JOBS_UPDATED = '%s';" % TODAY.isoformat(), h)
     open(p, "w", encoding="utf-8").write(h)
     open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8").write(h)
-    report = {"total": len(jobs), "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
+    reed_n = sum(1 for j in jobs if j["id"] >= REED_ID_OFFSET)
+    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
               "per_country": meta["per_country"], "member_queries": member_q, "top_member_industries": dict(inds.most_common(5)), "cv_signals": dict(cvwords.most_common(8))}
     print("REPORT " + json.dumps(report), flush=True)
     open(os.path.join(ROOT, "scripts/last_refresh.json"), "w").write(json.dumps(report, indent=2))

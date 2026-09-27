@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { json, adminOk } from "../lib/common.mjs";
 import jobsMeta from "../lib/jobs-meta.mjs";
+import jobsData from "../lib/jobs-data.mjs";
 
 async function stripePayments() {
   const key = process.env.STRIPE_SECRET_KEY; if (!key) return [];
@@ -36,6 +37,29 @@ export default async (req) => {
     const url = new URL(req.url);
     const view = url.searchParams.get("view") || "summary";
     const format = url.searchParams.get("format");
+    if (view === "jobs") {
+      // compact, filterable job list for matching (includes apply links)
+      const q = (url.searchParams.get("q") || "").toLowerCase(), cc = url.searchParams.get("country") || "", cat = (url.searchParams.get("category") || "").toLowerCase();
+      const work = url.searchParams.get("work") || "", limit = Math.min(Number(url.searchParams.get("limit")) || 200, 1000);
+      const rows = jobsData.filter((j) => (!cc || j.country === cc) && (!cat || String(j.category).toLowerCase().includes(cat))
+        && (!q || (j.title + " " + j.company + " " + j.category).toLowerCase().includes(q))
+        && (!work || (work === "remote" ? /remote/i.test(j.location) || j.remote : work === "hybrid" ? /hybrid/i.test(j.location) : true)))
+        .slice(0, limit).map((j) => ({ id: j.id, title: j.title, company: j.company, location: j.location, country: j.country, category: j.category, salary_min: j.salary_min, salary_max: j.salary_max, url: j.url }));
+      return json({ refreshed: jobsMeta.refreshed, total: rows.length, rows });
+    }
+    if (view === "alerts") {
+      // members who uploaded a CV and opted in to twice-daily job matches
+      const cvs = getStore({ name: "cv-files", consistency: "strong" });
+      const users = getStore({ name: "users", consistency: "strong" });
+      const l = await cvs.list(); const out = [];
+      await Promise.all((l.blobs || []).map(async (b) => {
+        const m = ((await cvs.getMetadata(b.key)) || {}).metadata || {};
+        if (m.alerts !== "yes") return;
+        const u = (await users.get(b.key, { type: "json" })) || {};
+        out.push({ key: b.key, email: m.email || u.email, first_name: u.firstName || "", country: u.country || "", city: u.city || "", industry: u.industry || "", work_pref: u.workPref || "", urgency: u.urgency || "", cv_name: m.name, cv_download: "/api/admin?view=cvfile&u=" + encodeURIComponent(b.key), opted_in: m.consentAt || m.uploadedAt });
+      }));
+      return json({ total: out.length, rows: out });
+    }
     if (view === "cvfile") {
       const k = url.searchParams.get("u") || "";
       const got = await getStore({ name: "cv-files", consistency: "strong" }).getWithMetadata(k, { type: "arrayBuffer" });

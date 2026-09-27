@@ -10,12 +10,13 @@ export default async (req) => {
     const fd = await req.formData();
     const f = fd.get("cv");
     if (!f || typeof f === "string") return json({ error: "No file received." }, 400);
+    if (fd.get("consent") !== "yes") return json({ error: "Please tick the box to confirm you want CV matched job alerts." }, 400);
     const name = String(f.name || "cv").slice(0, 120);
     if (!/\.(pdf|doc|docx)$/i.test(name)) return json({ error: "Please upload a PDF or Word document." }, 400);
     if (f.size > 5 * 1024 * 1024) return json({ error: "Your CV must be under 5MB." }, 400);
     const buf = await f.arrayBuffer();
     await getStore({ name: "cv-files", consistency: "strong" }).set(userKey(email), buf, {
-      metadata: { email, name, type: f.type || "", size: f.size, uploadedAt: new Date().toISOString() },
+      metadata: { email, name, type: f.type || "", size: f.size, uploadedAt: new Date().toISOString(), alerts: "yes", consentAt: new Date().toISOString() },
     });
     return json({ ok: true });
   } catch (err) {

@@ -69,6 +69,26 @@ export default async (req) => {
       }));
       return json({ total: out.length, rows: out });
     }
+    if (view === "visits") {
+      const days = Math.min(Math.max(Number(url.searchParams.get("days")) || 30, 1), 90);
+      const store = getStore({ name: "visits", consistency: "strong" });
+      const out = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+        const r = (await store.get(d, { type: "json" })) || { views: 0, uniques: 0, pages: {}, sources: {}, devices: {}, countries: {} };
+        out.push({ date: d, ...r });
+      }
+      const sum = (arr, f) => arr.reduce((a, r) => a + (r[f] || 0), 0);
+      const merge = (arr, f) => { const m = {}; arr.forEach((r) => Object.entries(r[f] || {}).forEach(([k, v]) => { m[k] = (m[k] || 0) + v; })); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+      const last = (n) => out.slice(-n);
+      return json({
+        today: { views: out[out.length - 1].views, uniques: out[out.length - 1].uniques },
+        week: { views: sum(last(7), "views"), uniques: sum(last(7), "uniques") },
+        month: { views: sum(out, "views"), uniques: sum(out, "uniques") },
+        daily: out.map((r) => ({ date: r.date, views: r.views, uniques: r.uniques })),
+        pages: merge(out, "pages"), sources: merge(out, "sources"), devices: merge(out, "devices"), countries: merge(out, "countries"),
+      });
+    }
     if (view === "cvfile") {
       const k = url.searchParams.get("u") || "";
       const got = await getStore({ name: "cv-files", consistency: "strong" }).getWithMetadata(k, { type: "arrayBuffer" });

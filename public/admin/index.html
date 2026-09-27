@@ -69,6 +69,7 @@
     <button data-v="applications">Applications</button>
     <button data-v="cvs">Saved CVs</button>
     <button data-v="payments">Payments</button>
+    <button data-v="visits">Visits</button>
   </div>
   <div class="tools">
     <input id="q" type="search" placeholder="Search by email, role or company">
@@ -81,6 +82,7 @@
 <script>
 (function(){
   var KEY_STORE='fc_admin_k', key='', view='signups', rows=[];
+  try { localStorage.setItem('fc_nocount','1'); } catch(e){}
   var u=new URL(location.href), kq=u.searchParams.get('k');
   if (kq) { try { localStorage.setItem(KEY_STORE,kq); } catch(e){} u.searchParams.delete('k'); history.replaceState({},'',u.pathname); }
   try { key=kq||localStorage.getItem(KEY_STORE)||''; } catch(e){ key=kq||''; }
@@ -115,12 +117,34 @@ $('lock').onclick=function(){ try { localStorage.removeItem(KEY_STORE); } catch(
         stat(s.signups.month,'New in 30 days','') + stat(s.active_week,'Active this week','') +
         stat(s.applications.total,'Apply taps', s.applications.week+' this week') + stat(s.cvs,'Saved CVs','') + stat(s.urgent||0,'Need a job urgently','') +
         stat(s.payments.month,'Payments in 30 days', s.payments.revenue_month) +
+        '<div class="stat" id="visStat"><b>\u2026</b><span>Visitors today</span><em>&nbsp;</em></div>' +
         stat(s.jobs.total.toLocaleString('en-GB'),'Live jobs', 'Refreshed '+fmt(s.jobs.refreshed));
       $('refreshNote').textContent='Job listings last refreshed '+fmt(s.jobs.refreshed)+' from '+s.jobs.source+'. Newest role posted '+s.jobs.newest_posted+'. '+Object.keys(s.jobs.per_country).length+' countries.';
       loadView();
+      api('visits','&days=7').then(function(r){return r.json();}).then(function(v){ var e=$('visStat'); if(e) e.innerHTML='<b>'+v.today.uniques+'</b><span>Visitors today</span><em>'+v.week.uniques+' this week</em>'; }).catch(function(){});
     }).catch(function(){ gate(key ? 'That key did not work. Please check it and try again.' : ''); });
   }
-  function loadView(){ $('tbl').innerHTML='<tr><td class="empty">Loading\u2026</td></tr>'; api(view).then(function(r){ return r.json(); }).then(function(d){ rows=d.rows||[]; render(); }); }
+  function loadVisits(){
+    $('tbl').innerHTML='<tr><td class="empty">Loading\u2026</td></tr>';
+    api('visits','&days=30').then(function(r){ return r.json(); }).then(function(v){
+      var maxV=Math.max(1, Math.max.apply(null, v.daily.map(function(d){ return d.views; })));
+      var bars=v.daily.map(function(d){ var h=Math.round(d.views/maxV*100); return '<div title="'+d.date+': '+d.views+' views, '+d.uniques+' visitors" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:6px"><div style="width:100%;height:'+Math.max(h,2)+'%;background:#5FC9BF;border-radius:4px 4px 0 0;opacity:'+(d.views?1:.25)+'"></div></div>'; }).join('');
+      var lab=function(t){ return {home:'Homepage',jobs:'Browse all roles',pricing:'Pricing',help:'Stuck? / CV help',games:'Games',newsletter:'Newsletter',testimonials:'Testimonials',wellbeing:'How are you?',news:'Forever News',academy:'Courses',legal:'Terms',direct:'Direct / typed in',instagram:'Instagram',google:'Google',facebook:'Facebook',tiktok:'TikTok',linkedin:'LinkedIn',whatsapp:'WhatsApp',phone:'Phone',computer:'Computer',tablet:'Tablet'}[t]||t; };
+      var list=function(title, rows){ var tot=rows.reduce(function(a,r){return a+r[1];},0)||1; return '<div style="flex:1;min-width:230px;background:#0A0D11;border:1px solid var(--line);border-radius:12px;padding:14px"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:.06em">'+title+'</div>'+(rows.length?rows.slice(0,8).map(function(r){ var pc=Math.round(r[1]/tot*100); return '<div style="display:flex;justify-content:space-between;font-size:14px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span>'+esc(lab(r[0]))+'</span><span style="color:var(--muted)">'+r[1]+' &middot; '+pc+'%</span></div>'; }).join(''):'<div style="color:var(--muted);font-size:14px">No data yet</div>')+'</div>'; };
+      $('tbl').innerHTML='<tr><td style="padding:16px">'+
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'+
+          [['Today',v.today],['Last 7 days',v.week],['Last 30 days',v.month]].map(function(x){ return '<div class="stat" style="flex:1;min-width:160px"><b>'+x[1].uniques+'</b><span>Visitors, '+x[0].toLowerCase()+'</span><em>'+x[1].views+' page views</em></div>'; }).join('')+
+        '</div>'+
+        '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.06em">PAGE VIEWS, LAST 30 DAYS</div>'+
+        '<div style="display:flex;gap:3px;height:140px;align-items:stretch;background:#0A0D11;border:1px solid var(--line);border-radius:12px;padding:12px 10px">'+bars+'</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin:6px 2px 18px"><span>'+v.daily[0].date+'</span><span>Today</span></div>'+
+        '<div style="display:flex;gap:12px;flex-wrap:wrap">'+list('WHERE VISITORS COME FROM', v.sources)+list('MOST VIEWED PAGES', v.pages)+'</div>'+
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">'+list('DEVICES', v.devices)+list('COUNTRIES', v.countries)+'</div>'+
+        '<p class="note" style="margin-top:14px">Anonymous totals only. Your own visits are not counted once you have opened your founder or admin link on that device.</p>'+
+      '</td></tr>';
+    }).catch(function(){ $('tbl').innerHTML='<tr><td class="empty">Could not load visits.</td></tr>'; });
+  }
+  function loadView(){ if (view==='visits') { $('csv').style.display='none'; $('q').style.display='none'; return loadVisits(); } $('csv').style.display=''; $('q').style.display=''; $('tbl').innerHTML='<tr><td class="empty">Loading\u2026</td></tr>'; api(view).then(function(r){ return r.json(); }).then(function(d){ rows=d.rows||[]; render(); }); }
   function render(){
     var q=$('q').value.trim().toLowerCase();
     var ht=$('hideTest')&&$('hideTest').checked; var list=rows.filter(function(r){ if (ht && /@(example\.com|forevercareers-test\.com)$/i.test(r.email||'')) return false; return !q || JSON.stringify(r).toLowerCase().indexOf(q)>-1; });

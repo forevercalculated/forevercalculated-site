@@ -76,8 +76,8 @@ export async function getMembership(email) {
 
 // ---- founder admin helpers ----
 export function adminOk(req) {
-  const key = process.env.ADMIN_KEY || "";
   const got = req.headers.get("x-admin-key") || new URL(req.url).searchParams.get("k") || "";
-  if (!key || got.length !== key.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(got), Buffer.from(key));
+  if (!got) return false;
+  return [process.env.ADMIN_KEY, process.env.ADMIN_KEY_2].filter(Boolean).some((key) =>
+    got.length === key.length && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(key)));
 }

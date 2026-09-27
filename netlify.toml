@@ -3,3 +3,14 @@
 
 [functions]
   node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/signup"
+  to = "/?newcustomer=1"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200

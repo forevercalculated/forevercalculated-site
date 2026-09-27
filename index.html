@@ -2393,6 +2393,14 @@
   .jm-on { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #DDE3E8; }
   .jm-on b { color: #5FC9BF; }
   @media (max-width: 640px) { .jm-row { grid-template-columns: 1fr; } .jm-box { padding: 18px; } }
+
+  /* ===== v54: hidden alert must never block taps; clearer close button ===== */
+  .notice:not(.show) { display: none !important; }
+  .notice:not(.show) .notice-card { pointer-events: none !important; }
+  .paywall-close { top: 12px !important; right: 12px !important; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    font-size: 28px !important; color: #FFFFFF !important; background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.22) !important;
+    border-radius: 50%; z-index: 5; line-height: 1 !important; padding: 0 0 2px; }
+  .paywall-close:hover, .paywall-close:focus-visible { background: rgba(255,255,255,0.18) !important; border-color: rgba(255,255,255,0.45) !important; outline: none; }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -3663,7 +3671,7 @@ function hideNotice() {
   const n = document.getElementById('notice');
   n.classList.remove('show');
   clearTimeout(noticeTimer);
-  setTimeout(() => { n.style.display = 'none'; }, 350);
+  setTimeout(() => { n.style.display = ''; }, 350);
 }
 function showNotice(text, opts) {
   if (!text) { hideNotice(); return; }
@@ -3671,7 +3679,7 @@ function showNotice(text, opts) {
   const title = (opts && opts.title) || 'Done';
   document.getElementById('noticeText').textContent = text;
   const t = n.querySelector('.notice-title'); if (t) t.textContent = title;
-  n.style.display = 'flex';
+  n.style.display = '';
   clearTimeout(noticeTimer);
   requestAnimationFrame(() => n.classList.add('show'));
   const closeBtn = document.getElementById('noticeClose');

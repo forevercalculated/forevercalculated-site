@@ -34,9 +34,17 @@ const toCsv = (rows, cols) => [cols.join(","), ...rows.map((r) => cols.map((c) =
 
 export default async (req) => {
   try {
-    if (!adminOk(req)) return json({ error: "Not found" }, 404);
     const url = new URL(req.url);
     const view = url.searchParams.get("view") || "summary";
+    const vk = process.env.VISITS_KEY || "";
+    const gotK = req.headers.get("x-admin-key") || url.searchParams.get("k") || "";
+    const visitsOnly = !!vk && gotK.length === vk.length && crypto.timingSafeEqual(Buffer.from(gotK), Buffer.from(vk));
+    if (!adminOk(req) && !(visitsOnly && view === "visits")) return json({ error: "Not found" }, 404);
+    if (view === "reset-visits" && req.method === "POST") {
+      const vs = getStore({ name: "visits", consistency: "strong" });
+      const l = await vs.list(); await Promise.all((l.blobs || []).map((b) => vs.delete(b.key)));
+      return json({ ok: true, cleared: (l.blobs || []).length });
+    }
     if (view === "delete-user" && (req.method === "POST" || req.method === "DELETE")) {
       const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
       if (!email) return json({ error: "email required" }, 400);

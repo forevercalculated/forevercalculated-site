@@ -2,11 +2,17 @@
 <html lang="en">
 <head>
 <script>
+(function(){ try { var u=new URL(location.href); if (u.searchParams.get('nocount')==='1') { localStorage.setItem('fc_nocount','1'); u.searchParams.delete('nocount'); history.replaceState(null,'',u.pathname+(u.search||'')+u.hash); } } catch(e){} })();
+</script>
+
+<script>
 (function(){
   try {
     var u = new URL(location.href);
     if (u.searchParams.get('newcustomer') === '1') {
+      var keepNc = localStorage.getItem('fc_nocount');
       Object.keys(localStorage).forEach(function(k){ if (k.indexOf('fc_') === 0) localStorage.removeItem(k); });
+      if (keepNc) localStorage.setItem('fc_nocount', keepNc);
       try { sessionStorage.clear(); } catch (e) {}
       u.searchParams.delete('newcustomer');
       history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
@@ -5655,7 +5661,7 @@ window.addEventListener('load', function(){ if (window.FC_NEW_CUSTOMER && typeof
   if (!testMode || typeof logout !== 'function') return;
   var orig = logout;
   window.logout = function(){ var r = orig.apply(this, arguments);
-    try { Object.keys(localStorage).forEach(function(k){ if (k.indexOf('fc_') === 0) localStorage.removeItem(k); }); } catch (e) {}
+    try { var keepNc = localStorage.getItem('fc_nocount'); Object.keys(localStorage).forEach(function(k){ if (k.indexOf('fc_') === 0) localStorage.removeItem(k); }); if (keepNc) localStorage.setItem('fc_nocount', keepNc); } catch (e) {}
     setTimeout(function(){ if (typeof openPaywall === 'function') openPaywall(null, 'signup'); }, 400); return r; };
   try { logout = window.logout; } catch (e) {}
 })();

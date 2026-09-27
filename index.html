@@ -2377,6 +2377,22 @@
   #urgentTimer .ut-note { font-size: 12px; line-height: 1.4; color: #B9C2CA; }
   #urgentTimer .ut-note b { color: #DDE3E8; }
   @media (max-width: 480px) { #urgentTimer { right: 12px; bottom: 100px; width: 208px; padding: 12px 12px 11px; } #urgentTimer .ut-clock { font-size: 23px; } }
+
+  /* ===== v53: job matching box for existing members (Stuck? page) ===== */
+  .jm-box { position: relative; max-width: 1100px; margin: 0 auto 26px; padding: 22px 24px; border-radius: 18px; background: linear-gradient(160deg, rgba(95,201,191,0.12), rgba(61,165,255,0.05)); border: 1px solid rgba(95,201,191,0.55); animation: apGlow 3.2s ease-in-out infinite; box-sizing: border-box; }
+  .jm-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .jm-box h2 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: #F4F6F8; margin: 0 0 6px; }
+  .jm-box p { font-size: 14.5px; line-height: 1.55; color: #B9C2CA; margin: 0 0 14px; max-width: 70ch; }
+  .jm-row { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; margin-bottom: 10px; }
+  .jm-row select, .jm-file { width: 100%; box-sizing: border-box; font: inherit; font-size: 14.5px; color: #F4F6F8; background: rgba(7,9,11,0.6); border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 12px 14px; }
+  .jm-file { display: flex; align-items: center; gap: 10px; border-style: dashed; border-color: rgba(95,201,191,0.55); cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .jm-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .jm-btn { font: inherit; font-size: 15px; font-weight: 700; padding: 12px 20px; border: 0; border-radius: 10px; background: #5FC9BF; color: #06201D; cursor: pointer; }
+  .jm-btn[disabled] { opacity: .6; cursor: default; }
+  .jm-err { color: #F59E8B; font-size: 13.5px; margin-top: 8px; min-height: 1em; }
+  .jm-on { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #DDE3E8; }
+  .jm-on b { color: #5FC9BF; }
+  @media (max-width: 640px) { .jm-row { grid-template-columns: 1fr; } .jm-box { padding: 18px; } }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -5663,6 +5679,58 @@ window.addEventListener('load', function(){ if (window.FC_NEW_CUSTOMER && typeof
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', check);
   else check();
+})();
+</script>
+<script>
+(function(){
+  function tok(){ try { return (typeof token==='function') ? token() : localStorage.getItem('fc_token'); } catch(e){ return null; } }
+  function build(){
+    var v=document.getElementById('viewHelp'); if(!v || document.getElementById('jmBox')) return;
+    var grid=v.querySelector('.help-grid'); if(!grid) return;
+    var box=document.createElement('div'); box.className='jm-box'; box.id='jmBox';
+    grid.parentNode.insertBefore(box, grid);
+    render(box);
+  }
+  function render(box){
+    var t=tok();
+    if(!t){
+      box.innerHTML='<div class="jm-top"><span class="ap-cvbadge">Free</span><span class="ap-opt">New</span></div><h2>Get jobs matched to your CV, twice a day</h2><p>Create a free account, upload your CV and we\u2019ll email you the roles that best match your skills every morning and evening.</p><button type="button" class="jm-btn" id="jmSignup">Create free account</button>';
+      box.querySelector('#jmSignup').onclick=function(){ openPaywall(null,'signup'); };
+      return;
+    }
+    box.innerHTML='<div class="jm-on">Checking your job matching\u2026</div>';
+    fetch('/api/me',{headers:{authorization:'Bearer '+t}}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(d && d.jobAlerts && d.jobAlerts.opted){
+        box.innerHTML='<div class="jm-top"><span class="ap-cvbadge">On</span></div><h2>Job matching is switched on</h2><p>Your CV is saved. We\u2019ll email you the roles that best match it every morning and evening. To stop, just reply "stop" to any match email.</p>';
+        return;
+      }
+      box.innerHTML='<div class="jm-top"><span class="ap-cvbadge">Free</span><span class="ap-opt">For members</span></div>'+
+        '<h2>Get jobs matched to your CV, twice a day</h2>'+
+        '<p>Upload your CV and we\u2019ll email you the Forever Careers roles that best match your skills and experience every morning and evening. Need work urgently? Your first 5 matches arrive within the hour.</p>'+
+        '<div class="jm-row"><select id="jmUrg"><option value="">How soon do you need a job?</option><option value="urgent">Urgently, within 2 weeks</option><option value="month">Within a month</option><option value="quarter">In 1 to 3 months</option><option value="exploring">Just exploring</option></select>'+
+        '<label class="jm-file"><input type="file" id="jmCv" accept=".pdf,.doc,.docx"><span id="jmCvName">\u2191 Upload your CV (PDF or Word)</span></label></div>'+
+        '<label class="ap-consent"><input type="checkbox" id="jmConsent"><span>I\u2019d like Forever Careers to store my CV and email me job matches based on it twice a day. I can unsubscribe at any time by replying "stop".</span></label>'+
+        '<div style="margin-top:12px"><button type="button" class="jm-btn" id="jmGo">Switch on job matching</button></div><div class="jm-err" id="jmErr"></div>';
+      var f=box.querySelector('#jmCv'), n=box.querySelector('#jmCvName');
+      f.onchange=function(){ n.textContent = f.files&&f.files[0] ? f.files[0].name : '\u2191 Upload your CV (PDF or Word)'; };
+      box.querySelector('#jmGo').onclick=function(){
+        var err=box.querySelector('#jmErr'), btn=this, file=f.files&&f.files[0], urg=box.querySelector('#jmUrg').value;
+        err.textContent='';
+        if(!file){ err.textContent='Please choose your CV file.'; return; }
+        if(file.size>5*1024*1024 || !/\.(pdf|doc|docx)$/i.test(file.name)){ err.textContent='Your CV must be a PDF or Word file under 5MB.'; return; }
+        if(!box.querySelector('#jmConsent').checked){ err.textContent='Please tick the box to switch on job matching.'; var w=box.querySelector('.ap-consent'); w.classList.add('need'); setTimeout(function(){w.classList.remove('need');},1600); return; }
+        btn.disabled=true; btn.textContent='Uploading\u2026';
+        var fd=new FormData(); fd.append('cv',file); fd.append('consent','yes'); if(urg) fd.append('urgency',urg);
+        fetch('/api/cv-upload',{method:'POST',headers:{authorization:'Bearer '+tok()},body:fd}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});}).then(function(res){
+          if(!res.ok){ btn.disabled=false; btn.textContent='Switch on job matching'; err.textContent=(res.j&&res.j.error)||'Upload failed. Please try again.'; return; }
+          showNotice(urg==='urgent' ? 'Because you need work urgently, your first 5 matched roles will be emailed to you within the hour.' : 'Job matching is on. Your first matches will arrive by email soon.', { title: 'CV uploaded', duration: 9000 });
+          render(box);
+          if(urg==='urgent') setTimeout(function(){ location.reload(); }, 2500);
+        }).catch(function(){ btn.disabled=false; btn.textContent='Switch on job matching'; err.textContent='Upload failed. Please check your connection.'; });
+      };
+    }).catch(function(){ box.innerHTML=''; });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(build, 50); }); else setTimeout(build, 50);
 })();
 </script>
 </body>

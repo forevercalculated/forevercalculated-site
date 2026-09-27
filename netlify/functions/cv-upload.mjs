@@ -18,6 +18,12 @@ export default async (req) => {
     await getStore({ name: "cv-files", consistency: "strong" }).set(userKey(email), buf, {
       metadata: { email, name, type: f.type || "", size: f.size, uploadedAt: new Date().toISOString(), alerts: "yes", consentAt: new Date().toISOString() },
     });
+    const urg = String(fd.get("urgency") || "");
+    if (["urgent", "month", "quarter", "exploring"].includes(urg)) {
+      const us = getStore({ name: "users", consistency: "strong" });
+      const u = await us.get(userKey(email), { type: "json" });
+      if (u) await us.setJSON(userKey(email), { ...u, urgency: urg });
+    }
     return json({ ok: true });
   } catch (err) {
     console.error(err);

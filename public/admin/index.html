@@ -71,6 +71,7 @@
   </div>
   <div class="tools">
     <input id="q" type="search" placeholder="Search by email, role or company">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A3ACB6"><input type="checkbox" id="hideTest" checked style="width:17px;height:17px;accent-color:#5FC9BF"> Hide test accounts</label>
     <a class="btn primary" id="csv" href="#">Download CSV</a>
   </div>
   <div class="tablewrap"><table id="tbl"></table></div>
@@ -92,7 +93,7 @@
   $('lock').onclick=function(){ try { localStorage.removeItem(KEY_STORE); } catch(e){} key=''; gate(''); };
   $('refresh').onclick=function(){ load(); };
   document.querySelectorAll('.tabs button').forEach(function(b){ b.onclick=function(){ document.querySelectorAll('.tabs button').forEach(function(x){ x.classList.toggle('on',x===b); }); view=b.getAttribute('data-v'); loadView(); }; });
-  $('q').oninput=function(){ render(); };
+  $('q').oninput=function(){ render(); }; $('hideTest').onchange=function(){ render(); };
   $('csv').onclick=function(e){ e.preventDefault(); api(view,'&format=csv').then(function(r){ return r.blob(); }).then(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='forever-careers-'+view+'-'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); a.remove(); }); };
   function stat(n,label,sub){ return '<div class="stat"><b>'+n+'</b><span>'+label+'</span>'+(sub?'<em>'+sub+'</em>':'')+'</div>'; }
   function load(){
@@ -111,7 +112,7 @@
   function loadView(){ $('tbl').innerHTML='<tr><td class="empty">Loading\u2026</td></tr>'; api(view).then(function(r){ return r.json(); }).then(function(d){ rows=d.rows||[]; render(); }); }
   function render(){
     var q=$('q').value.trim().toLowerCase();
-    var list=rows.filter(function(r){ return !q || JSON.stringify(r).toLowerCase().indexOf(q)>-1; });
+    var ht=$('hideTest')&&$('hideTest').checked; var list=rows.filter(function(r){ if (ht && /@(example\.com|forevercareers-test\.com)$/i.test(r.email||'')) return false; return !q || JSON.stringify(r).toLowerCase().indexOf(q)>-1; });
     var h='';
     if (view==='signups') {
       h='<tr><th>Name</th><th>Email</th><th>Joined</th><th>Looking in</th><th>Industry</th><th>Work</th><th>Urgency</th><th>Last active</th><th>Visits</th><th>Apply taps</th><th>CV saved</th></tr>'+list.map(function(r){ return '<tr><td>'+esc((r.first_name+' '+r.last_name).trim()||'Not given')+'</td><td>'+esc(r.email)+'</td><td class="nowrap">'+fmt(r.joined)+'</td><td>'+esc(r.looking_in)+'</td><td>'+esc(r.industry)+'</td><td>'+esc(r.work_pref)+'</td><td>'+(r.urgency.indexOf('Urgently')===0?'<span class="tag" style="border-color:#F59E8B;color:#F59E8B">'+esc(r.urgency)+'</span>':esc(r.urgency))+'</td><td class="nowrap">'+fmt(r.last_active)+'</td><td>'+r.visits+'</td><td>'+r.applications+'</td><td><span class="tag '+(r.cv_saved==='yes'?'':'no')+'">'+r.cv_saved+'</span></td></tr>'; }).join('');

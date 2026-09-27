@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+(function(){
+  try {
+    var u = new URL(location.href);
+    if (u.searchParams.get('newcustomer') === '1') {
+      Object.keys(localStorage).forEach(function(k){ if (k.indexOf('fc_') === 0) localStorage.removeItem(k); });
+      try { sessionStorage.clear(); } catch (e) {}
+      u.searchParams.delete('newcustomer');
+      history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+      window.FC_NEW_CUSTOMER = true;
+      try { sessionStorage.setItem('fc_test_mode', '1'); } catch (e) {}
+    }
+  } catch (e) {}
+})();
+</script>
+
 <meta charset="UTF-8">
 <!-- This site is hosted on Netlify. Anyone can build and deploy a site
      like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=c02510c5-8a48-4119-8003-8ad749cfa381
@@ -5491,6 +5507,17 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
   var ap=document.getElementById('authProfile'), sel=document.getElementById('authEmail'); if (ap && typeof authMode!=='undefined' && authMode!=='signup') ap.style.display='none';
   // copy the site's input styling onto the new selects
   try { var ref=document.getElementById('authEmail'); var cs=getComputedStyle(ref); document.querySelectorAll('#authProfile select, #authProfile input').forEach(function(el){ ['background','border','borderRadius','color','fontSize','padding','height'].forEach(function(k){ el.style[k]=cs[k]; }); }); } catch(e){}
+})();
+</script>
+<script>
+window.addEventListener('load', function(){ if (window.FC_NEW_CUSTOMER && typeof openPaywall === 'function') setTimeout(function(){ openPaywall(null, 'signup'); }, 600); });
+(function(){ var testMode=false; try { testMode = sessionStorage.getItem('fc_test_mode') === '1'; } catch (e) {}
+  if (!testMode || typeof logout !== 'function') return;
+  var orig = logout;
+  window.logout = function(){ var r = orig.apply(this, arguments);
+    try { Object.keys(localStorage).forEach(function(k){ if (k.indexOf('fc_') === 0) localStorage.removeItem(k); }); } catch (e) {}
+    setTimeout(function(){ if (typeof openPaywall === 'function') openPaywall(null, 'signup'); }, 400); return r; };
+  try { logout = window.logout; } catch (e) {}
 })();
 </script>
 </body>

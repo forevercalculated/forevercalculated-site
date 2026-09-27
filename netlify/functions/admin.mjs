@@ -36,14 +36,24 @@ export default async (req) => {
     const url = new URL(req.url);
     const view = url.searchParams.get("view") || "summary";
     const format = url.searchParams.get("format");
+    if (view === "cvfile") {
+      const k = url.searchParams.get("u") || "";
+      const got = await getStore({ name: "cv-files", consistency: "strong" }).getWithMetadata(k, { type: "arrayBuffer" });
+      if (!got) return json({ error: "No CV" }, 404);
+      const nm = (got.metadata && got.metadata.name) || "cv";
+      return new Response(got.data, { headers: { "content-type": (got.metadata && got.metadata.type) || "application/octet-stream", "content-disposition": `attachment; filename="${nm.replace(/"/g, "")}"`, "cache-control": "no-store" } });
+    }
     const wantPay = view === "summary" || view === "payments";
     const [users, activity, applies, cvs, payments] = await Promise.all([all("users"), all("activity"), all("apply-log"), all("cvs"), wantPay ? stripePayments().catch(() => []) : Promise.resolve([])]);
     const DAY = 86400000, now = Date.now();
+    const cvFiles = {};
+    try { const st = getStore({ name: "cv-files", consistency: "strong" }); const l = await st.list(); await Promise.all((l.blobs || []).map(async (b) => { const m = await st.getMetadata(b.key); cvFiles[b.key] = (m && m.metadata) || {}; })); } catch (e) { console.error("cv-files", e); }
     const nameOf = (k) => { const u = users[k] || {}; return { first_name: u.firstName || "", last_name: u.lastName || "" }; };
 
     const signups = Object.entries(users).map(([k, u]) => ({
       first_name: u.firstName || "", last_name: u.lastName || "", email: u.email, joined: u.createdAt || "",
       looking_in: [u.city, ({ ANY: "Anywhere (remote)", OTHER: "Other country" })[u.country] || u.country].filter(Boolean).join(", "), industry: u.industry || "", work_pref: ({ remote: "Remote", hybrid: "Hybrid", onsite: "On site", any: "Open to any" })[u.workPref] || "", urgency: ({ urgent: "Urgently (within 2 weeks)", month: "Within a month", quarter: "In 1 to 3 months", exploring: "Just exploring" })[u.urgency] || "",
+      cv_file: cvFiles[k] ? (cvFiles[k].name || "yes") : "", key: k,
       last_active: (activity[k] && activity[k].lastSeen) || "",
       visits: (activity[k] && activity[k].visits) || 0, applications: (applies[k] && applies[k].events.length) || 0, cv_saved: cvs[k] ? "yes" : "no",
     })).sort((a, b) => String(b.joined).localeCompare(String(a.joined)));
@@ -63,7 +73,7 @@ export default async (req) => {
       });
     }
     const map = {
-      signups: [signups, ["first_name", "last_name", "email", "joined", "looking_in", "industry", "work_pref", "urgency", "last_active", "visits", "applications", "cv_saved"]],
+      signups: [signups, ["first_name", "last_name", "email", "joined", "looking_in", "industry", "work_pref", "urgency", "cv_file", "last_active", "visits", "applications", "cv_saved"]],
       applications: [events, ["first_name", "last_name", "email", "role", "company", "location", "country", "applied_at"]],
       cvs: [cvList, ["first_name", "last_name", "email", "score", "saved_at", "cv_text"]],
       payments: [payments, ["paid_at", "service", "amount", "currency", "name", "email"]],

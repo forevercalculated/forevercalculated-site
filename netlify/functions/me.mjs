@@ -14,7 +14,17 @@ async function handle(req) {
         await act.setJSON(k, { ...(prev || {}), email, lastSeen: new Date(now).toISOString(), visits: ((prev && prev.visits) || 0) + 1 });
       }
     } catch (e) { console.error("activity", e); }
-    return json({ email, ...(await getMembership(email)) });
+    let jobAlerts = null;
+    try {
+      const k = userKey(email);
+      const u = await getStore({ name: "users", consistency: "strong" }).get(k, { type: "json" });
+      const cvMeta = (await getStore({ name: "cv-files", consistency: "strong" }).getMetadata(k)) || null;
+      const meta = cvMeta && cvMeta.metadata;
+      if (u && meta && meta.alerts === "yes") {
+        jobAlerts = { opted: true, urgency: u.urgency || "", firstSentAt: meta.firstSentAt || null, consentAt: meta.consentAt || meta.uploadedAt || null };
+      }
+    } catch (e) { console.error("jobAlerts", e); }
+    return json({ email, jobAlerts, ...(await getMembership(email)) });
   } catch (err) {
     console.error(err);
     return json({ email, active: false, error: "We couldn't check your plan just now. Please try again shortly." }, 503);

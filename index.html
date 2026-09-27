@@ -2360,6 +2360,23 @@
   /* ===== v51: urgent job-matching message ===== */
   .ap-urgent { margin-top: 2px; padding: 11px 12px; border-radius: 10px; background: rgba(245,158,139,0.10); border: 1px solid rgba(245,158,139,0.45); font-size: 12.5px; line-height: 1.5; color: #E8ECEF; text-align: left; }
   .ap-urgent b { color: #FFD2C7; font-weight: 700; }
+
+  /* ===== v52: urgent job-match countdown widget ===== */
+  #urgentTimer { position: fixed; z-index: 640; right: 16px; bottom: 108px; width: 236px; max-width: calc(100vw - 32px);
+    background: linear-gradient(160deg, #10231C 0%, #0B0F13 75%); border: 1px solid rgba(95,201,191,0.5);
+    border-radius: 16px; padding: 14px 14px 13px; box-shadow: 0 14px 34px rgba(0,0,0,0.5), 0 0 22px rgba(95,201,191,0.10);
+    transform: translateY(14px); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s; }
+  #urgentTimer.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  #urgentTimer .ut-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  #urgentTimer .ut-label { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--teal, #5FC9BF); }
+  #urgentTimer .ut-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal, #5FC9BF); animation: utPulse 1.8s ease-in-out infinite; }
+  @keyframes utPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(95,201,191,.55); } 50% { box-shadow: 0 0 0 5px rgba(95,201,191,0); } }
+  #urgentTimer .ut-x { background: none; border: 0; color: #6E7781; font-size: 16px; line-height: 1; cursor: pointer; padding: 0 0 0 8px; }
+  #urgentTimer .ut-x:hover { color: #D6DCE2; }
+  #urgentTimer .ut-clock { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #F4F6F8; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+  #urgentTimer .ut-note { font-size: 12px; line-height: 1.4; color: #B9C2CA; }
+  #urgentTimer .ut-note b { color: #DDE3E8; }
+  @media (max-width: 480px) { #urgentTimer { right: 12px; bottom: 100px; width: 208px; padding: 12px 12px 11px; } #urgentTimer .ut-clock { font-size: 23px; } }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -2485,6 +2502,11 @@
     </svg>
   </div>
 </header>
+<div id="urgentTimer" role="status" aria-live="polite">
+  <div class="ut-top"><span class="ut-label"><span class="ut-dot"></span>Matching in progress</span><button type="button" class="ut-x" id="urgentTimerClose" aria-label="Dismiss">&times;</button></div>
+  <div class="ut-clock" id="urgentTimerClock">60:00</div>
+  <div class="ut-note" id="urgentTimerNote">First 5 matches for your CV. <b>Keep an eye on your email.</b></div>
+</div>
 <div class="notice" id="notice"><div class="notice-card"><span class="notice-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div class="notice-body"><div class="notice-title">Done</div><div id="noticeText"></div></div><button type="button" class="notice-x" id="noticeClose" aria-label="Dismiss">&times;</button></div></div>
 
 <div class="view active" id="viewHome"><section class="hero">
@@ -5591,6 +5613,56 @@ window.addEventListener('load', function(){ if (window.FC_NEW_CUSTOMER && typeof
     m.style.display='';
   }
   u.addEventListener('change', paint); if (cv) cv.addEventListener('change', paint); if (ok) ok.addEventListener('change', paint);
+})();
+</script>
+<script>
+(function(){
+  var KEY = 'fc_urgent_dismissed';
+  var el, clockEl, noteEl, timer;
+  function fmt(ms){ var s=Math.max(0,Math.round(ms/1000)); var m=Math.floor(s/60); var r=s%60; return (m<10?'0':'')+m+':'+(r<10?'0':'')+r; }
+  function stop(){ if(timer) clearInterval(timer); if(el) el.classList.remove('show'); }
+  function tick(deadline){
+    var left = deadline - Date.now();
+    if (left <= 0) {
+      clockEl.textContent = '00:00';
+      noteEl.innerHTML = 'Your first matches should now be in your inbox. <b>Not there yet?</b> Give it a few more minutes.';
+      clearInterval(timer);
+      setTimeout(stop, 20000);
+      return;
+    }
+    clockEl.textContent = fmt(left);
+  }
+  function start(deadline){
+    if (!el) return;
+    if (Date.now() >= deadline + 20 * 60000) return; // don't resurrect very stale timers
+    try { if (sessionStorage.getItem(KEY) === String(deadline)) return; } catch (e) {}
+    el.classList.add('show');
+    tick(deadline);
+    timer = setInterval(function(){ tick(deadline); }, 1000);
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    el = document.getElementById('urgentTimer'); clockEl = document.getElementById('urgentTimerClock'); noteEl = document.getElementById('urgentTimerNote');
+    var closeBtn = document.getElementById('urgentTimerClose');
+    if (closeBtn) closeBtn.addEventListener('click', function(){ try { sessionStorage.setItem(KEY, el.dataset.deadline || '1'); } catch (e) {} stop(); });
+  });
+  function fromData(data){
+    try {
+      if (!data || !data.jobAlerts || !data.jobAlerts.opted || data.jobAlerts.urgency !== 'urgent' || !data.jobAlerts.consentAt) return;
+      var deadline = Date.parse(data.jobAlerts.consentAt) + 60 * 60000;
+      if (Date.now() >= deadline + 20 * 60000) return;
+      if (el) el.dataset.deadline = deadline;
+      start(deadline);
+    } catch (e) {}
+  }
+  function check(){
+    try {
+      var tok = (typeof token === 'function') ? token() : (localStorage.getItem('fc_token') || null);
+      if (!tok) return;
+      fetch('/api/me', { headers: { authorization: 'Bearer ' + tok } }).then(function(r){ return r.ok ? r.json() : null; }).then(fromData).catch(function(){});
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', check);
+  else check();
 })();
 </script>
 </body>

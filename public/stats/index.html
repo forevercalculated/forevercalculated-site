@@ -30,6 +30,7 @@
   .gate { max-width:420px; margin:14vh auto; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:24px; }
   .gate input { width:100%; font:inherit; font-size:15px; color:var(--text); background:#0A0D11; border:1px solid var(--line); border-radius:10px; padding:12px; margin:12px 0; }
   @media (max-width: 640px) { .stats { grid-template-columns:1fr 1fr 1fr; } .stat b { font-size:24px; } .grid2 { grid-template-columns:1fr; } }
+  .mode-badge { display:inline-flex; align-items:center; gap:6px; margin-left:10px; padding:5px 10px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.06em; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -40,7 +41,7 @@
   <div id="err" style="color:#F59E8B;font-size:14px;margin-top:8px"></div>
 </div>
 <div id="app" class="wrap" style="display:none">
-  <header><div class="brand">Forever<span>Careers</span><small>Website visits</small></div><button class="btn" id="ref">Refresh</button></header>
+  <header><div class="brand">Forever<span>Careers</span><span class="mode-badge" style="background:rgba(95,201,191,.14);border:1px solid rgba(95,201,191,.55);color:#5FC9BF">📊 VISITS VIEWER</span><small>Website visits &middot; view only</small></div><button class="btn" id="ref">Refresh</button></header>
   <div class="seg"><button data-d="1">Today</button><button data-d="7">7 days</button><button data-d="30" class="on">30 days</button></div>
   <div class="stats" id="cards"></div>
   <div class="lab" id="chartLab">PAGE VIEWS PER DAY</div>

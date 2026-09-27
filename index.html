@@ -2427,6 +2427,17 @@
   .hf-range { cursor: pointer; }
   .hf-range input[type=range]::-webkit-slider-thumb { pointer-events: none !important; }
   .hf-range input[type=range]::-moz-range-thumb { pointer-events: none !important; }
+
+  /* ===== v57: founder-only mode badge ===== */
+  #fcModeBadge { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); z-index: 650; display: none; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 999px; font: 700 12px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; letter-spacing: .02em; color: #F4F6F8;
+    background: rgba(11,15,19,0.92); border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 6px 20px rgba(0,0,0,.45); white-space: nowrap; cursor: pointer; }
+  #fcModeBadge.show { display: flex; }
+  #fcModeBadge .mb-part { display: inline-flex; align-items: center; gap: 5px; }
+  #fcModeBadge .mb-sep { opacity: .35; }
+  #fcModeBadge .mb-f { color: #FFD28A; } #fcModeBadge .mb-t { color: #9CC8FF; } #fcModeBadge .mb-n { color: #9AA3AD; }
+  #fcModeBadge .mb-tip { display: none; }
+  #fcModeBadge.open .mb-tip { display: inline; font-weight: 500; color: #B9C2CA; margin-left: 4px; }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -5863,6 +5874,28 @@ window.addEventListener('load', function(){ if (window.FC_NEW_CUSTOMER && typeof
     wrapped._fcVisit=true; window.showView=wrapped; try { showView=wrapped; } catch(e){}
   }
   window.addEventListener('load', function(){ setTimeout(function(){ hook(); send('home'); }, 400); });
+})();
+</script>
+<script>
+(function(){
+  function g(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function t(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }
+  function build(){
+    var founder=!!g('fc_founder'), test=t('fc_test_mode')==='1', nocount=g('fc_nocount')==='1';
+    if (!founder && !test && !nocount) return;          // customers never see this
+    var b=document.getElementById('fcModeBadge');
+    if (!b) { b=document.createElement('div'); b.id='fcModeBadge'; b.setAttribute('role','status'); document.body.appendChild(b);
+      b.addEventListener('click', function(){ b.classList.toggle('open'); }); }
+    var parts=[];
+    if (founder) parts.push('<span class="mb-part mb-f">\uD83D\uDCBC Founder mode</span>');
+    if (test) parts.push('<span class="mb-part mb-t">\uD83E\uDDEA Test mode</span>');
+    if (nocount) parts.push('<span class="mb-part mb-n">\uD83D\uDEAB Not counted</span>');
+    var tip = founder ? 'all jobs unlocked' : (test ? 'you are seeing the site as a new customer' : 'your visits are not in the stats');
+    b.innerHTML = parts.join('<span class="mb-sep">\u00B7</span>') + '<span class="mb-tip">\u2014 '+tip+'</span>';
+    b.classList.add('show');
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(build, 300); }); else setTimeout(build, 300);
+  window.addEventListener('storage', build);
 })();
 </script>
 </body>

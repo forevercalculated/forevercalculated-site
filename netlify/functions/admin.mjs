@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import crypto from "node:crypto";
 import { json, adminOk } from "../lib/common.mjs";
 import jobsMeta from "../lib/jobs-meta.mjs";
 import jobsData from "../lib/jobs-data.mjs";
@@ -36,6 +37,14 @@ export default async (req) => {
     if (!adminOk(req)) return json({ error: "Not found" }, 404);
     const url = new URL(req.url);
     const view = url.searchParams.get("view") || "summary";
+    if (view === "delete-user" && (req.method === "POST" || req.method === "DELETE")) {
+      const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
+      if (!email) return json({ error: "email required" }, 400);
+      const key = crypto.createHash("sha256").update(email).digest("hex");
+      const stores = ["users", "activity", "applied-v2", "apply-log", "cvs", "cv-files"];
+      await Promise.all(stores.map((n) => getStore({ name: n, consistency: "strong" }).delete(key).catch(() => {})));
+      return json({ ok: true, email });
+    }
     const format = url.searchParams.get("format");
     if (view === "jobs") {
       // compact, filterable job list for matching (includes apply links)

@@ -458,8 +458,17 @@
   .signup-btn { background: var(--glow); border-color: transparent; color: #fff; margin-left: 8px; }
   .signup-btn:hover { filter: brightness(1.1); }
   .link-btn:hover { border-color: var(--pink); }
-  .notice { display: none; margin: 18px auto 0; max-width: 1080px; padding: 0 28px; }
-  .notice div { background: var(--bg-card); border: 1px solid var(--line); border-left: 3px solid var(--pink); border-radius: 10px; padding: 14px 16px; font-size: 14px; }
+  .notice { display: none; }
+  .notice { position: fixed; top: 0; left: 0; right: 0; z-index: 900; display: flex; justify-content: center; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0; pointer-events: none; }
+  .notice-card { pointer-events: auto; display: flex; align-items: flex-start; gap: 12px; max-width: 480px; width: 100%; background: linear-gradient(160deg, #10231C 0%, #0B0F13 70%); border: 1px solid rgba(95,201,191,0.55); box-shadow: 0 14px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(95,201,191,0.12); border-radius: 16px; padding: 16px 16px 16px 14px; transform: translateY(-24px); opacity: 0; transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s; }
+  .notice.show .notice-card { transform: translateY(0); opacity: 1; }
+  .notice-ic { flex: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(95,201,191,0.16); display: flex; align-items: center; justify-content: center; color: var(--teal, #5FC9BF); }
+  .notice-body { flex: 1; min-width: 0; }
+  .notice-title { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal, #5FC9BF); margin-bottom: 4px; }
+  #noticeText { font-size: 14.5px; line-height: 1.45; color: #EDF1F3; }
+  .notice-x { flex: none; background: none; border: 0; color: #7D8691; font-size: 20px; line-height: 1; cursor: pointer; padding: 2px 4px; margin: -4px -4px 0 0; }
+  .notice-x:hover { color: #F4F6F8; }
+  @media (max-width: 520px) { .notice { padding-left: 12px; padding-right: 12px; } }
   .auth-form { display: grid; gap: 10px; }
   .auth-form input { padding: 13px 14px; border: 1px solid var(--line); background: var(--bg-card); color: var(--text); border-radius: 9px; font: inherit; font-size: 15px; }
   .auth-form input::placeholder { color: var(--text-soft); }
@@ -2476,7 +2485,7 @@
     </svg>
   </div>
 </header>
-<div class="notice" id="notice"><div id="noticeText"></div></div>
+<div class="notice" id="notice"><div class="notice-card"><span class="notice-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div class="notice-body"><div class="notice-title">Done</div><div id="noticeText"></div></div><button type="button" class="notice-x" id="noticeClose" aria-label="Dismiss">&times;</button></div></div>
 
 <div class="view active" id="viewHome"><section class="hero">
   <div class="glow-scene">
@@ -3611,10 +3620,26 @@ async function api(path, opts = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
-function showNotice(text) {
+let noticeTimer = null;
+function hideNotice() {
   const n = document.getElementById('notice');
+  n.classList.remove('show');
+  clearTimeout(noticeTimer);
+  setTimeout(() => { n.style.display = 'none'; }, 350);
+}
+function showNotice(text, opts) {
+  if (!text) { hideNotice(); return; }
+  const n = document.getElementById('notice');
+  const title = (opts && opts.title) || 'Done';
   document.getElementById('noticeText').textContent = text;
-  n.style.display = text ? 'block' : 'none';
+  const t = n.querySelector('.notice-title'); if (t) t.textContent = title;
+  n.style.display = 'flex';
+  clearTimeout(noticeTimer);
+  requestAnimationFrame(() => n.classList.add('show'));
+  const closeBtn = document.getElementById('noticeClose');
+  closeBtn.onclick = hideNotice;
+  const dur = (opts && opts.duration) || 6000;
+  noticeTimer = setTimeout(hideNotice, dur);
 }
 
 function fmtDate(iso) {
@@ -3806,7 +3831,7 @@ async function submitAuth(e) {
     const r = await api('auth', { method: 'POST', body: JSON.stringify({ action: authMode, email, password, firstName, lastName, ...(authMode === 'signup' ? prof : {}) }) });
     if (!r.ok) { err.textContent = r.data.error || 'Something went wrong. Please try again.'; return false; }
     store(TOKEN_KEY, r.data.token); store(EMAIL_KEY, r.data.email);
-    if (authMode === 'signup' && cvF) { try { const fd = new FormData(); fd.append('cv', cvF); fd.append('consent', 'yes'); fetch('/api/cv-upload', { method: 'POST', headers: { authorization: 'Bearer ' + r.data.token }, body: fd }).then(x => { if (x.ok) showNotice(prof.urgency === 'urgent' ? 'Your CV is uploaded. Because you need work urgently, your first 5 matched roles will be emailed to you within the hour.' : 'Your CV is uploaded. Your first job matches will arrive by email soon.'); }).catch(() => {}); } catch (e) {} }
+    if (authMode === 'signup' && cvF) { try { const fd = new FormData(); fd.append('cv', cvF); fd.append('consent', 'yes'); fetch('/api/cv-upload', { method: 'POST', headers: { authorization: 'Bearer ' + r.data.token }, body: fd }).then(x => { if (x.ok) showNotice(prof.urgency === 'urgent' ? 'Because you need work urgently, your first 5 matched roles will be emailed to you within the hour.' : 'Your first job matches will arrive by email soon.', { title: 'CV uploaded', duration: 9000 }); }).catch(() => {}); } catch (e) {} }
     if (authMode === 'signup') { try { const cc = /^[A-Z]{2}$/.test(prof.country) ? prof.country : ''; const f = JSON.parse(localStorage.getItem('fc_filters') || '{}'); f.types = (prof.workPref && prof.workPref !== 'any') ? [prof.workPref] : []; f.country = cc; f.city = prof.city || ''; localStorage.setItem('fc_filters', JSON.stringify(f)); } catch (e) {} }
     if (authMode === 'signup') { try { fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': 'new-signup', first_name: firstName, last_name: lastName, email: r.data.email, looking_in: [prof.city, prof.country].filter(Boolean).join(', '), industry: prof.industry, work_pref: prof.workPref, urgency: prof.urgency, cv_uploaded: cvF ? 'yes, job alerts on' : 'no', signed_up_at: new Date().toISOString() }).toString() }).catch(() => {}); } catch (e) {} }
     document.getElementById('authPassword').value = '';

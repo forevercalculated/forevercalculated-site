@@ -58,6 +58,7 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" id="refresh">Refresh</button>
       <a class="btn" href="/">View site</a>
+      <button class="btn" id="delAcc" style="border-color:#F59E8B;color:#F59E8B">Delete account</button>
       <button class="btn" id="lock">Lock</button>
     </div>
   </header>
@@ -90,7 +91,17 @@
   function gate(msg){ $('app').style.display='none'; $('gate').style.display='block'; $('gateErr').textContent=msg||''; }
   $('keyGo').onclick=function(){ key=$('keyIn').value.trim(); try { localStorage.setItem(KEY_STORE,key); } catch(e){} load(); };
   $('keyIn').onkeydown=function(e){ if(e.key==='Enter') $('keyGo').click(); };
-  $('lock').onclick=function(){ try { localStorage.removeItem(KEY_STORE); } catch(e){} key=''; gate(''); };
+  $('delAcc').onclick=function(){
+  var e=prompt('Email address to delete completely (sign up, activity, applications, saved CV):');
+  if(!e) return;
+  e=e.trim().toLowerCase();
+  if(!confirm('Permanently delete the account for '+e+'? This cannot be undone.')) return;
+  fetch('/api/admin?view=delete-user&email='+encodeURIComponent(e),{method:'POST',headers:{'x-admin-key':key}})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ alert(d.ok?('Deleted: '+e):('Error: '+(d.error||'unknown'))); load(); })
+    .catch(function(){ alert('Request failed.'); });
+};
+$('lock').onclick=function(){ try { localStorage.removeItem(KEY_STORE); } catch(e){} key=''; gate(''); };
   $('refresh').onclick=function(){ load(); };
   document.querySelectorAll('.tabs button').forEach(function(b){ b.onclick=function(){ document.querySelectorAll('.tabs button').forEach(function(x){ x.classList.toggle('on',x===b); }); view=b.getAttribute('data-v'); loadView(); }; });
   $('q').oninput=function(){ render(); }; $('hideTest').onchange=function(){ render(); };

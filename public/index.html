@@ -2401,6 +2401,26 @@
     font-size: 28px !important; color: #FFFFFF !important; background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.22) !important;
     border-radius: 50%; z-index: 5; line-height: 1 !important; padding: 0 0 2px; }
   .paywall-close:hover, .paywall-close:focus-visible { background: rgba(255,255,255,0.18) !important; border-color: rgba(255,255,255,0.45) !important; outline: none; }
+
+  /* ===== v56: responsive salary sliders ===== */
+  .hf-range { touch-action: none; -webkit-user-select: none; user-select: none; }
+  .hf-range input[type=range] { touch-action: none; }
+  .hf-range input[type=range]:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.12); }
+  .hf-range input.hf-top { z-index: 3; }
+  @media (pointer: coarse) {
+    .hf-range { height: 40px; }
+    .hf-range .hf-track, .hf-range .hf-fill { top: 18px; }
+    .hf-range input[type=range] { top: 4px; height: 32px; }
+    .hf-range input[type=range]::-webkit-slider-thumb { width: 28px; height: 28px; }
+    .hf-range input[type=range]::-moz-range-thumb { width: 26px; height: 26px; }
+  }
+  .bj-more { display: block; width: 100%; margin: 14px 0 4px; padding: 14px; font: inherit; font-size: 15px; font-weight: 700; color: #F4F6F8; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; cursor: pointer; }
+  .bj-more:hover { background: rgba(255,255,255,0.1); }
+
+  /* ===== v56b: whole salary bar is draggable ===== */
+  .hf-range { cursor: pointer; }
+  .hf-range input[type=range]::-webkit-slider-thumb { pointer-events: none !important; }
+  .hf-range input[type=range]::-moz-range-thumb { pointer-events: none !important; }
 </style><script>(function(){function k(){['nl-badge-frame','nl-hud-frame'].forEach(function(i){var e=document.getElementById(i);if(e)e.remove();});}k();new MutationObserver(k).observe(document.documentElement,{childList:true,subtree:true});})();</script><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -3559,7 +3579,7 @@ function formatSalary(min, max, country) {
 function renderJobs() {
   const _cSel = document.getElementById('countrySel');
   if (_cSel) {
-    const sym = _cSel.value === 'US' ? '$' : (_cSel.value === 'UK' ? '£' : '£/$');
+    const sym = ({UK:'£',US:'$',CA:'C$',AU:'A$',NZ:'NZ$',SG:'S$',ZA:'R',IN:'₹',DE:'€',FR:'€',NL:'€',ES:'€',IT:'€',BE:'€',AT:'€',CH:'CHF',PL:'zł',BR:'R$',MX:'MX$'})[_cSel.value] || '£/$';
     const a = document.getElementById('curMinSym'), b = document.getElementById('curMaxSym');
     if (a) a.textContent = sym;
     if (b) b.textContent = sym;
@@ -3572,6 +3592,8 @@ function renderJobs() {
 
   const salMin = parseFloat(document.getElementById('salMin')?.value) || 0;
   const salMax = parseFloat(document.getElementById('salMax')?.value) || Infinity;
+  const salOn = salMin > 0 || salMax !== Infinity;
+  const countrySel = document.getElementById('countrySel')?.value || '';
   const anyChip = activeChips.remote || activeChips.hybrid || activeChips.onsite;
 
   const city = (document.getElementById('citySearch')?.value || '').trim().toLowerCase();
@@ -3581,10 +3603,9 @@ function renderJobs() {
     const matchesCat = !cat || j.category === cat;
     const top = j.salary_max || j.salary_min || 0;
     const bottom = j.salary_min || j.salary_max || 0;
-    const matchesSalary = top >= salMin && bottom <= salMax;
+    const matchesSalary = !salOn || (top > 0 && top >= salMin && bottom <= salMax);
     const wt = inferWorkType(j);
     const matchesType = !anyChip || activeChips[wt];
-    const countrySel = document.getElementById('countrySel')?.value || '';
     const matchesCountry = !countrySel || (j.country || 'UK') === countrySel;
     return matchesQ && matchesCity && matchesCat && matchesSalary && matchesType && matchesCountry;
   });
@@ -3598,7 +3619,9 @@ function renderJobs() {
   }
   empty.style.display = 'none';
 
-  deduped.forEach(j => {
+  const PAGE = 40;
+  let shown = 0;
+  const drawRow = j => {
     const row = document.createElement('div');
     row.className = 'job-row';
     const info = document.createElement('div');
@@ -3616,7 +3639,17 @@ function renderJobs() {
     btn.onclick = () => fcApply(j.id);
     row.append(info, btn);
     list.appendChild(row);
-  });
+  };
+  const more = document.createElement('button');
+  more.type = 'button'; more.className = 'bj-more';
+  const drawNext = () => {
+    const end = Math.min(deduped.length, shown + PAGE);
+    for (; shown < end; shown++) drawRow(deduped[shown]);
+    if (shown < deduped.length) { more.textContent = 'Show more roles (' + (deduped.length - shown).toLocaleString() + ' more)'; list.appendChild(more); }
+    else if (more.parentNode) more.parentNode.removeChild(more);
+  };
+  more.onclick = () => { if (more.parentNode) more.parentNode.removeChild(more); drawNext(); };
+  drawNext();
 }
 
 // ---------- accounts & membership ----------
@@ -4897,7 +4930,7 @@ try { if (localStorage.getItem('fc_seen_qs')) document.getElementById('quickSear
   var panel=document.querySelector('.hero .search-panel'); if (!panel || typeof JOBS==='undefined') return;
   var sal=function(j){ return j.salary_max || j.salary_min || 0; };
   var top=0; JOBS.forEach(function(j){ var v=sal(j); if (v>top && v<250000) top=v; });
-  var MAX=Math.max(50000, Math.ceil(top/10000)*10000), STEP=1000;
+  var MAX=150000, STEP=1000;
   var DEF={types:[], country:'', city:'', smin:0, smax:MAX};
   var st; try { st=JSON.parse(localStorage.getItem('fc_filters')||'null'); } catch(e){ st=null; }
   st=Object.assign({}, DEF, st||{}); if (st.smax>MAX) st.smax=MAX;
@@ -4931,7 +4964,8 @@ try { if (localStorage.getItem('fc_seen_qs')) document.getElementById('quickSear
     box.querySelector('#hfSalVal').textContent=sym()+k(st.smin)+' – '+sym()+k(st.smax)+(st.smax>=MAX?'+':'');
   }
   function save(){ try { localStorage.setItem('fc_filters', JSON.stringify(st)); } catch(e){} }
-  function update(){ paint(); save(); if (typeof renderPreview==='function') renderPreview(); }
+  var hfRaf=0;
+  function update(){ paint(); save(); if (hfRaf) return; hfRaf=requestAnimationFrame(function(){ hfRaf=0; if (typeof renderPreview==='function') renderPreview(); }); }
 
   window.fcHF=function(){
     var active = st.types.length || st.country || st.city.trim() || st.smin>0 || st.smax<MAX;
@@ -4957,8 +4991,8 @@ try { if (localStorage.getItem('fc_seen_qs')) document.getElementById('quickSear
     var i=st.types.indexOf(b.dataset.t); if (i>-1) st.types.splice(i,1); else st.types.push(b.dataset.t); update(); }); });
   var hcs0=box.querySelector('.hf-country'); if (hcs0) hcs0.addEventListener('change', function(){ st.country=hcs0.value; update(); });
   city.addEventListener('input', function(){ st.city=city.value; update(); });
-  mn.addEventListener('input', function(){ st.smin=Math.min(+mn.value, st.smax-STEP); update(); });
-  mx.addEventListener('input', function(){ st.smax=Math.max(+mx.value, st.smin+STEP); update(); });
+  mn.addEventListener('input', function(){ st.smin=Math.max(0, Math.min(+mn.value, st.smax-STEP)); update(); });
+  mx.addEventListener('input', function(){ st.smax=Math.min(MAX, Math.max(+mx.value, st.smin+STEP)); update(); });
   box.querySelector('#hfReset').addEventListener('click', window.fcHFReset);
 
   // carry the same filters into Browse all roles when they press Search / Enter
@@ -4991,7 +5025,7 @@ try { if (localStorage.getItem('fc_seen_qs')) document.getElementById('quickSear
 
   var sal=function(j){ return j.salary_max || j.salary_min || 0; };
   var top=0; JOBS.forEach(function(j){ var v=sal(j); if (v>top && v<250000) top=v; });
-  var MAX=Math.max(50000, Math.ceil(top/10000)*10000), STEP=1000;
+  var MAX=150000, STEP=1000;
   var smin=document.getElementById('salMin'), smax=document.getElementById('salMax'), cs=document.getElementById('countrySel');
 
   // work type block
@@ -5022,8 +5056,12 @@ try { if (localStorage.getItem('fc_seen_qs')) document.getElementById('quickSear
     var sy = cs && cs.value ? ({UK:'£',US:'$',CA:'C$',AU:'A$',NZ:'NZ$',SG:'S$',ZA:'R',IN:'₹',DE:'€',FR:'€',NL:'€',ES:'€',IT:'€',BE:'€',AT:'€',CH:'CHF ',PL:'zł ',BR:'R$',MX:'MX$'}[cs.value]||'') : '';
     sb.querySelector('#bjSalVal').textContent=sy+k(lo)+' – '+sy+k(hi)+(hi>=MAX?'+':'');
   }
-  bmin.addEventListener('input', function(){ var hi=+bmax.value; var v=Math.min(+bmin.value, hi-STEP); smin.value = v>0 ? v : ''; renderJobs(); });
-  bmax.addEventListener('input', function(){ var lo=+bmin.value; var v=Math.max(+bmax.value, lo+STEP); smax.value = v<MAX ? v : ''; renderJobs(); });
+  var bjRaf=0; function bjSoon(){ if (bjRaf) return; bjRaf=requestAnimationFrame(function(){ bjRaf=0; renderJobs(); }); }
+  bmin.addEventListener('input', function(){ var hi=+bmax.value; var v=Math.min(+bmin.value, hi-STEP); if (v<0) v=0; smin.value = v>0 ? v : ''; paint(); bjSoon(); });
+  bmax.addEventListener('input', function(){ var lo=+bmin.value; var v=Math.max(+bmax.value, lo+STEP); if (v>MAX) v=MAX; smax.value = v<MAX ? v : ''; paint(); bjSoon(); });
+  // typing in the Min / Max boxes keeps the slider in step too
+  [smin, smax].forEach(function(el){ if (el) el.addEventListener('input', function(){ try { paint(); } catch(e){} }); });
+  if (cs) cs.addEventListener('change', function(){ try { paint(); } catch(e){} });
   foot.querySelector('#bjReset').addEventListener('click', function(){
     ['jobsSearch','citySearch','salMin','salMax'].forEach(function(id){ var e=document.getElementById(id); if (e) e.value=''; });
     var c=document.getElementById('cat'); if (c) c.value=''; if (cs) cs.value='';
@@ -5740,6 +5778,54 @@ window.addEventListener('load', function(){ if (window.FC_NEW_CUSTOMER && typeof
     }).catch(function(){ box.innerHTML=''; });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(build, 50); }); else setTimeout(build, 50);
+})();
+</script>
+<script>
+(function(){
+  // Drag anywhere on a salary bar: the nearest handle follows your finger or mouse.
+  function wire(r){
+    if (r.dataset.fcWired) return; r.dataset.fcWired='1';
+    var ins=r.querySelectorAll('input[type=range]'); if (ins.length<2) return;
+    var lo=ins[0], hi=ins[1], active=null, pid=null, pending=null, x0=0;
+    var max=function(){ return +lo.max||1; }, step=function(){ return +lo.step||1; };
+    function valAt(x){
+      var b=r.getBoundingClientRect(), pad=12, f=(x-b.left-pad)/Math.max(1,(b.width-2*pad));
+      f=Math.max(0,Math.min(1,f)); return Math.round(f*max()/step())*step();
+    }
+    function set(inp,v){ if (+inp.value===v && inp._fcLast===v) return; inp._fcLast=v; inp.value=v; inp.dispatchEvent(new Event('input',{bubbles:true})); }
+    function choose(v){
+      var a=+lo.value, b=+hi.value;
+      if (v<=a) return lo; if (v>=b) return hi;
+      return (v-a)<=(b-v) ? lo : hi;
+    }
+    function mark(){ lo.classList.toggle('hf-top',active===lo); hi.classList.toggle('hf-top',active===hi); }
+    function start(x){
+      var v=valAt(x), a=+lo.value, b=+hi.value, near=Math.abs(v-a)<=3*step()||Math.abs(v-b)<=3*step();
+      // handles squeezed together and you pressed on them: wait to see which way you drag
+      if (b-a<=3*step() && near) { pending=v; x0=x; active=null; return; }
+      pending=null; active=choose(v); mark(); set(active,v);
+    }
+    r.addEventListener('pointerdown', function(e){
+      if (e.button>0) return; e.preventDefault(); pid=e.pointerId;
+      try { r.setPointerCapture(pid); } catch(_){}
+      start(e.clientX);
+    });
+    r.addEventListener('pointermove', function(e){
+      if (e.pointerId!==pid) return;
+      if (!active && pending!==null) { if (Math.abs(e.clientX-x0)<3) return; active = e.clientX<x0 ? lo : hi; pending=null; mark(); }
+      if (!active) return;
+      var v=valAt(e.clientX);
+      // dragged one handle past the other: hand over so the bar keeps following you
+      if (active===hi && v < +lo.value) { active=lo; mark(); }
+      else if (active===lo && v > +hi.value) { active=hi; mark(); }
+      set(active, v);
+    });
+    function end(e){ if (e.pointerId===pid){ active=null; pending=null; pid=null; try { r.releasePointerCapture(e.pointerId); } catch(_){} } }
+    r.addEventListener('pointerup', end); r.addEventListener('pointercancel', end);
+  }
+  function all(){ document.querySelectorAll('.hf-range').forEach(wire); }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', all); else all();
+  setTimeout(all, 1500);
 })();
 </script>
 </body>

@@ -2190,8 +2190,8 @@
   @media (min-width: 900px) { .fc-bottom-cards .hero-side { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 20px !important; } .fc-bottom-cards .hero-side > :not([style*='display: none']) { flex: 1 1 0 !important; min-width: 0 !important; } }
 
   /* ===== v40: phone pages for Academy, How are you?, Forever News ===== */
-  @media (min-width: 900px) { .fcp-nav { display: none !important; } }
-  @media (max-width: 899px) { #wellbeingNewsTop { display: none !important; } }
+  #wellbeingNewsTop { display: none !important; }
+  @media (min-width: 900px) { .fcp-well, .fcp-news { max-width: 760px; padding-top: 36px; } }
   .fcp { background: var(--bg); }
   .fcp-wrap { max-width: 640px; margin: 0 auto; padding: 22px 20px 110px; box-sizing: border-box; }
   .fcp-back { font: inherit; font-size: 14px; font-weight: 600; color: #C9D0D7; background: transparent; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 9px 14px; cursor: pointer; margin-bottom: 26px; }
@@ -5412,7 +5412,6 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
 <script>
 (function(){
   var MQ = window.matchMedia('(max-width: 899px)');
-  if (!MQ.matches) return;
   var TIPS=[
     ["Rest","Step away from job boards for ten minutes every hour. A rested mind writes a sharper application."],
     ["Perspective","A rejection is about fit on the day, not about your worth. It says nothing about what you can do."],
@@ -5436,6 +5435,7 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
   function mkView(id, html){ var v=document.createElement('div'); v.className='view fcp'; v.id=id; v.innerHTML=html; anchor.parentNode.insertBefore(v, anchor.nextSibling); return v; }
   var back = '<button type="button" class="fcp-back" onclick="showView(\'home\')">&larr; Home</button>';
 
+  if (MQ.matches) {
   /* ---------- Academy ---------- */
   var vA = mkView('viewAcademy', '<section class="fcp-wrap fcp-academy">'+back+'<div class="fcp-path">forever://academy</div><h1 class="fcp-h1">Forever Careers Academy</h1><p class="fcp-lede">Short online courses from trusted providers. Learn at your own pace and add real, recognised skills to your CV.</p><div id="fcpAcademyBody"></div></section>');
   var crs = document.getElementById('coursesTop');
@@ -5448,6 +5448,7 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
     vA.querySelectorAll('.crs-go').forEach(function(el){ el.innerHTML = el.textContent.replace(/\s*\u2192\s*$/, '').trim(); });
   }
 
+  }
   /* ---------- Wellbeing ---------- */
   var moods = [['great','Great','#5FC9BF'],['good','Good','#7FD8A6'],['okay','Okay','#C9D0D7'],['low','Low','#A78BFA'],['struggling','Struggling','#F59E8B']];
   var moodReply = {
@@ -5547,7 +5548,7 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
   paintNews();
 
   /* ---------- routing ---------- */
-  var MINE = { academy:'viewAcademy', wellbeing:'viewWellbeing', news:'viewNews' };
+  var MINE = MQ.matches ? { academy:'viewAcademy', wellbeing:'viewWellbeing', news:'viewNews' } : { wellbeing:'viewWellbeing', news:'viewNews' };
   var orig = window.showView;
   window.showView = function(name){
     Object.keys(MINE).forEach(function(k){ var el=document.getElementById(MINE[k]); if (el) el.classList.remove('active'); });
@@ -5565,7 +5566,7 @@ document.addEventListener('DOMContentLoaded', cvoPkg); setTimeout(cvoPkg, 0);
 
   /* ---------- sidebar ---------- */
   var navC=document.getElementById('navCourses');
-  if (navC) navC.setAttribute('onclick', "showView('academy')");
+  if (navC && MQ.matches) navC.setAttribute('onclick', "showView('academy')");
   var mkNav=function(id, label, view, svg){ var b=document.createElement('button'); b.id=id; b.type='button'; b.className='fcp-nav'; b.innerHTML=svg+' '+label; b.addEventListener('click', function(){ showView(view); document.body.classList.remove('nav-open'); var t=document.querySelector('.sn-toggle'); if(t){ t.setAttribute('aria-expanded','false'); var l=t.querySelector('.sn-label'); if(l) l.textContent='Menu'; } }); return b; };
   if (navC && navC.parentNode) {
     var hb=mkNav('navWellbeing','How are you?','wellbeing','<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>');

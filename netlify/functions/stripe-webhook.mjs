@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { getBilling, setBilling, linkCustomer, emailForCustomer, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor } from "../lib/billing.mjs";
+import { setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor } from "../lib/billing.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
 
 const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { status: 200, headers: { "content-type": "application/json" } });
@@ -7,19 +7,6 @@ const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { 
 async function nameFor(email) {
   try { const u = await getStore({ name: "users", consistency: "strong" }).get(userKey(email), { type: "json" }); return (u && u.firstName) || ""; } catch { return ""; }
 }
-const periodEnd = (sub) => sub.current_period_end || (sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].current_period_end) || null;
-
-async function applySubscription(sub, hintEmail) {
-  const email = normEmail((sub.metadata && sub.metadata.email) || hintEmail || (await emailForCustomer(sub.customer)) || "");
-  if (!email) { console.error("webhook: no email for subscription", sub.id); return null; }
-  await linkCustomer(sub.customer, email);
-  const patch = { customerId: sub.customer, subscriptionId: sub.id, status: sub.status, trialEnd: sub.trial_end || null, currentPeriodEnd: periodEnd(sub), cancelAtPeriodEnd: !!sub.cancel_at_period_end };
-  if (sub.trial_end || sub.status === "trialing" || sub.status === "active") patch.trialUsed = true;
-  const prev = await getBilling(email);
-  const saved = await setBilling(email, patch);
-  return { email, prev, saved };
-}
-
 async function handleEvent(ev) {
   const o = ev.data && ev.data.object;
   switch (ev.type) {

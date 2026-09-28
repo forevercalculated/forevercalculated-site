@@ -13,6 +13,6 @@ async function handle(req) {
 }
 export default async (req) => {
   try { return await handle(req); }
-  catch (err) { console.error(err); return json({ error: "We couldn't open your billing page just now. Please try again." }, 500); }
+  catch (err) { console.error(err); return json({ error: "We couldn't open your billing page just now. Please try again.", ...(process.env.BILLING_MODE === "test" ? { detail: String(err && err.message).slice(0, 300) } : {}) }, 500); }
 };
 export const config = { path: "/api/portal" };

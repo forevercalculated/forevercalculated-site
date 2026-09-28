@@ -28,10 +28,44 @@ export async function emailForCustomer(customerId) {
   return null;
 }
 
+const periodEnd = (sub) => sub.current_period_end || (sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].current_period_end) || null;
+
+export async function applySubscription(sub, hintEmail) {
+  const email = normEmail((sub.metadata && sub.metadata.email) || hintEmail || (await emailForCustomer(sub.customer)) || "");
+  if (!email) { console.error("billing: no email for subscription", sub.id); return null; }
+  await linkCustomer(sub.customer, email);
+  const patch = { customerId: sub.customer, subscriptionId: sub.id, status: sub.status, trialEnd: sub.trial_end || null, currentPeriodEnd: periodEnd(sub), cancelAtPeriodEnd: !!sub.cancel_at_period_end };
+  if (sub.trial_end || sub.status === "trialing" || sub.status === "active") patch.trialUsed = true;
+  const prev = await getBilling(email);
+  const saved = await setBilling(email, patch);
+  return { email, prev, saved };
+}
+
+// Safety net: if a webhook was missed or is late, ask Stripe directly (at most once a minute per person).
+export async function reconcile(email, billing) {
+  try {
+    if (!billing || !billing.customerId) return billing;
+    const now = Date.now();
+    const st = billing.status;
+    const live = st === "trialing" || st === "active" || st === "past_due";
+    const overdue = (billing.trialEnd && billing.trialEnd * 1000 < now) || (billing.currentPeriodEnd && billing.currentPeriodEnd * 1000 < now);
+    if (live && !overdue) return billing;
+    const last = billing.reconciledAt ? Date.parse(billing.reconciledAt) : 0;
+    if (now - last < 60000) return billing;
+    const list = await stripe("GET", `subscriptions?customer=${encodeURIComponent(billing.customerId)}&status=all&limit=5`);
+    const subs = (list.data || []).sort((a, b) => b.created - a.created);
+    const pick = subs.find((x) => ["trialing", "active", "past_due"].includes(x.status)) || subs[0];
+    if (pick) await applySubscription(pick, email);
+    await setBilling(email, { reconciledAt: new Date().toISOString() });
+    return await getBilling(email);
+  } catch (e) { console.error("reconcile", e); return billing; }
+}
+
 export async function membershipFor(email) {
   const e = normEmail(email);
   if (!enforcedFor(e)) return decideMembership({ enforced: false });
-  const [user, billing] = await Promise.all([users().get(userKey(e), { type: "json" }), getBilling(e)]);
+  const [user, b0] = await Promise.all([users().get(userKey(e), { type: "json" }), getBilling(e)]);
+  const billing = await reconcile(e, b0);
   return decideMembership({ enforced: true, user, billing, now: Date.now(), launchMs: launchMs() });
 }
 export async function trialFor(email) {

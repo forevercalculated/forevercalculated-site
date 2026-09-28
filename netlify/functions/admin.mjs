@@ -85,14 +85,23 @@ export default async (req) => {
       // members who uploaded a CV and opted in to twice-daily job matches
       const cvs = getStore({ name: "cv-files", consistency: "strong" });
       const users = getStore({ name: "users", consistency: "strong" });
-      const l = await cvs.list(); const out = [];
+      // Only members with access (free trial, paying, or inside the launch countdown) are returned,
+      // so the job-match emails stop for anyone whose trial ended without paying. ?all=1 shows everyone.
+      const billing = getStore({ name: "billing", consistency: "strong" });
+      const showAll = url.searchParams.get("all") === "1";
+      const now = Date.now(), lm = launchMsFrom(process.env);
+      const l = await cvs.list(); const out = []; let skipped = 0;
       await Promise.all((l.blobs || []).map(async (b) => {
         const m = ((await cvs.getMetadata(b.key)) || {}).metadata || {};
         if (m.alerts !== "yes") return;
         const u = (await users.get(b.key, { type: "json" })) || {};
-        out.push({ key: b.key, email: m.email || u.email, first_name: u.firstName || "", country: u.country || "", city: u.city || "", industry: u.industry || "", work_pref: u.workPref || "", urgency: u.urgency || "", cv_name: m.name, cv_download: "/api/admin?view=cvfile&u=" + encodeURIComponent(b.key), opted_in: m.consentAt || m.uploadedAt });
+        const email = m.email || u.email;
+        if (!u.email) { skipped++; return; } // account deleted
+        const mem = decideMembership({ enforced: billingEnforced(process.env, email), user: u, billing: (await billing.get(b.key, { type: "json" })) || null, now, launchMs: lm });
+        if (!mem.active && !showAll) { skipped++; return; }
+        out.push({ key: b.key, email, first_name: u.firstName || "", country: u.country || "", city: u.city || "", industry: u.industry || "", work_pref: u.workPref || "", urgency: u.urgency || "", cv_name: m.name, cv_download: "/api/admin?view=cvfile&u=" + encodeURIComponent(b.key), opted_in: m.consentAt || m.uploadedAt, plan: mem.plan, access: mem.active ? "active" : "no access" });
       }));
-      return json({ total: out.length, rows: out });
+      return json({ total: out.length, skipped_no_access: skipped, rows: out });
     }
     if (view === "visits") {
       const days = Math.min(Math.max(Number(url.searchParams.get("days")) || 30, 1), 90);

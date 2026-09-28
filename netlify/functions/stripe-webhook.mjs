@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor } from "../lib/billing.mjs";
+import { setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong } from "../lib/billing.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
 
 const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { status: 200, headers: { "content-type": "application/json" } });
@@ -18,7 +18,12 @@ async function handleEvent(ev) {
     }
     case "customer.subscription.created":
     case "customer.subscription.updated": {
-      await applySubscription(o);
+      const r = await applySubscription(o);
+      if (r && o.status === "trialing" && o.trial_end && enforcedFor(r.email) && r.saved.welcomedFor !== o.id && !(r.prev && r.prev.welcomedFor)) {
+        const name = await nameFor(r.email);
+        await sendEmail({ to: r.email, ...mail.welcome(name, fmtLong(o.trial_end * 1000)) });
+        await setBilling(r.email, { welcomedFor: o.id, welcomedAt: new Date().toISOString() });
+      }
       return;
     }
     case "customer.subscription.deleted": {

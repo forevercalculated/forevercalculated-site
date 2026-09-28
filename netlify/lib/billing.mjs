@@ -144,7 +144,22 @@ const wrap = (inner) => `<div style="font-family:-apple-system,Segoe UI,Arial,sa
 const btn = (href, label) => `<p style="margin:22px 0"><a href="${href}" style="background:#0b0f13;color:#fff;text-decoration:none;padding:13px 22px;border-radius:8px;font-weight:600;display:inline-block">${label}</a></p>`;
 const first = (n) => (n ? `Hi ${n},` : "Hi,");
 
+const li = (t) => `<tr><td style="padding:0 10px 10px 0;vertical-align:top;color:#16A672;font-weight:700">&#10003;</td><td style="padding:0 0 10px">${t}</td></tr>`;
 export const mail = {
+  welcome: (name, dateText) => ({ subject: `Welcome to Forever Careers${name ? ", " + name : ""}. Your free trial has started`, html: wrap(`<p>${first(name)}</p>
+<p>Welcome to Forever Careers. We're so glad you're here, and thank you for trusting us with something as important as your next job.</p>
+<p>Looking for work can feel lonely. You don't have to do it on your own any more. You've just joined a community of people across 19 countries who are moving forward together, and from today we're in your corner.</p>
+<p style="margin:22px 0 10px"><b>Here's what your 14-day free trial includes</b></p>
+<table style="border-collapse:collapse;font-size:15px;line-height:1.5">
+${li("<b>Full access to our job board.</b> Thousands of live remote, hybrid and on-site roles across 19 countries, with direct links to apply.")}
+${li("<b>Jobs matched to your CV, twice a day.</b> Every morning and evening we send you the roles that best fit your skills and experience, straight to your inbox.")}
+${li("<b>Roles you can trust.</b> We check the board every day and remove closed and duplicate listings, so your time goes on real opportunities.")}
+</table>
+<p style="margin-top:18px">Your free trial runs until <b>${dateText}</b>. After that it's <b>£50 a month</b>, and you can cancel at any time from <b>Manage plan</b> on the site. No awkward phone calls, no fuss. We'll send you a reminder before your trial ends.</p>
+${btn(SITE, "Start exploring your roles")}
+<p>If anything doesn't feel right, or you'd just like to talk something through, email us at <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>. We read every message and we'll get back to you.</p>
+<p>Here's to your next role.</p>
+<p>Kenneth and the Forever Careers team</p>`) }),
   paymentCancelled: (name, link) => ({ subject: "Your Forever Careers account has been cancelled", html: wrap(`<p>${first(name)}</p><p>We couldn't take your £50 monthly payment, so your Forever Careers account has been cancelled and your job emails have stopped.</p><p>To restart, make your payment with the secure link below. Your account reactivates automatically with the same login details.</p>${btn(link, "Pay £50 and reactivate")}<p>If you think this is a mistake, just reply to this email.</p>`) }),
   userCancelled: (name, link) => ({ subject: "Your Forever Careers plan has been cancelled", html: wrap(`<p>${first(name)}</p><p>Your Forever Careers plan is cancelled, so you won't be charged again.</p><p>If you change your mind, you can restart any time and your login stays the same.</p>${btn(link, "Restart my plan")}`) }),
   graceReminder: (name, daysLeft, dateText) => ({ subject: daysLeft <= 1 ? "Last day of your Forever Careers free trial" : `${daysLeft} days left of your Forever Careers free trial`, html: wrap(`<p>${first(name)}</p><p>Your free trial ends on <b>${dateText}</b>. To keep receiving your CV-matched jobs and full access, add your card now. Your card is only charged when the trial ends, then £50 a month. Cancel any time.</p>${btn(`${SITE}/?subscribe=1`, "Add card and keep my access")}`) }),

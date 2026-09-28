@@ -9,7 +9,7 @@ export default async (req) => {
     if (!admin || req.headers.get("x-admin-key") !== admin) return json({ error: "Unauthorised" }, 401);
     const { title, body, url } = await req.json().catch(() => ({}));
     if (!title) return json({ error: "title required" }, 400);
-    webpush.setVapidDetails("mailto:forevercalculated@gmail.com", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+    webpush.setVapidDetails("mailto:hello@forevercalculatedcareers.com", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
     const store = getStore({ name: "push-subs", consistency: "strong" });
     const { blobs } = await store.list();
     let sent = 0, removed = 0, failed = 0;

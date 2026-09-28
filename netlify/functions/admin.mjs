@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { json, adminOk } from "../lib/common.mjs";
 import jobsMeta from "../lib/jobs-meta.mjs";
 import jobsData from "../lib/jobs-data.mjs";
+import { billingEnforced, launchMsFrom, decideMembership } from "../lib/billing-core.mjs";
 
 async function stripePayments() {
   const key = process.env.STRIPE_SECRET_KEY; if (!key) return [];
@@ -49,9 +50,25 @@ export default async (req) => {
       const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
       if (!email) return json({ error: "email required" }, 400);
       const key = crypto.createHash("sha256").update(email).digest("hex");
-      const stores = ["users", "activity", "applied-v2", "apply-log", "cvs", "cv-files"];
+      const stores = ["users", "activity", "applied-v2", "apply-log", "cvs", "cv-files", "billing"];
       await Promise.all(stores.map((n) => getStore({ name: n, consistency: "strong" }).delete(key).catch(() => {})));
       return json({ ok: true, email });
+    }
+    if (view === "billing-members") {
+      // who should receive job emails: active = free (billing off) or trial/paid/in grace
+      const [us, bs] = [await all("users"), await all("billing")];
+      const now = Date.now(), lm = launchMsFrom(process.env);
+      const active = [], inactive = [];
+      for (const [k, u] of Object.entries(us)) {
+        if (!u || !u.email) continue;
+        const m = decideMembership({ enforced: billingEnforced(process.env, u.email), user: u, billing: bs[k] || null, now, launchMs: lm });
+        (m.active ? active : inactive).push(u.email);
+      }
+      return json({ mode: process.env.BILLING_MODE || "off", total: active.length + inactive.length, active, inactive });
+    }
+    if (view === "outbox") {
+      const ob = await all("outbox");
+      return json({ queued: Object.entries(ob).filter(([, v]) => !v.sent).map(([id, v]) => ({ id, ...v })) });
     }
     const format = url.searchParams.get("format");
     if (view === "jobs") {

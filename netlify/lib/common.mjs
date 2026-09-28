@@ -70,8 +70,10 @@ async function stripeGet(path) {
 // Looks up every Stripe customer with this email and returns the active
 // subscription to our job-access product that runs the longest.
 export async function getMembership(email) {
-  // Job board is free for everyone with an account (subscriptions retired Sept 2026)
-  return { active: true, free: true, plan: "Free account" };
+  // Free for everyone unless billing is switched on (BILLING_MODE=test|on). Rules live in billing.mjs.
+  if (!/^(test|on)$/i.test(String(process.env.BILLING_MODE || ""))) return { active: true, free: true, plan: "Free account" };
+  const { membershipFor } = await import("./billing.mjs");
+  return membershipFor(email);
 }
 
 // ---- founder admin helpers ----

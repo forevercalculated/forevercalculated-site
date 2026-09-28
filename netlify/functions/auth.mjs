@@ -32,7 +32,8 @@ async function handle(req) {
       workPref: pick(body.workPref, WORK), urgency: pick(body.urgency, URGENCY),
     };
     if (!profile.country || !profile.industry || !profile.workPref || !profile.urgency) return json({ error: "Please answer the questions about the work you're looking for." }, 400);
-    await store.setJSON(key, { email, firstName, lastName, ...profile, salt, hash, createdAt: new Date().toISOString() });
+    const source = String(body.source || "").toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 40);
+    await store.setJSON(key, { email, firstName, lastName, ...profile, ...(source ? { source } : {}), salt, hash, createdAt: new Date().toISOString() });
   } else if (body.action === "login") {
     if (!existing || !(await verifyPassword(password, existing.salt, existing.hash))) {
       return json({ error: "Email or password is incorrect." }, 401);

@@ -43,9 +43,19 @@ export async function applySubscription(sub, hintEmail) {
 
 // Safety net: if a webhook was missed or is late, ask Stripe directly (at most once a minute per person).
 export async function reconcile(email, billing) {
+  email = normEmail(email);
   try {
-    if (!billing || !billing.customerId) return billing;
     const now = Date.now();
+    if (!billing || !billing.customerId) {
+      // Checkout creates the Stripe customer only when it completes, so look them up by email.
+      const last0 = billing && billing.reconciledAt ? Date.parse(billing.reconciledAt) : 0;
+      if (now - last0 < 60000) return billing;
+      const cs = await stripe("GET", `customers?email=${encodeURIComponent(email)}&limit=5`);
+      const cust = (cs.data || []).sort((a, b) => b.created - a.created)[0];
+      if (!cust) { await setBilling(email, { reconciledAt: new Date().toISOString() }); return await getBilling(email); }
+      await linkCustomer(cust.id, email);
+      billing = await setBilling(email, { customerId: cust.id, reconciledAt: new Date(0).toISOString() });
+    }
     const st = billing.status;
     const live = st === "trialing" || st === "active" || st === "past_due";
     const overdue = (billing.trialEnd && billing.trialEnd * 1000 < now) || (billing.currentPeriodEnd && billing.currentPeriodEnd * 1000 < now);

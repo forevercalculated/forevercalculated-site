@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { getStore } from "@netlify/blobs";
 
 const TO = "hello@forevercalculatedcareers.com";
-const FROM = "David at Forever Careers <hello@forevercalculatedcareers.com>";
+const FROM = "Christal at Forever Careers <hello@forevercalculatedcareers.com>";
 const json = (b, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const isEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -17,7 +17,7 @@ export default async (req, context) => {
   const question = String(b.question || "").trim().slice(0, 2000);
   const page = String(b.page || "").slice(0, 300);
   const transcript = (Array.isArray(b.transcript) ? b.transcript : []).slice(-20)
-    .filter((m) => m && typeof m.content === "string").map((m) => ({ role: m.role === "assistant" ? "David" : "Visitor", content: m.content.slice(0, 800) }));
+    .filter((m) => m && typeof m.content === "string").map((m) => ({ role: m.role === "assistant" ? "Christal" : "Visitor", content: m.content.slice(0, 800) }));
   if (!name || !isEmail(email) || !question) return json({ error: "Please add your name, a valid email and your question." }, 400);
 
   const store = getStore({ name: "chat-handoffs", consistency: "strong" });
@@ -32,10 +32,10 @@ export default async (req, context) => {
   const record = { id, name, email, question, page, transcript, createdAt: new Date().toISOString(), emailed: false };
 
   const html = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#111">
-<p><b>New question from the website chat</b></p>
+<p><b>New question from the website chat (via Christal)</b></p>
 <p><b>Name:</b> ${esc(name)}<br><b>Email:</b> ${esc(email)}<br><b>Page:</b> ${esc(page)}</p>
 <p><b>Question:</b><br>${esc(question).replace(/\n/g, "<br>")}</p>
-${transcript.length ? `<hr><p><b>Chat with David so far:</b></p>${transcript.map((m) => `<p><b>${m.role}:</b> ${esc(m.content).replace(/\n/g, "<br>")}</p>`).join("")}` : ""}
+${transcript.length ? `<hr><p><b>Chat with Christal so far:</b></p>${transcript.map((m) => `<p><b>${m.role}:</b> ${esc(m.content).replace(/\n/g, "<br>")}</p>`).join("")}` : ""}
 <hr><p style="color:#666">Reply to this email to answer ${esc(name)} directly.</p></div>`;
 
   const key = process.env.RESEND_API_KEY;

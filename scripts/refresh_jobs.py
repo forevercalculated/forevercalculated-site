@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Forever Careers job refresh.
-Keeps live roles, removes stale ones (not re-listed and older than MAX_AGE days), pulls fresh roles from Adzuna
+Keeps live roles, removes stale ones (not re-listed and older than MAX_AGE days), pulls fresh roles from Adzuna, Reed, ZipRecruiter and Jooble (US)
 across all 19 countries, and leans the pull toward what signed-up members want (industries, countries,
 work style) and what their CVs show, plus entry-level roles people are likely to land.
 Usage: ADMIN_KEY=... python3 scripts/refresh_jobs.py   (run from the repo root)
@@ -11,17 +11,22 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_ID = os.environ.get("ADZUNA_APP_ID", "6a6b424b"); APP_KEY = os.environ.get("ADZUNA_APP_KEY", "cc549e49d03b3da032d317a06c182eed")
 ADMIN_KEY = os.environ.get("ADMIN_KEY", ""); SITE = "https://forevercalculatedcareers.com"
 REED_KEY = os.environ.get("REED_KEY", "ccef8776-5275-4435-8fad-bc41a22464c6")
-SOURCES = os.environ.get("SOURCES", "adzuna,reed,ziprecruiter").split(",")
+SOURCES = os.environ.get("SOURCES", "adzuna,reed,ziprecruiter,jooble").split(",")
+JOOBLE_KEY = os.environ.get("JOOBLE_KEY", "22c1cc1d-497a-4b40-8820-36915c8a0006"); JOOBLE_ID_OFFSET = 3 * 10**12
+JOOBLE_BUDGET = int(os.environ.get("JOOBLE_BUDGET", "90")); JOOBLE_TARGET = int(os.environ.get("JOOBLE_TARGET", "4000")); JOOBLE_SHARE = float(os.environ.get("JOOBLE_SHARE", "0.2"))
 ZR_URL = "https://api.ziprecruiter.com/mcp"; ZR_ID_OFFSET = 2 * 10**12
 ZR_MIN = int(os.environ.get("ZR_MIN", "1000")); ZR_TARGET = int(os.environ.get("ZR_TARGET", "1150")); ZR_CALLS = int(os.environ.get("ZR_CALLS", "320"))
 ZR_SLEEP = float(os.environ.get("ZR_SLEEP", "3")); ZR_ONLY = os.environ.get("ZR_ONLY", "") == "1"
 REED_BUDGET = int(os.environ.get("REED_BUDGET", "260"))
 REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(os.environ.get("MIN_PER_COUNTRY", "150")); REED_ID_OFFSET = 10**12
-MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "12000"))
+MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "15000"))
 CALL_BUDGET = int(os.environ.get("CALL_BUDGET", "180")); SLEEP = 2.6
 TODAY = datetime.date.today()
 CC = {"UK":"gb","US":"us","CA":"ca","AU":"au","NZ":"nz","SG":"sg","ZA":"za","IN":"in","DE":"de","FR":"fr","NL":"nl","ES":"es","IT":"it","BE":"be","AT":"at","CH":"ch","PL":"pl","BR":"br","MX":"mx"}
 TAG = {v:k for k,v in CC.items()}
+def is_reed(j): return REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET
+def is_zr(j): return ZR_ID_OFFSET <= j["id"] < JOOBLE_ID_OFFSET
+def is_jooble(j): return j["id"] >= JOOBLE_ID_OFFSET
 BROAD_PAGES = {"gb":16,"us":16,"ca":5,"au":5,"nz":3,"in":3,"de":3,"fr":3,"sg":2,"za":2,"nl":2,"es":2,"it":2,"be":2,"at":2,"ch":2,"pl":2,"br":2,"mx":2}
 ENTRY = ["customer service","call centre","customer support","administrator","admin assistant","receptionist","data entry","retail assistant",
          "warehouse operative","care assistant","support worker","entry level","trainee","graduate","apprentice","no experience","work from home","remote"]
@@ -126,6 +131,68 @@ def reed_job(r):
     return {"id": REED_ID_OFFSET + int(jid), "title": t, "company": r.get("employerName") or "Company not listed", "location": loc,
             "salary_min": round(r.get("minimumSalary") or 0), "salary_max": round(r.get("maximumSalary") or 0), "category": cat,
             "url": u, "country": "UK", "remote": remote, "posted": posted, "expires": expires, "source": "reed"}
+
+# ---------------- Jooble (US only: this API key covers jooble.org) ----------------
+jooble_calls = 0; jooble_errors = 0
+def jooble(keywords, page=1, location=""):
+    global jooble_calls, jooble_errors
+    if jooble_calls >= JOOBLE_BUDGET or jooble_errors >= 5: return None
+    body = json.dumps({"keywords": keywords, "location": location, "page": str(page), "ResultOnPage": "100"}).encode()
+    req = urllib.request.Request("https://jooble.org/api/" + JOOBLE_KEY, data=body, headers={"Content-Type": "application/json", "User-Agent": "ForeverCareers/1.0"})
+    jooble_calls += 1
+    try:
+        d = json.loads(urllib.request.urlopen(req, timeout=40).read().decode())
+    except Exception as e:
+        jooble_errors += 1; print("  jooble error", keywords, page, str(e)[:80], flush=True); time.sleep(5); return []
+    time.sleep(1.0)
+    return d.get("jobs") or []
+
+def jooble_salary(s):
+    s = (s or "").lower().replace(",", "")
+    nums = [float(n) * (1000 if k else 1) for n, k in re.findall(r"\$?(\d+(?:\.\d+)?)\s*(k)?", s)]
+    if not nums: return 0, 0
+    mult = 2080 if "hour" in s else (12 if "month" in s else (52 if "week" in s else 1))
+    lo, hi = nums[0] * mult, (nums[1] if len(nums) > 1 else nums[0]) * mult
+    if lo < 5000: return 0, 0
+    return round(lo), round(hi)
+
+def jooble_job(r):
+    t = re.sub(r"<[^>]+>|&nbsp;", " ", r.get("title") or ""); t = re.sub(r"\s+", " ", t).strip(); u = r.get("link"); jid = r.get("id")
+    if not t or not u or jid is None: return None
+    loc = (r.get("location") or "").strip() or "United States"
+    if re.search(r"united kingdom|england|scotland|wales|ireland|india|australia|germany|france", loc, re.I): return None
+    posted = (r.get("updated") or "")[:10]
+    if posted and posted < (TODAY - datetime.timedelta(days=MAX_AGE)).isoformat(): return None
+    country = "CA" if CA_RX.search(loc) else "US"
+    text = t + " " + re.sub(r"<[^>]+>", " ", r.get("snippet") or "") + " " + loc + " " + (r.get("type") or "")
+    remote = bool(RE_REMOTE.search(text)) or bool(re.search(r"\bremote\b", t + " " + loc, re.I))
+    if remote and "remote" not in loc.lower(): loc += " (Remote)"
+    elif (not remote) and RE_HYBRID.search(text) and "hybrid" not in loc.lower(): loc += " (Hybrid)"
+    lo, hi = jooble_salary(r.get("salary"))
+    cat = "General"; tl = t.lower()
+    for c, rx in RULES:
+        if re.search(rx, tl): cat = c; break
+    return {"id": JOOBLE_ID_OFFSET + abs(int(jid)) % (10**11), "title": t, "company": (r.get("company") or "").strip() or "Company not listed", "location": loc,
+            "salary_min": lo, "salary_max": hi, "category": cat, "url": u, "country": country, "remote": remote, "posted": posted or TODAY.isoformat(), "source": "jooble"}
+
+JOOBLE_Q = ["customer service", "call center", "administrative assistant", "data entry", "receptionist", "medical assistant", "caregiver",
+            "home health aide", "warehouse associate", "retail associate", "delivery driver", "cashier", "help desk", "it support",
+            "sales representative", "bookkeeper", "office assistant", "virtual assistant", "entry level", "no experience", "work from home"]
+
+def jooble_pull(member_q, want):
+    got = {}
+    queries = list(dict.fromkeys([q for q in member_q if len(q) > 2] + JOOBLE_Q))
+    for q in queries:
+        if len(got) >= want: break
+        for page in (1, 2, 3):
+            res = jooble(q, page)
+            if res is None: return got
+            new = 0
+            for r in res:
+                j = jooble_job(r)
+                if j and j["id"] not in got: got[j["id"]] = j; new += 1
+            if len(res) < 100 or new < 10 or len(got) >= want: break
+    return got
 
 # ---------------- ZipRecruiter (US and Canada) via its public MCP endpoint ----------------
 zr_calls = 0; zr_blocked = False; zr_sid = None
@@ -299,17 +366,18 @@ def dedupe(jobs, score):
     best = {}
     for j in jobs:
         key = (re.sub(r"[^a-z0-9]", "", j["title"].lower()), re.sub(r"[^a-z0-9]", "", j["company"].lower()), j["country"])
-        rank = (2 if REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET else (1 if j["id"] >= ZR_ID_OFFSET else 0), score(j), j.get("posted") or "")
+        rank = (2 if is_reed(j) else (1 if (is_zr(j) or is_jooble(j)) else 0), score(j), j.get("posted") or "")
         if key not in best or rank > best[key][0]: best[key] = (rank, j)
     return [v[1] for v in best.values()]
 
 def select(jobs, score):
     """Balance sources and countries, then keep the best fits up to CAP."""
     jobs = sorted(jobs, key=score, reverse=True)
-    zr_j = [j for j in jobs if j["id"] >= ZR_ID_OFFSET]
-    reed_j = [j for j in jobs if REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET]; adz_j = [j for j in jobs if j["id"] < REED_ID_OFFSET]
+    zr_j = [j for j in jobs if is_zr(j)]; jb_j = [j for j in jobs if is_jooble(j)]
+    reed_j = [j for j in jobs if is_reed(j)]; adz_j = [j for j in jobs if j["id"] < REED_ID_OFFSET]
     zr_quota = min(len(zr_j), max(ZR_MIN, int(CAP * 0.1)))
-    reed_quota = min(len(reed_j), int(CAP * REED_SHARE)); adz_quota = CAP - reed_quota - zr_quota
+    jb_quota = min(len(jb_j), int(CAP * JOOBLE_SHARE))
+    reed_quota = min(len(reed_j), int(CAP * REED_SHARE)); adz_quota = CAP - reed_quota - zr_quota - jb_quota
     chosen, per_c = [], collections.Counter()
     # every country keeps a base selection of its best-fitting roles
     for j in adz_j:
@@ -320,6 +388,7 @@ def select(jobs, score):
         if j["id"] not in ids: chosen.append(j); ids.add(j["id"])
     chosen += reed_j[:reed_quota]
     chosen += zr_j[:zr_quota]
+    chosen += jb_j[:jb_quota]
     if len(chosen) < CAP:  # fill any gap with the next best of either source
         ids = {j["id"] for j in chosen}
         chosen += [j for j in jobs if j["id"] not in ids][:CAP - len(chosen)]
@@ -346,7 +415,7 @@ def write_outputs(jobs, added, removed, member_q, keep_refreshed=None):
     # write outputs
     data = [dict({k: j[k] for k in ("id","title","company","location","salary_min","salary_max","category","url","country")}, **({"expires": j["expires"]} if j.get("expires") else {})) for j in jobs]
     open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), "w", encoding="utf-8").write("export default " + json.dumps(data, ensure_ascii=False) + ";\n")
-    meta = {"refreshed": keep_refreshed or datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"), "source": " + ".join(x for x, on in (("Adzuna", True), ("Reed", "reed" in SOURCES), ("ZipRecruiter", any(j["id"] >= ZR_ID_OFFSET for j in jobs))) if on),
+    meta = {"refreshed": keep_refreshed or datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"), "source": " + ".join(x for x, on in (("Adzuna", True), ("Reed", "reed" in SOURCES), ("ZipRecruiter", any(is_zr(j) for j in jobs)), ("Jooble", any(is_jooble(j) for j in jobs))) if on),
             "total": len(jobs), "per_country": dict(collections.Counter(j["country"] for j in jobs)),
             "newest_posted": max((j.get("posted") or "") for j in jobs), "oldest_posted": min((j.get("posted") or "9999") for j in jobs),
             "added": added, "removed": removed, "member_queries": member_q}
@@ -362,11 +431,18 @@ def write_outputs(jobs, added, removed, member_q, keep_refreshed=None):
             if d == 0: k += 1; break
         k += 1
     h = h[:st] + json.dumps(pub, ensure_ascii=False) + h[k:]
-    if any(j["id"] >= ZR_ID_OFFSET for j in jobs) and ">ZipRecruiter</a>" not in h:
+    if any(is_zr(j) for j in jobs) and ">ZipRecruiter</a>" not in h:
         bq = '"'
         zr_link = " and <a href=" + bq + "https://www.ziprecruiter.com" + bq + " target=" + bq + "_blank" + bq + " rel=" + bq + "noopener" + bq + " style=" + bq + "color:inherit" + bq + ">ZipRecruiter</a>"
         h = h.replace("Adzuna</a> and <a href=" + bq + "https://www.reed.co.uk", "Adzuna</a>, <a href=" + bq + "https://www.reed.co.uk", 1)
         h = h.replace(">reed.co.uk</a>'", ">reed.co.uk</a>" + zr_link + "'", 1)
+    if any(is_jooble(j) for j in jobs) and ">Jooble</a>" not in h:
+        a = h.find('Jobs from <a href="https://www.adzuna'); b = h.find("; bp.parentNode", a)
+        if a > 0 and b > a:
+            seg = h[a:b]; q = re.search(r"\\?'$", seg); tail = q.group(0) if q else ""; body = seg[:len(seg) - len(tail)]
+            links = re.findall(r"<a [^>]*>[^<]*</a>", body)
+            links.append('<a href="https://jooble.org" target="_blank" rel="noopener" style="color:inherit">Jooble</a>')
+            h = h[:a] + "Jobs from " + ", ".join(links[:-1]) + " and " + links[-1] + tail + h[b:]
     h = re.sub(r"const FC_JOBS_UPDATED = '[0-9-]*';", "const FC_JOBS_UPDATED = '%s';" % TODAY.isoformat(), h)
     open(p, "w", encoding="utf-8").write(h)
     open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8").write(h)
@@ -377,7 +453,7 @@ def zr_only(current, member_q, t0):
     'refreshed' date unchanged, so the 3-day refresh clock is not reset."""
     zr = zr_pull(member_q, ZR_TARGET)
     print("ziprecruiter pulled:", len(zr), "| zr calls", zr_calls, "| blocked:", zr_blocked, flush=True)
-    base = [j for j in current if j["id"] < ZR_ID_OFFSET]
+    base = [j for j in current if not is_zr(j)]
     jobs = base + list(zr.values())
     jobs.sort(key=lambda j: (j.get("posted") or ""), reverse=True)
     old = open(os.path.join(ROOT, "netlify/lib/jobs-meta.mjs")).read()
@@ -458,6 +534,12 @@ def main():
         zr = zr_pull(member_q, ZR_TARGET)
         for jid, j in zr.items(): fresh[jid] = j
         print("ziprecruiter added:", len(zr), "| zr calls", zr_calls, "| blocked:", zr_blocked, flush=True)
+    # 6) Jooble (US): member queries first, then broad entry-level US titles
+    jb = {}
+    if "jooble" in SOURCES:
+        jb = jooble_pull(member_q, JOOBLE_TARGET)
+        for jid, j in jb.items(): fresh[jid] = j
+        print("jooble added:", len(jb), "| jooble calls", jooble_calls, "| errors", jooble_errors, flush=True)
     print("fresh pulled:", len(fresh), "| calls", calls, flush=True)
     # merge: keep current jobs that are re-listed or still recent; add fresh
     cutoff = (TODAY - datetime.timedelta(days=MAX_AGE)).isoformat()
@@ -480,8 +562,8 @@ def main():
     jobs.sort(key=lambda j: (j.get("posted") or ""), reverse=True)
     print("deduped:", dupes, "| pool:", len(pool), "| selected:", len(jobs), flush=True)
     meta = write_outputs(jobs, added, removed, member_q)
-    reed_n = sum(1 for j in jobs if REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET); zr_n = sum(1 for j in jobs if j["id"] >= ZR_ID_OFFSET)
-    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "ziprecruiter_jobs": zr_n, "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
+    reed_n = sum(1 for j in jobs if is_reed(j)); zr_n = sum(1 for j in jobs if is_zr(j)); jb_n = sum(1 for j in jobs if is_jooble(j))
+    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "ziprecruiter_jobs": zr_n, "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "jooble_jobs": jb_n, "jooble_calls": jooble_calls, "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
               "per_country": meta["per_country"], "member_queries": member_q, "top_member_industries": dict(inds.most_common(5)), "cv_signals": dict(cvwords.most_common(8))}
     print("REPORT " + json.dumps(report), flush=True)
     open(os.path.join(ROOT, "scripts/last_refresh.json"), "w").write(json.dumps(report, indent=2))

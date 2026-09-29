@@ -30,6 +30,7 @@ async function handle(req) {
     billing_address_collection: "auto",
     locale: "en-GB",
     custom_text: { submit: { message: msg } },
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
   };
   if (billing && billing.customerId) body.customer = billing.customerId; else body.customer_email = email;
   const session = await stripe("POST", "checkout/sessions", body);

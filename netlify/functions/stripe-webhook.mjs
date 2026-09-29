@@ -1,11 +1,11 @@
 import { getStore } from "@netlify/blobs";
-import { setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong } from "../lib/billing.mjs";
+import { getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong } from "../lib/billing.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
 
 const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { status: 200, headers: { "content-type": "application/json" } });
 
 async function nameFor(email) {
-  try { const u = await getStore({ name: "users", consistency: "strong" }).get(userKey(email), { type: "json" }); return (u && u.firstName) || ""; } catch { return ""; }
+  try { const u = await getStore({ name: "users", consistency: "strong" }).get(userKey(email), { type: "json" }); const n = (u && u.firstName) || ""; return n === n.toUpperCase() ? n.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase()) : n; } catch { return ""; }
 }
 async function handleEvent(ev) {
   const o = ev.data && ev.data.object;
@@ -14,6 +14,19 @@ async function handleEvent(ev) {
       if (o.mode !== "subscription") return;
       const email = normEmail((o.metadata && o.metadata.email) || (o.customer_details && o.customer_details.email) || o.customer_email || "");
       if (email && o.customer) { await linkCustomer(o.customer, email); await setBilling(email, { customerId: o.customer, subscriptionId: o.subscription || null, trialUsed: true }); }
+      return;
+    }
+    case "checkout.session.expired": {
+      if (o.mode !== "subscription") return;
+      const email = normEmail((o.metadata && o.metadata.email) || (o.customer_details && o.customer_details.email) || o.customer_email || "");
+      if (!email || !enforcedFor(email)) return;
+      const mem = await membershipFor(email).catch(() => null);
+      if (mem && mem.active) return; // already started a trial or paying
+      const bill = (await getBilling(email)) || {};
+      if (bill.checkoutReminderAt || bill.trialUsed) return; // only ever once
+      const name = await nameFor(email);
+      await sendEmail({ to: email, ...mail.checkoutReminder(name) });
+      await setBilling(email, { checkoutReminderAt: new Date().toISOString(), checkoutReminderFor: o.id });
       return;
     }
     case "customer.subscription.created":

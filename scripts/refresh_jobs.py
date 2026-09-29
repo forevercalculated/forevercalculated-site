@@ -165,6 +165,8 @@ def zr_search(args):
                     if c.get("type") == "text":
                         try: payload = json.loads(c["text"]); break
                         except Exception: pass
+            if isinstance(payload, dict) and "results" not in payload and isinstance(payload.get("structuredContent"), dict):
+                payload = payload["structuredContent"]
             return (payload or {}).get("results") or []
         except urllib.error.HTTPError as e:
             if e.code == 429:

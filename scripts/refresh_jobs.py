@@ -11,7 +11,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_ID = os.environ.get("ADZUNA_APP_ID", "6a6b424b"); APP_KEY = os.environ.get("ADZUNA_APP_KEY", "cc549e49d03b3da032d317a06c182eed")
 ADMIN_KEY = os.environ.get("ADMIN_KEY", ""); SITE = "https://forevercalculatedcareers.com"
 REED_KEY = os.environ.get("REED_KEY", "ccef8776-5275-4435-8fad-bc41a22464c6")
-SOURCES = os.environ.get("SOURCES", "adzuna,reed").split(",")
+SOURCES = os.environ.get("SOURCES", "adzuna,reed,ziprecruiter").split(",")
+ZR_URL = "https://api.ziprecruiter.com/mcp"; ZR_ID_OFFSET = 2 * 10**12
+ZR_MIN = int(os.environ.get("ZR_MIN", "1000")); ZR_TARGET = int(os.environ.get("ZR_TARGET", "1150")); ZR_CALLS = int(os.environ.get("ZR_CALLS", "320"))
+ZR_SLEEP = float(os.environ.get("ZR_SLEEP", "3")); ZR_ONLY = os.environ.get("ZR_ONLY", "") == "1"
 REED_BUDGET = int(os.environ.get("REED_BUDGET", "260"))
 REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(os.environ.get("MIN_PER_COUNTRY", "150")); REED_ID_OFFSET = 10**12
 MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "12000"))
@@ -124,6 +127,104 @@ def reed_job(r):
             "salary_min": round(r.get("minimumSalary") or 0), "salary_max": round(r.get("maximumSalary") or 0), "category": cat,
             "url": u, "country": "UK", "remote": remote, "posted": posted, "expires": expires, "source": "reed"}
 
+# ---------------- ZipRecruiter (US and Canada) via its public MCP endpoint ----------------
+zr_calls = 0; zr_blocked = False; zr_sid = None
+CA_RX = re.compile(r",\s*(Ontario|Quebec|British Columbia|Alberta|Manitoba|Saskatchewan|Nova Scotia|New Brunswick|Newfoundland|Prince Edward Island|Yukon|Northwest Territories|Nunavut|ON|QC|BC|AB|MB|SK|NS|NB|NL|PE)\b")
+def _zr_post(body, sid=None):
+    hdr = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream", "User-Agent": "ForeverCareers/1.0"}
+    if sid: hdr["mcp-session-id"] = sid
+    req = urllib.request.Request(ZR_URL, data=json.dumps(body).encode(), headers=hdr, method="POST")
+    with urllib.request.urlopen(req, timeout=40) as r:
+        raw = r.read().decode("utf-8", "replace"); new_sid = r.headers.get("mcp-session-id")
+    if raw.lstrip().startswith("event:") or "\ndata:" in raw or raw.startswith("data:"):
+        datas = [ln[5:].strip() for ln in raw.splitlines() if ln.startswith("data:")]
+        raw = datas[-1] if datas else "{}"
+    return (json.loads(raw) if raw.strip() else {}), new_sid
+
+def zr_session():
+    global zr_sid
+    d, sid = _zr_post({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "forevercareers-refresh", "version": "1"}}})
+    zr_sid = sid
+    try: _zr_post({"jsonrpc": "2.0", "method": "notifications/initialized"}, zr_sid)
+    except Exception: pass
+
+def zr_search(args):
+    """One search_jobs call (5 results). Paced, retries on 429 with backoff. Returns list, [] on error, None when blocked/over budget."""
+    global zr_calls, zr_blocked, zr_sid
+    if zr_blocked or zr_calls >= ZR_CALLS: return None
+    for attempt in range(4):
+        try:
+            if zr_sid is None: zr_session()
+            zr_calls += 1
+            d, _ = _zr_post({"jsonrpc": "2.0", "id": zr_calls + 1, "method": "tools/call", "params": {"name": "search_jobs", "arguments": args}}, zr_sid)
+            time.sleep(ZR_SLEEP)
+            res = d.get("result") or {}
+            payload = res.get("structuredContent")
+            if not payload:
+                for c in res.get("content") or []:
+                    if c.get("type") == "text":
+                        try: payload = json.loads(c["text"]); break
+                        except Exception: pass
+            return (payload or {}).get("results") or []
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                wait = 30 * (attempt + 1); print("  ziprecruiter 429, waiting", wait, "s", flush=True); time.sleep(wait); zr_sid = None; continue
+            if e.code in (400, 404, 410): zr_sid = None
+            print("  ziprecruiter error", e.code, flush=True); time.sleep(5)
+        except Exception as e:
+            print("  ziprecruiter error", str(e)[:80], flush=True); zr_sid = None; time.sleep(5)
+    zr_blocked = True; print("  ziprecruiter unavailable after retries; continuing without it", flush=True)
+    return None
+
+def zr_job(r):
+    t = (r.get("title") or "").strip(); u = r.get("job_redirect_url"); comp = (r.get("company") or "").strip() or "Company not listed"
+    if not t or not u: return None
+    loc = (r.get("location") or "").strip()
+    if not loc or loc.lower() == "location not specified": loc = "United States"
+    country = "CA" if CA_RX.search(loc) else "US"
+    remote = bool(r.get("is_remote")) or bool(re.search(r"\bremote\b", t, re.I))
+    jt = r.get("job_type") or ""
+    if remote and "remote" not in loc.lower(): loc += " (Remote)"
+    elif (not remote) and "hybrid" in jt.lower() and "hybrid" not in loc.lower(): loc += " (Hybrid)"
+    sal = r.get("salary") or {}
+    try: posted = (TODAY - datetime.timedelta(days=int(r.get("days_ago") or 0))).isoformat()
+    except Exception: posted = TODAY.isoformat()
+    cat = "General"; tl = t.lower()
+    for c, rx in RULES:
+        if re.search(rx, tl): cat = c; break
+    import hashlib
+    key = re.sub(r"[^a-z0-9]", "", (t + "|" + comp + "|" + loc).lower())
+    jid = ZR_ID_OFFSET + int(hashlib.sha1(key.encode()).hexdigest()[:12], 16) % (10**11)
+    return {"id": jid, "title": t, "company": comp, "location": loc, "salary_min": round(sal.get("min_annual") or 0), "salary_max": round(sal.get("max_annual") or 0),
+            "category": cat, "url": u, "country": country, "remote": remote, "posted": posted, "source": "ziprecruiter"}
+
+ZR_Q = ["customer service representative", "administrative assistant", "data entry", "receptionist", "medical assistant", "registered nurse",
+        "caregiver", "warehouse associate", "retail sales associate", "delivery driver", "it support", "help desk", "sales representative",
+        "accounting clerk", "bookkeeper", "office manager", "call center", "virtual assistant", "project coordinator", "recruiter",
+        "teacher", "cashier", "security officer", "cleaner", "cook", "marketing coordinator", "hr assistant", "logistics coordinator",
+        "entry level", "work from home"]
+
+def zr_pull(member_q, want):
+    """Collect at least ZR_MIN unique US/Canada roles: member queries first (remote and any), then broad US titles."""
+    got = {}
+    queries = list(dict.fromkeys([q for q in member_q if len(q) > 2] + ZR_Q))
+    plans = []
+    for q in queries:
+        plans.append({"job_role": q, "location_types": ["REMOTE"]})
+        plans.append({"job_role": q})
+    for base in plans:
+        if len(got) >= want: break
+        for page in range(8):  # up to 40 roles per search
+            args = dict(base, offset=page * 5, max_posted_minutes_ago=60 * 24 * 14)
+            res = zr_search(args)
+            if res is None: return got
+            new = 0
+            for r in res:
+                j = zr_job(r)
+                if j and j["id"] not in got: got[j["id"]] = j; new += 1
+            if len(res) < 5 or new == 0 or len(got) >= want: break
+    return got
+
 def admin(view):
     if not ADMIN_KEY: return None
     try:
@@ -196,15 +297,17 @@ def dedupe(jobs, score):
     best = {}
     for j in jobs:
         key = (re.sub(r"[^a-z0-9]", "", j["title"].lower()), re.sub(r"[^a-z0-9]", "", j["company"].lower()), j["country"])
-        rank = (1 if j["id"] >= REED_ID_OFFSET else 0, score(j), j.get("posted") or "")
+        rank = (2 if REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET else (1 if j["id"] >= ZR_ID_OFFSET else 0), score(j), j.get("posted") or "")
         if key not in best or rank > best[key][0]: best[key] = (rank, j)
     return [v[1] for v in best.values()]
 
 def select(jobs, score):
     """Balance sources and countries, then keep the best fits up to CAP."""
     jobs = sorted(jobs, key=score, reverse=True)
-    reed_j = [j for j in jobs if j["id"] >= REED_ID_OFFSET]; adz_j = [j for j in jobs if j["id"] < REED_ID_OFFSET]
-    reed_quota = min(len(reed_j), int(CAP * REED_SHARE)); adz_quota = CAP - reed_quota
+    zr_j = [j for j in jobs if j["id"] >= ZR_ID_OFFSET]
+    reed_j = [j for j in jobs if REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET]; adz_j = [j for j in jobs if j["id"] < REED_ID_OFFSET]
+    zr_quota = min(len(zr_j), max(ZR_MIN, int(CAP * 0.1)))
+    reed_quota = min(len(reed_j), int(CAP * REED_SHARE)); adz_quota = CAP - reed_quota - zr_quota
     chosen, per_c = [], collections.Counter()
     # every country keeps a base selection of its best-fitting roles
     for j in adz_j:
@@ -214,6 +317,7 @@ def select(jobs, score):
         if len([x for x in chosen if x["id"] < REED_ID_OFFSET]) >= adz_quota: break
         if j["id"] not in ids: chosen.append(j); ids.add(j["id"])
     chosen += reed_j[:reed_quota]
+    chosen += zr_j[:zr_quota]
     if len(chosen) < CAP:  # fill any gap with the next best of either source
         ids = {j["id"] for j in chosen}
         chosen += [j for j in jobs if j["id"] not in ids][:CAP - len(chosen)]
@@ -236,6 +340,51 @@ def load_current():
         p = pub.get(j["id"], {}); j["posted"] = p.get("posted", ""); j["remote"] = p.get("remote", False)
     return data
 
+def write_outputs(jobs, added, removed, member_q, keep_refreshed=None):
+    # write outputs
+    data = [dict({k: j[k] for k in ("id","title","company","location","salary_min","salary_max","category","url","country")}, **({"expires": j["expires"]} if j.get("expires") else {})) for j in jobs]
+    open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), "w", encoding="utf-8").write("export default " + json.dumps(data, ensure_ascii=False) + ";\n")
+    meta = {"refreshed": keep_refreshed or datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"), "source": " + ".join(x for x, on in (("Adzuna", True), ("Reed", "reed" in SOURCES), ("ZipRecruiter", any(j["id"] >= ZR_ID_OFFSET for j in jobs))) if on),
+            "total": len(jobs), "per_country": dict(collections.Counter(j["country"] for j in jobs)),
+            "newest_posted": max((j.get("posted") or "") for j in jobs), "oldest_posted": min((j.get("posted") or "9999") for j in jobs),
+            "added": added, "removed": removed, "member_queries": member_q}
+    open(os.path.join(ROOT, "netlify/lib/jobs-meta.mjs"), "w").write("export default " + json.dumps(meta) + ";\n")
+    pub = [{k: v for k, v in j.items() if k not in ("url", "expires", "source")} for j in jobs]
+    p = os.path.join(ROOT, "public/index.html"); h = open(p, encoding="utf-8").read()
+    i = h.find("const JOBS = ["); st = i + len("const JOBS = "); d = 0; k = st
+    while True:
+        c = h[k]
+        if c == "[": d += 1
+        elif c == "]":
+            d -= 1
+            if d == 0: k += 1; break
+        k += 1
+    h = h[:st] + json.dumps(pub, ensure_ascii=False) + h[k:]
+    if any(j["id"] >= ZR_ID_OFFSET for j in jobs) and ">ZipRecruiter</a>" not in h:
+        bq = '"'
+        zr_link = " and <a href=" + bq + "https://www.ziprecruiter.com" + bq + " target=" + bq + "_blank" + bq + " rel=" + bq + "noopener" + bq + " style=" + bq + "color:inherit" + bq + ">ZipRecruiter</a>"
+        h = h.replace("Adzuna</a> and <a href=" + bq + "https://www.reed.co.uk", "Adzuna</a>, <a href=" + bq + "https://www.reed.co.uk", 1)
+        h = h.replace(">reed.co.uk</a>'", ">reed.co.uk</a>" + zr_link + "'", 1)
+    h = re.sub(r"const FC_JOBS_UPDATED = '[0-9-]*';", "const FC_JOBS_UPDATED = '%s';" % TODAY.isoformat(), h)
+    open(p, "w", encoding="utf-8").write(h)
+    open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8").write(h)
+    return meta
+
+def zr_only(current, member_q, t0):
+    """One-off: add ZipRecruiter roles to the live list without a full refresh. Keeps every current role and keeps the
+    'refreshed' date unchanged, so the 3-day refresh clock is not reset."""
+    zr = zr_pull(member_q, ZR_TARGET)
+    print("ziprecruiter pulled:", len(zr), "| zr calls", zr_calls, "| blocked:", zr_blocked, flush=True)
+    base = [j for j in current if j["id"] < ZR_ID_OFFSET]
+    jobs = base + list(zr.values())
+    jobs.sort(key=lambda j: (j.get("posted") or ""), reverse=True)
+    old = open(os.path.join(ROOT, "netlify/lib/jobs-meta.mjs")).read()
+    m = re.search(r'"refreshed":\s*"([^"]+)"', old)
+    write_outputs(jobs, len(zr), 0, member_q, keep_refreshed=m.group(1) if m else None)
+    report = {"total": len(jobs), "ziprecruiter_jobs": len(zr), "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "mode": "ziprecruiter_only",
+              "refreshed_kept": m.group(1) if m else None, "per_country": dict(collections.Counter(j["country"] for j in jobs)), "minutes": round((time.time() - t0) / 60, 1)}
+    print("REPORT " + json.dumps(report), flush=True)
+
 def main():
     t0 = time.time()
     current = load_current()
@@ -256,6 +405,7 @@ def main():
     if work.get("Remote"): member_q += ["remote", "work from home"]
     member_q = list(dict.fromkeys(member_q))[:14]
     target_cc = [CC[c] for c, _ in ctys.most_common(3)] or ["gb"]
+    if ZR_ONLY: return zr_only(current, member_q, t0)
     if "adzuna" not in SOURCES: member_q_adz = []
     else: member_q_adz = member_q
     for q in member_q_adz:
@@ -301,6 +451,11 @@ def main():
                     if j and j["id"] not in fresh: fresh[j["id"]] = j
             if reed_calls >= REED_BUDGET: break
         print("reed added:", len(fresh) - n0, "| reed calls", reed_calls, "| member cities:", dict(MEMBER_CITIES.most_common(5)), flush=True)
+    # 5) ZipRecruiter (US and Canada): at least ZR_MIN roles, member queries first
+    if "ziprecruiter" in SOURCES:
+        zr = zr_pull(member_q, ZR_TARGET)
+        for jid, j in zr.items(): fresh[jid] = j
+        print("ziprecruiter added:", len(zr), "| zr calls", zr_calls, "| blocked:", zr_blocked, flush=True)
     print("fresh pulled:", len(fresh), "| calls", calls, flush=True)
     # merge: keep current jobs that are re-listed or still recent; add fresh
     cutoff = (TODAY - datetime.timedelta(days=MAX_AGE)).isoformat()
@@ -322,30 +477,9 @@ def main():
     jobs = select(pool, score)
     jobs.sort(key=lambda j: (j.get("posted") or ""), reverse=True)
     print("deduped:", dupes, "| pool:", len(pool), "| selected:", len(jobs), flush=True)
-    # write outputs
-    data = [dict({k: j[k] for k in ("id","title","company","location","salary_min","salary_max","category","url","country")}, **({"expires": j["expires"]} if j.get("expires") else {})) for j in jobs]
-    open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), "w", encoding="utf-8").write("export default " + json.dumps(data, ensure_ascii=False) + ";\n")
-    meta = {"refreshed": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"), "source": "Adzuna + Reed" if "reed" in SOURCES else "Adzuna",
-            "total": len(jobs), "per_country": dict(collections.Counter(j["country"] for j in jobs)),
-            "newest_posted": max((j.get("posted") or "") for j in jobs), "oldest_posted": min((j.get("posted") or "9999") for j in jobs),
-            "added": added, "removed": removed, "member_queries": member_q}
-    open(os.path.join(ROOT, "netlify/lib/jobs-meta.mjs"), "w").write("export default " + json.dumps(meta) + ";\n")
-    pub = [{k: v for k, v in j.items() if k not in ("url", "expires", "source")} for j in jobs]
-    p = os.path.join(ROOT, "public/index.html"); h = open(p, encoding="utf-8").read()
-    i = h.find("const JOBS = ["); st = i + len("const JOBS = "); d = 0; k = st
-    while True:
-        c = h[k]
-        if c == "[": d += 1
-        elif c == "]":
-            d -= 1
-            if d == 0: k += 1; break
-        k += 1
-    h = h[:st] + json.dumps(pub, ensure_ascii=False) + h[k:]
-    h = re.sub(r"const FC_JOBS_UPDATED = '[0-9-]*';", "const FC_JOBS_UPDATED = '%s';" % TODAY.isoformat(), h)
-    open(p, "w", encoding="utf-8").write(h)
-    open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8").write(h)
-    reed_n = sum(1 for j in jobs if j["id"] >= REED_ID_OFFSET)
-    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
+    meta = write_outputs(jobs, added, removed, member_q)
+    reed_n = sum(1 for j in jobs if REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET); zr_n = sum(1 for j in jobs if j["id"] >= ZR_ID_OFFSET)
+    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "ziprecruiter_jobs": zr_n, "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
               "per_country": meta["per_country"], "member_queries": member_q, "top_member_industries": dict(inds.most_common(5)), "cv_signals": dict(cvwords.most_common(8))}
     print("REPORT " + json.dumps(report), flush=True)
     open(os.path.join(ROOT, "scripts/last_refresh.json"), "w").write(json.dumps(report, indent=2))

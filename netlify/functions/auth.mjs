@@ -30,8 +30,10 @@ async function handle(req) {
     const profile = {
       country: pick(body.country, COUNTRIES), city: clean(body.city), industry: pick(body.industry, INDUSTRIES),
       workPref: pick(body.workPref, WORK), urgency: pick(body.urgency, URGENCY),
+      about: String(body.about || "").replace(/\s+/g, " ").trim().slice(0, 1000),
     };
     if (!profile.country || !profile.industry || !profile.workPref || !profile.urgency) return json({ error: "Please answer the questions about the work you're looking for." }, 400);
+    if (profile.about.length < 40) return json({ error: "Please tell us a bit about yourself and what you are looking for (at least 40 characters)." }, 400);
     const source = String(body.source || "").toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 40);
     await store.setJSON(key, { email, firstName, lastName, ...profile, ...(source ? { source } : {}), salt, hash, createdAt: new Date().toISOString() });
   } else if (body.action === "login") {

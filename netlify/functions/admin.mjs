@@ -99,7 +99,7 @@ export default async (req) => {
         if (!u.email) { skipped++; return; } // account deleted
         const mem = decideMembership({ enforced: billingEnforced(process.env, email), user: u, billing: (await billing.get(b.key, { type: "json" })) || null, now, launchMs: lm });
         if (!mem.active && !showAll) { skipped++; return; }
-        out.push({ key: b.key, email, first_name: u.firstName || "", country: u.country || "", city: u.city || "", industry: u.industry || "", work_pref: u.workPref || "", urgency: u.urgency || "", cv_name: m.name, cv_download: "/api/admin?view=cvfile&u=" + encodeURIComponent(b.key), opted_in: m.consentAt || m.uploadedAt, plan: mem.plan, access: mem.active ? "active" : "no access" });
+        out.push({ key: b.key, email, first_name: u.firstName || "", country: u.country || "", city: u.city || "", industry: u.industry || "", work_pref: u.workPref || "", urgency: u.urgency || "", about: u.about || "", cv_name: m.name, cv_download: "/api/admin?view=cvfile&u=" + encodeURIComponent(b.key), opted_in: m.consentAt || m.uploadedAt, plan: mem.plan, access: mem.active ? "active" : "no access" });
       }));
       return json({ total: out.length, skipped_no_access: skipped, rows: out });
     }
@@ -140,7 +140,7 @@ export default async (req) => {
 
     const signups = Object.entries(users).map(([k, u]) => ({
       first_name: u.firstName || "", last_name: u.lastName || "", email: u.email, joined: u.createdAt || "", source: u.source || "",
-      looking_in: [u.city, ({ ANY: "Anywhere (remote)", OTHER: "Other country" })[u.country] || u.country].filter(Boolean).join(", "), industry: u.industry || "", work_pref: ({ remote: "Remote", hybrid: "Hybrid", onsite: "On site", any: "Open to any" })[u.workPref] || "", urgency: ({ urgent: "Urgently (within 2 weeks)", month: "Within a month", quarter: "In 1 to 3 months", exploring: "Just exploring" })[u.urgency] || "",
+      looking_in: [u.city, ({ ANY: "Anywhere (remote)", OTHER: "Other country" })[u.country] || u.country].filter(Boolean).join(", "), industry: u.industry || "", work_pref: ({ remote: "Remote", hybrid: "Hybrid", onsite: "On site", any: "Open to any" })[u.workPref] || "", urgency: ({ urgent: "Urgently (within 2 weeks)", month: "Within a month", quarter: "In 1 to 3 months", exploring: "Just exploring" })[u.urgency] || "", about: u.about || "",
       cv_file: cvFiles[k] ? (cvFiles[k].name || "yes") : "", key: k,
       last_active: (activity[k] && activity[k].lastSeen) || "",
       visits: (activity[k] && activity[k].visits) || 0, applications: (applies[k] && applies[k].events.length) || 0, cv_saved: cvs[k] ? "yes" : "no",
@@ -162,7 +162,7 @@ export default async (req) => {
       });
     }
     const map = {
-      signups: [signups, ["first_name", "last_name", "email", "joined", "source", "looking_in", "industry", "work_pref", "urgency", "cv_file", "last_active", "visits", "applications", "cv_saved"]],
+      signups: [signups, ["first_name", "last_name", "email", "joined", "source", "looking_in", "industry", "work_pref", "urgency", "about", "cv_file", "last_active", "visits", "applications", "cv_saved"]],
       applications: [events, ["first_name", "last_name", "email", "role", "company", "location", "country", "applied_at"]],
       cvs: [cvList, ["first_name", "last_name", "email", "score", "saved_at", "cv_text"]],
       payments: [payments, ["paid_at", "service", "amount", "currency", "name", "email"]],

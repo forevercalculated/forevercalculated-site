@@ -25,6 +25,12 @@ TODAY = datetime.date.today()
 TOPUP = os.environ.get("TOPUP", "") == "1"
 MEMBERS_ONLY = os.environ.get("MEMBERS_ONLY", "") == "1"  # one-off: only the per-member targeted pull, then merge
 MEMBER_HITS = set()  # ids found by per-member searches get a strong ranking boost
+SENIOR_HITS = set()  # ids found for members with a senior profile (member_titles.json): exempt from the entry level filter
+def _load(name, default):
+    try: return json.load(open(os.path.join(ROOT, "scripts", name), encoding="utf-8"))
+    except Exception: return default
+MEMBER_TITLES = _load("member_titles.json", {})  # {email: {"titles": [...], "senior": true}} set by Kenneth for specific members
+PINNED = _load("pinned_jobs.json", [])  # roles hand picked for specific members: always kept until they expire
 SKILL_TITLES = [  # (pattern in CV / about text, titles to search)
     (r"computer science|it support|service desk|help ?desk|technical support|networking|comptia", ["it support", "service desk analyst", "helpdesk", "technical support", "1st line support"]),
     (r"data entry|records|data processing|typing", ["data entry", "records administrator", "data administrator"]),
@@ -404,9 +410,11 @@ def member_profiles():
         for rx, ts in SKILL_TITLES:
             if re.search(rx, low): titles += ts
         titles = [t for t in dict.fromkeys(titles) if t not in ("entry level", "trainee", "no experience")][:8]
+        ov = MEMBER_TITLES.get((m.get("email") or "").lower())
+        if ov: titles = list(ov.get("titles") or titles)[:10]
         part = bool(re.search(r"part[ -]?time|flexible|zero[ -]?hours|alongside (my )?(studies|university|degree)", low))
         student = bool(re.search(r"student|undergraduate|studying|university", (m.get("about") or "").lower()))
-        out.append({"email": m.get("email"), "titles": titles, "part": part, "student": student, "city": (m.get("city") or "").strip(),
+        out.append({"senior": bool(ov and ov.get("senior")), "email": m.get("email"), "titles": titles, "part": part, "student": student, "city": (m.get("city") or "").strip(),
                     "country": m.get("country") or "UK", "work": m.get("work_pref") or ""})
     return out
 
@@ -428,7 +436,9 @@ def member_pull(profiles, add_adzuna, fresh):
                     res = reed(q, skip, pr["city"] if (pr["city"] and pr["work"] != "remote" and "remote" not in q) else None)
                     for r in res or []:
                         j = reed_job(r)
-                        if j: fresh.setdefault(j["id"], j); MEMBER_HITS.add(j["id"])
+                        if j:
+                            fresh.setdefault(j["id"], j); MEMBER_HITS.add(j["id"])
+                            if pr.get("senior"): SENIOR_HITS.add(j["id"])
                     if not res or len(res) < 100: break
             if add_adzuna:
                 cc = CC.get(pr["country"], "gb")
@@ -672,11 +682,15 @@ def main():
         kept[jid] = j
     score = fit_scorer(inds, ctys, work, cvwords)
     before = len(kept)
-    kept = {k: j for k, j in kept.items() if eligible(j)}
+    today_s = TODAY.isoformat()
+    pins = [dict({k: v for k, v in j.items() if k != "pinned_for"}) for j in PINNED
+            if (j.get("expires") or "9999") >= today_s and (j.get("posted") or today_s) >= (TODAY - datetime.timedelta(days=30)).isoformat()]
+    pin_ids = {j["id"] for j in pins}
+    kept = {k: j for k, j in kept.items() if k not in pin_ids and (eligible(j) or k in SENIOR_HITS)}
     print("entry level filter: kept", len(kept), "of", before, flush=True)
     pool = dedupe(list(kept.values()), score)
     dupes = len(kept) - len(pool)
-    jobs = select(pool, score)
+    jobs = pins + select(pool, score)[:CAP - len(pins)]
     jobs.sort(key=lambda j: (j.get("posted") or ""), reverse=True)
     print("deduped:", dupes, "| pool:", len(pool), "| selected:", len(jobs), flush=True)
     meta = write_outputs(jobs, added, removed, member_q)

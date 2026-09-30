@@ -13,21 +13,50 @@ ADMIN_KEY = os.environ.get("ADMIN_KEY", ""); SITE = "https://forevercalculatedca
 REED_KEY = os.environ.get("REED_KEY", "ccef8776-5275-4435-8fad-bc41a22464c6")
 SOURCES = os.environ.get("SOURCES", "adzuna,reed,ziprecruiter,jooble").split(",")
 JOOBLE_KEY = os.environ.get("JOOBLE_KEY", "22c1cc1d-497a-4b40-8820-36915c8a0006"); JOOBLE_ID_OFFSET = 3 * 10**12
-JOOBLE_BUDGET = int(os.environ.get("JOOBLE_BUDGET", "90")); JOOBLE_TARGET = int(os.environ.get("JOOBLE_TARGET", "4000")); JOOBLE_SHARE = float(os.environ.get("JOOBLE_SHARE", "0.2"))
+JOOBLE_BUDGET = int(os.environ.get("JOOBLE_BUDGET", "150")); JOOBLE_TARGET = int(os.environ.get("JOOBLE_TARGET", "4000")); JOOBLE_SHARE = float(os.environ.get("JOOBLE_SHARE", "0.2"))
 ZR_URL = "https://api.ziprecruiter.com/mcp"; ZR_ID_OFFSET = 2 * 10**12
 ZR_MIN = int(os.environ.get("ZR_MIN", "1000")); ZR_TARGET = int(os.environ.get("ZR_TARGET", "1150")); ZR_CALLS = int(os.environ.get("ZR_CALLS", "320"))
 ZR_SLEEP = float(os.environ.get("ZR_SLEEP", "3")); ZR_ONLY = os.environ.get("ZR_ONLY", "") == "1"
-REED_BUDGET = int(os.environ.get("REED_BUDGET", "260"))
-REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(os.environ.get("MIN_PER_COUNTRY", "150")); REED_ID_OFFSET = 10**12
+REED_BUDGET = int(os.environ.get("REED_BUDGET", "380"))
+REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(os.environ.get("MIN_PER_COUNTRY", "40")); REED_ID_OFFSET = 10**12
 MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "15000"))
 CALL_BUDGET = int(os.environ.get("CALL_BUDGET", "180")); SLEEP = 2.6
 TODAY = datetime.date.today()
+TOPUP = os.environ.get("TOPUP", "") == "1"  # second pass: more Reed city searches and Jooble pages for target roles only
 CC = {"UK":"gb","US":"us","CA":"ca","AU":"au","NZ":"nz","SG":"sg","ZA":"za","IN":"in","DE":"de","FR":"fr","NL":"nl","ES":"es","IT":"it","BE":"be","AT":"at","CH":"ch","PL":"pl","BR":"br","MX":"mx"}
 TAG = {v:k for k,v in CC.items()}
 def is_reed(j): return REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET
 def is_zr(j): return ZR_ID_OFFSET <= j["id"] < JOOBLE_ID_OFFSET
 def is_jooble(j): return j["id"] >= JOOBLE_ID_OFFSET
 BROAD_PAGES = {"gb":16,"us":16,"ca":5,"au":5,"nz":3,"in":3,"de":3,"fr":3,"sg":2,"za":2,"nl":2,"es":2,"it":2,"be":2,"at":2,"ch":2,"pl":2,"br":2,"mx":2}
+TARGET_Q = ["customer service advisor", "customer support", "call centre", "contact centre", "customer service", "customer success", "live chat",
+    "administrator", "admin assistant", "office administrator", "receptionist", "data entry", "virtual assistant", "administrative assistant",
+    "it support", "service desk", "help desk", "technical support", "1st line support", "desktop support",
+    "accounts assistant", "finance assistant", "credit control", "payroll administrator", "bookkeeper", "hr assistant", "hr administrator",
+    "recruitment resourcer", "sales advisor", "telesales", "sales development representative", "appointment setter", "lead generation",
+    "claims handler", "insurance administrator", "complaints handler", "collections advisor", "marketing assistant", "social media assistant",
+    "content moderator", "transcription", "care assistant", "support worker", "healthcare assistant", "online tutor", "trainee", "apprentice",
+    "graduate", "junior", "entry level", "no experience"]
+TARGET_RX = re.compile(r"customer|client service|call cent|contact cent|help ?desk|service desk|it support|technical support|tech support|1st line|first line|2nd line|second line|desktop support|it technician|support (agent|advisor|adviser|analyst|specialist|associate|representative|executive|officer|assistant|engineer|technician)|live chat|chat (agent|support)|data entry|data (administrator|clerk|processor)|junior data|admin|receptionist|secretary|personal assistant|virtual assistant|office (assistant|junior|coordinator)|coordinator|clerk|typist|transcri|moderat|telesales|telemarket|sales (advisor|adviser|assistant|associate|representative|executive|agent|development)|business development representative|lead generat|appointment setter|account(s)? (assistant|administrator|payable|receivable|clerk)|credit control|payroll|bookkeep|finance (assistant|administrator|clerk)|purchase ledger|sales ledger|hr (assistant|administrator|coordinator|advisor|adviser)|people (assistant|administrator)|recruitment (resourcer|administrator|coordinator|assistant)|resourcer|marketing (assistant|executive|coordinator)|social media|content (writer|assistant)|claims (handler|advisor|adviser|assistant)|underwriting assistant|insurance (advisor|adviser|administrator|assistant)|collections|debt (advisor|adviser)|complaints|onboarding|care assistant|healthcare assistant|care worker|carer|support worker|caregiver|tutor|teaching assistant|trainee|apprentice|graduate|entry level|junior|no experience|retail assistant|sales assistant|store assistant|cashier|team member|booking|reservations|dispatcher|scheduler|order processor", re.I)
+EXCLUDE_RX = re.compile(r"\b(senior|snr|sr\.?|lead|principal|head|director|chief|vp|vice president|partner|architect|manager|supervisor|superintendent|specialist nurse|nurse|doctor|physician|surgeon|dentist|pharmacist|solicitor|lawyer|attorney|barrister|paralegal|developer|software|devops|scientist|professor|lecturer|teacher|psychologist|therapist|surveyor|accountant|actuary|engineer(?!.{0,15}support)|driver|hgv|forklift|chef|welder|electrician|plumber|mechanic)\b", re.I)
+KEEP_TITLE_RX = re.compile(r"\b(assistant manager|trainee manager|trainee|apprentice|graduate|junior|support engineer|desktop engineer|service desk engineer|it support engineer|1st line engineer|first line engineer)\b", re.I)
+SAL_CAP = {"UK":40000,"US":75000,"CA":75000,"AU":90000,"NZ":80000,"SG":70000,"ZA":450000,"IN":1200000,"DE":55000,"FR":50000,"NL":55000,"ES":40000,"IT":40000,
+           "BE":55000,"AT":55000,"CH":95000,"PL":150000,"BR":120000,"MX":400000}
+def eligible(j):
+    """Entry level only: target job families, no senior or specialist titles, no clearly high paid roles."""
+    t = j.get("title") or ""
+    if not TARGET_RX.search(t): return False
+    if EXCLUDE_RX.search(t) and not KEEP_TITLE_RX.search(t): return False
+    cap = SAL_CAP.get(j.get("country"))
+    lo = j.get("salary_min") or 0
+    if cap and lo and lo > cap: return False
+    return True
+def work_tier(j):
+    loc = (j.get("location") or "").lower()
+    if j.get("remote") or "remote" in loc: return 2
+    if "hybrid" in loc: return 1
+    return 0
+
 ENTRY = ["customer service","call centre","customer support","administrator","admin assistant","receptionist","data entry","retail assistant",
          "warehouse operative","care assistant","support worker","entry level","trainee","graduate","apprentice","no experience","work from home","remote"]
 IND_Q = {"Customer Service":["customer service advisor","call centre","customer support"],"Admin & Office":["administrator","office assistant","data entry"],
@@ -61,7 +90,7 @@ def adzuna(cc, page, what=None, days=14):
     global calls
     if calls >= CALL_BUDGET: return None
     q = {"app_id":APP_ID,"app_key":APP_KEY,"results_per_page":50,"sort_by":"date","max_days_old":days,"content-type":"application/json"}
-    if what: q["what"] = what
+    if what: q["what"] = what; q["what_exclude"] = "senior lead principal director head manager"
     url = "https://api.adzuna.com/v1/api/jobs/%s/search/%d?%s" % (cc, page, urllib.parse.urlencode(q))
     calls += 1
     try:
@@ -175,23 +204,24 @@ def jooble_job(r):
     return {"id": JOOBLE_ID_OFFSET + abs(int(jid)) % (10**11), "title": t, "company": (r.get("company") or "").strip() or "Company not listed", "location": loc,
             "salary_min": lo, "salary_max": hi, "category": cat, "url": u, "country": country, "remote": remote, "posted": posted or TODAY.isoformat(), "source": "jooble"}
 
-JOOBLE_Q = ["customer service", "call center", "administrative assistant", "data entry", "receptionist", "medical assistant", "caregiver",
-            "home health aide", "warehouse associate", "retail associate", "delivery driver", "cashier", "help desk", "it support",
-            "sales representative", "bookkeeper", "office assistant", "virtual assistant", "entry level", "no experience", "work from home"]
+JOOBLE_Q = ["remote customer service", "customer service", "remote customer support", "call center", "remote data entry", "data entry",
+            "administrative assistant", "remote administrative assistant", "virtual assistant", "receptionist", "help desk", "it support", "remote it support",
+            "technical support", "service desk", "chat support", "bookkeeper", "accounts payable clerk", "payroll clerk", "hr assistant", "sales development representative",
+            "appointment setter", "insurance customer service", "claims processor", "caregiver", "entry level remote", "work from home", "no experience remote"]
 
 def jooble_pull(member_q, want):
     got = {}
     queries = list(dict.fromkeys([q for q in member_q if len(q) > 2] + JOOBLE_Q))
     for q in queries:
         if len(got) >= want: break
-        for page in (1, 2, 3):
+        for page in ((1, 2, 3, 4, 5) if TOPUP else (1, 2, 3)):
             res = jooble(q, page)
             if res is None: return got
             new = 0
             for r in res:
                 j = jooble_job(r)
                 if j and j["id"] not in got: got[j["id"]] = j; new += 1
-            if len(res) < 100 or new < 10 or len(got) >= want: break
+            if len(res) < 100 or new < (3 if TOPUP else 10) or len(got) >= want: break
     return got
 
 # ---------------- ZipRecruiter (US and Canada) via its public MCP endpoint ----------------
@@ -353,7 +383,7 @@ def fit_scorer(inds, ctys, work, cvwords):
         if ENTRY_RX.search(t) and not SENIOR_RX.search(t): sc += 2
         if SENIOR_RX.search(t): sc -= 3
         if j.get("salary_min") or j.get("salary_max"): sc += 1
-        if want_remote and j.get("remote"): sc += 1
+        sc += 3 * work_tier(j)  # fully remote first, then hybrid
         sc += 1.5 * ctys.get(j.get("country"), 0) / total_c
         try: age = newest - datetime.date.fromisoformat(j.get("posted") or "2000-01-01").toordinal()
         except Exception: age = 30
@@ -489,13 +519,17 @@ def main():
     for q in member_q_adz:
         for cc in target_cc:
             got = add(adzuna(cc, 1, q), cc); print("  member", cc, q, "+", got, flush=True)
-    # 2) entry-level, easy-to-land roles in the UK and US
-    for q in (ENTRY if "adzuna" in SOURCES else []):
-        for cc in ("gb", "us"):
+    # 2) target entry level roles: remote first, then hybrid, then any, in the UK and US; remote in other English speaking countries
+    for q in (TARGET_Q if "adzuna" in SOURCES else []):
+        for cc, variants in (("gb", ("remote", "hybrid", "")), ("us", ("remote", ""))):
+            for v in variants:
+                if add(adzuna(cc, 1, (q + " " + v).strip()), cc) is None: break
+    for q in (["remote customer service", "remote administrator", "remote data entry", "remote it support", "work from home"] if "adzuna" in SOURCES else []):
+        for cc in ("ca", "au", "nz", "in", "sg", "za"):
             add(adzuna(cc, 1, q), cc)
     print("after member + entry-level:", len(fresh), "| calls", calls, flush=True)
-    # 3) broad newest roles in every country
-    for cc, pages in (BROAD_PAGES.items() if "adzuna" in SOURCES else []):
+    # 3) broad newest roles (small, only if budget remains; non matching titles are filtered out later)
+    for cc, pages in ((("gb", 3), ("us", 3)) if "adzuna" in SOURCES else []):
         for p in range(1, pages + 1):
             res = adzuna(cc, p)
             if res is None: break
@@ -503,9 +537,9 @@ def main():
             if len(res) < 50: break
     # 4) Reed (UK): member queries first, then entry-level and broad UK keywords
     if "reed" in SOURCES:
-        reed_q = member_q + ENTRY + ["administrator", "customer service", "warehouse", "retail", "care", "sales", "driver", "cleaner",
-                  "receptionist", "accounts", "teaching assistant", "chef", "security", "engineer", "project coordinator", "hr", "marketing", "it support"]
+        reed_q = [q + " remote" for q in member_q[:8]] + member_q + [q + " remote" for q in TARGET_Q[:25]] + [q + " hybrid" for q in TARGET_Q[:15]] + TARGET_Q
         reed_q = list(dict.fromkeys(reed_q))
+        if TOPUP: reed_q = []
         n0 = len(fresh)
         for q in reed_q:
             for skip in (0, 100):
@@ -518,8 +552,10 @@ def main():
             if reed_calls >= REED_BUDGET: break
         # city sweep: members' own cities first, then major UK cities, for the top member queries
         cities = [c for c, _ in MEMBER_CITIES.most_common(5)] + UK_CITIES
+        if TOPUP: cities += ["Enfield", "Grays", "Croydon", "Watford", "Luton", "Chelmsford", "Brighton", "Oxford", "Cambridge", "Norwich", "Ipswich", "Peterborough", "Northampton", "Derby", "Stoke", "Wolverhampton", "Bradford", "Hull", "York", "Preston", "Bolton", "Swansea", "Aberdeen", "Dundee", "Plymouth", "Exeter", "Portsmouth", "Bournemouth", "Swindon", "Gloucester", "Sunderland", "Middlesbrough", "Warrington", "Stockport", "Slough", "Basildon", "Harlow", "Stevenage", "Crawley", "Maidstone"]
         cities = list(dict.fromkeys(cities))
-        sweep_q = list(dict.fromkeys(member_q[:6] + ["assistant", "administrator", "warehouse", "retail"]))
+        sweep_q = list(dict.fromkeys(member_q[:4] + ["customer service", "administrator", "receptionist", "data entry"]))
+        if TOPUP: sweep_q = ["customer service", "administrator", "receptionist", "customer support", "call centre", "admin assistant", "accounts assistant", "sales advisor", "support worker", "care assistant", "it support", "trainee"]
         for city in cities:
             for q in sweep_q:
                 res = reed(q, 0, city)
@@ -537,7 +573,7 @@ def main():
     # 6) Jooble (US): member queries first, then broad entry-level US titles
     jb = {}
     if "jooble" in SOURCES:
-        jb = jooble_pull(member_q, JOOBLE_TARGET)
+        jb = jooble_pull(([] if TOPUP else member_q), JOOBLE_TARGET)
         for jid, j in jb.items(): fresh[jid] = j
         print("jooble added:", len(jb), "| jooble calls", jooble_calls, "| errors", jooble_errors, flush=True)
     print("fresh pulled:", len(fresh), "| calls", calls, flush=True)
@@ -556,6 +592,9 @@ def main():
         if jid not in kept: added += 1
         kept[jid] = j
     score = fit_scorer(inds, ctys, work, cvwords)
+    before = len(kept)
+    kept = {k: j for k, j in kept.items() if eligible(j)}
+    print("entry level filter: kept", len(kept), "of", before, flush=True)
     pool = dedupe(list(kept.values()), score)
     dupes = len(kept) - len(pool)
     jobs = select(pool, score)
@@ -563,7 +602,7 @@ def main():
     print("deduped:", dupes, "| pool:", len(pool), "| selected:", len(jobs), flush=True)
     meta = write_outputs(jobs, added, removed, member_q)
     reed_n = sum(1 for j in jobs if is_reed(j)); zr_n = sum(1 for j in jobs if is_zr(j)); jb_n = sum(1 for j in jobs if is_jooble(j))
-    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "ziprecruiter_jobs": zr_n, "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "jooble_jobs": jb_n, "jooble_calls": jooble_calls, "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
+    report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "ziprecruiter_jobs": zr_n, "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "jooble_jobs": jb_n, "jooble_calls": jooble_calls, "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "filtered_out": before - len(kept), "remote": sum(1 for j in jobs if work_tier(j) == 2), "hybrid": sum(1 for j in jobs if work_tier(j) == 1), "onsite": sum(1 for j in jobs if work_tier(j) == 0), "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
               "per_country": meta["per_country"], "member_queries": member_q, "top_member_industries": dict(inds.most_common(5)), "cv_signals": dict(cvwords.most_common(8))}
     print("REPORT " + json.dumps(report), flush=True)
     open(os.path.join(ROOT, "scripts/last_refresh.json"), "w").write(json.dumps(report, indent=2))

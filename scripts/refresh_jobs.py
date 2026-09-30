@@ -22,7 +22,21 @@ REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(
 MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "15000"))
 CALL_BUDGET = int(os.environ.get("CALL_BUDGET", "180")); SLEEP = 2.6
 TODAY = datetime.date.today()
-TOPUP = os.environ.get("TOPUP", "") == "1"  # second pass: more Reed city searches and Jooble pages for target roles only
+TOPUP = os.environ.get("TOPUP", "") == "1"
+MEMBERS_ONLY = os.environ.get("MEMBERS_ONLY", "") == "1"  # one-off: only the per-member targeted pull, then merge
+MEMBER_HITS = set()  # ids found by per-member searches get a strong ranking boost
+SKILL_TITLES = [  # (pattern in CV / about text, titles to search)
+    (r"computer science|it support|service desk|help ?desk|technical support|networking|comptia", ["it support", "service desk analyst", "helpdesk", "technical support", "1st line support"]),
+    (r"data entry|records|data processing|typing", ["data entry", "records administrator", "data administrator"]),
+    (r"data analy|excel|reporting|sql", ["junior data analyst", "reporting assistant", "data administrator"]),
+    (r"reception|front desk|bookings", ["receptionist", "front of house", "bookings coordinator"]),
+    (r"customer service|call cent|contact cent|customer support|dwp|advisor", ["customer service advisor", "customer support", "contact centre advisor", "live chat advisor"]),
+    (r"admin|office|coordinator|clerk", ["administrator", "admin assistant", "office assistant"]),
+    (r"care|support worker|healthcare|clinical|nhs|dental|patient", ["healthcare administrator", "patient services", "care coordinator", "medical receptionist"]),
+    (r"sales|retail", ["sales advisor", "customer sales advisor", "retail assistant"]),
+    (r"hr\b|human resources|recruit", ["hr assistant", "recruitment administrator", "recruitment resourcer"]),
+    (r"account|finance|payroll|bookkeep", ["accounts assistant", "finance assistant", "payroll administrator"]),
+]  # second pass: more Reed city searches and Jooble pages for target roles only
 CC = {"UK":"gb","US":"us","CA":"ca","AU":"au","NZ":"nz","SG":"sg","ZA":"za","IN":"in","DE":"de","FR":"fr","NL":"nl","ES":"es","IT":"it","BE":"be","AT":"at","CH":"ch","PL":"pl","BR":"br","MX":"mx"}
 TAG = {v:k for k,v in CC.items()}
 def is_reed(j): return REED_ID_OFFSET <= j["id"] < ZR_ID_OFFSET
@@ -37,7 +51,7 @@ TARGET_Q = ["customer service advisor", "customer support", "call centre", "cont
     "claims handler", "insurance administrator", "complaints handler", "collections advisor", "marketing assistant", "social media assistant",
     "content moderator", "transcription", "care assistant", "support worker", "healthcare assistant", "online tutor", "trainee", "apprentice",
     "graduate", "junior", "entry level", "no experience"]
-TARGET_RX = re.compile(r"customer|client service|call cent|contact cent|help ?desk|service desk|it support|technical support|tech support|1st line|first line|2nd line|second line|desktop support|it technician|support (agent|advisor|adviser|analyst|specialist|associate|representative|executive|officer|assistant|engineer|technician)|live chat|chat (agent|support)|data entry|data (administrator|clerk|processor)|junior data|admin|receptionist|secretary|personal assistant|virtual assistant|office (assistant|junior|coordinator)|coordinator|clerk|typist|transcri|moderat|telesales|telemarket|sales (advisor|adviser|assistant|associate|representative|executive|agent|development)|business development representative|lead generat|appointment setter|account(s)? (assistant|administrator|payable|receivable|clerk)|credit control|payroll|bookkeep|finance (assistant|administrator|clerk)|purchase ledger|sales ledger|hr (assistant|administrator|coordinator|advisor|adviser)|people (assistant|administrator)|recruitment (resourcer|administrator|coordinator|assistant)|resourcer|marketing (assistant|executive|coordinator)|social media|content (writer|assistant)|claims (handler|advisor|adviser|assistant)|underwriting assistant|insurance (advisor|adviser|administrator|assistant)|collections|debt (advisor|adviser)|complaints|onboarding|care assistant|healthcare assistant|care worker|carer|support worker|caregiver|tutor|teaching assistant|trainee|apprentice|graduate|entry level|junior|no experience|retail assistant|sales assistant|store assistant|cashier|team member|booking|reservations|dispatcher|scheduler|order processor", re.I)
+TARGET_RX = re.compile(r"customer|client service|call cent|contact cent|help ?desk|service desk|it support|technical support|tech support|1st line|first line|2nd line|second line|desktop support|it technician|support (agent|advisor|adviser|analyst|specialist|associate|representative|executive|officer|assistant|engineer|technician)|live chat|chat (agent|support)|data entry|data (administrator|clerk|processor)|junior data|admin|receptionist|secretary|personal assistant|virtual assistant|office (assistant|junior|coordinator)|coordinator|clerk|typist|transcri|moderat|telesales|telemarket|sales (advisor|adviser|assistant|associate|representative|executive|agent|development)|business development representative|lead generat|appointment setter|account(s)? (assistant|administrator|payable|receivable|clerk)|credit control|payroll|bookkeep|finance (assistant|administrator|clerk)|purchase ledger|sales ledger|hr (assistant|administrator|coordinator|advisor|adviser)|people (assistant|administrator)|recruitment (resourcer|administrator|coordinator|assistant)|resourcer|marketing (assistant|executive|coordinator)|social media|content (writer|assistant)|claims (handler|advisor|adviser|assistant)|underwriting assistant|insurance (advisor|adviser|administrator|assistant)|collections|debt (advisor|adviser)|complaints|onboarding|care assistant|healthcare assistant|care worker|carer|support worker|caregiver|tutor|teaching assistant|trainee|apprentice|graduate|entry level|junior|no experience|placement|intern|internship|student|part time|part-time|weekend|evening|retail assistant|sales assistant|store assistant|cashier|team member|booking|reservations|dispatcher|scheduler|order processor", re.I)
 EXCLUDE_RX = re.compile(r"\b(senior|snr|sr\.?|lead|principal|head|director|chief|vp|vice president|partner|architect|manager|supervisor|superintendent|specialist nurse|nurse|doctor|physician|surgeon|dentist|pharmacist|solicitor|lawyer|attorney|barrister|paralegal|developer|software|devops|scientist|professor|lecturer|teacher|psychologist|therapist|surveyor|accountant|actuary|engineer(?!.{0,15}support)|driver|hgv|forklift|chef|welder|electrician|plumber|mechanic)\b", re.I)
 KEEP_TITLE_RX = re.compile(r"\b(assistant manager|trainee manager|trainee|apprentice|graduate|junior|support engineer|desktop engineer|service desk engineer|it support engineer|1st line engineer|first line engineer)\b", re.I)
 SAL_CAP = {"UK":40000,"US":75000,"CA":75000,"AU":90000,"NZ":80000,"SG":70000,"ZA":450000,"IN":1200000,"DE":55000,"FR":50000,"NL":55000,"ES":40000,"IT":40000,
@@ -368,6 +382,66 @@ def member_signals():
 ENTRY_RX = re.compile(r"\b(assistant|advisor|adviser|agent|operative|trainee|apprentice|graduate|junior|entry|associate|representative|administrator|receptionist|support worker|carer|team member|crew|cashier|picker|packer|driver|cleaner|coordinator)\b", re.I)
 SENIOR_RX = re.compile(r"\b(senior|sr\.?|lead|principal|head of|director|architect|chief|vp|partner|staff engineer|consultant surgeon)\b", re.I)
 
+def member_profiles():
+    """One profile per active member on the job alerts list: search titles from their industry, CV and about text; part time and student flags; city."""
+    al = admin("alerts") or {}
+    try:
+        from pypdf import PdfReader
+    except Exception:
+        PdfReader = None
+    out = []
+    for m in (al.get("rows") or [])[:60]:
+        if m.get("access") != "active" or re.search(r"example\.com|forevercareers-test", m.get("email", ""), re.I): continue
+        txt = (m.get("about") or "") + " " + (m.get("industry") or "")
+        if PdfReader and str(m.get("cv_name", "")).lower().endswith(".pdf"):
+            try:
+                raw = urllib.request.urlopen(urllib.request.Request(SITE + m["cv_download"] + "&k=" + ADMIN_KEY), timeout=30).read()
+                txt += " " + " ".join((pg.extract_text() or "") for pg in PdfReader(io.BytesIO(raw)).pages)
+            except Exception as e:
+                print("  cv read error", str(e)[:60])
+        low = txt.lower()
+        titles = list(IND_Q.get(m.get("industry") or "", []))
+        for rx, ts in SKILL_TITLES:
+            if re.search(rx, low): titles += ts
+        titles = [t for t in dict.fromkeys(titles) if t not in ("entry level", "trainee", "no experience")][:8]
+        part = bool(re.search(r"part[ -]?time|flexible|zero[ -]?hours|alongside (my )?(studies|university|degree)", low))
+        student = bool(re.search(r"student|undergraduate|studying|university", (m.get("about") or "").lower()))
+        out.append({"email": m.get("email"), "titles": titles, "part": part, "student": student, "city": (m.get("city") or "").strip(),
+                    "country": m.get("country") or "UK", "work": m.get("work_pref") or ""})
+    return out
+
+def member_pull(profiles, add_adzuna, fresh):
+    """Targeted searches for every member: their titles, remote first, part time and student variants, near their city."""
+    before = len(fresh)
+    for pr in profiles:
+        qs = []
+        for t in pr["titles"]:
+            qs.append(t + " remote")
+            if pr["part"]: qs.append(t + " part time")
+            if pr["work"] in ("hybrid", "any", "onsite"): qs.append(t + " hybrid")
+        if pr["student"]: qs += ["student " + pr["titles"][0] if pr["titles"] else "student", "placement", "internship", "part time student"]
+        qs = list(dict.fromkeys(qs))[:14]
+        uk = pr["country"] in ("UK", "")
+        for q in qs:
+            if "reed" in SOURCES and uk:
+                for skip in (0, 100):
+                    res = reed(q, skip, pr["city"] if (pr["city"] and pr["work"] != "remote" and "remote" not in q) else None)
+                    for r in res or []:
+                        j = reed_job(r)
+                        if j: fresh.setdefault(j["id"], j); MEMBER_HITS.add(j["id"])
+                    if not res or len(res) < 100: break
+            if add_adzuna:
+                cc = CC.get(pr["country"], "gb")
+                for r in adzuna(cc, 1, q) or []:
+                    j = to_job(r, cc)
+                    if j: fresh.setdefault(j["id"], j); MEMBER_HITS.add(j["id"])
+            if "jooble" in SOURCES and pr["country"] in ("US", "CA", "ANY", "OTHER"):
+                for r in jooble(q, 1) or []:
+                    j = jooble_job(r)
+                    if j: fresh.setdefault(j["id"], j); MEMBER_HITS.add(j["id"])
+        print("  member pull", pr["email"].split("@")[0][:4] + "***", "titles", pr["titles"][:4], "part", pr["part"], "student", pr["student"], flush=True)
+    print("member pull added:", len(fresh) - before, "| member hits", len(MEMBER_HITS), flush=True)
+
 def fit_scorer(inds, ctys, work, cvwords):
     terms = []
     for ind, _ in inds.most_common(5): terms += IND_Q.get(ind, [])
@@ -384,6 +458,7 @@ def fit_scorer(inds, ctys, work, cvwords):
         if SENIOR_RX.search(t): sc -= 3
         if j.get("salary_min") or j.get("salary_max"): sc += 1
         sc += 3 * work_tier(j)  # fully remote first, then hybrid
+        if j["id"] in MEMBER_HITS: sc += 5  # found by a search for a real member's skills: always keep
         sc += 1.5 * ctys.get(j.get("country"), 0) / total_c
         try: age = newest - datetime.date.fromisoformat(j.get("posted") or "2000-01-01").toordinal()
         except Exception: age = 30
@@ -445,7 +520,7 @@ def write_outputs(jobs, added, removed, member_q, keep_refreshed=None):
     # write outputs
     data = [dict({k: j[k] for k in ("id","title","company","location","salary_min","salary_max","category","url","country")}, **({"expires": j["expires"]} if j.get("expires") else {})) for j in jobs]
     open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), "w", encoding="utf-8").write("export default " + json.dumps(data, ensure_ascii=False) + ";\n")
-    meta = {"refreshed": keep_refreshed or datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"), "source": " + ".join(x for x, on in (("Adzuna", True), ("Reed", "reed" in SOURCES), ("ZipRecruiter", any(is_zr(j) for j in jobs)), ("Jooble", any(is_jooble(j) for j in jobs))) if on),
+    meta = {"refreshed": keep_refreshed or datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"), "source": " + ".join(x for x, on in (("Adzuna", True), ("Reed", "reed" in SOURCES or any(is_reed(j) for j in jobs)), ("ZipRecruiter", any(is_zr(j) for j in jobs)), ("Jooble", any(is_jooble(j) for j in jobs))) if on),
             "total": len(jobs), "per_country": dict(collections.Counter(j["country"] for j in jobs)),
             "newest_posted": max((j.get("posted") or "") for j in jobs), "oldest_posted": min((j.get("posted") or "9999") for j in jobs),
             "added": added, "removed": removed, "member_queries": member_q}
@@ -514,6 +589,10 @@ def main():
     member_q = list(dict.fromkeys(member_q))[:14]
     target_cc = [CC[c] for c, _ in ctys.most_common(3)] or ["gb"]
     if ZR_ONLY: return zr_only(current, member_q, t0)
+    profiles = member_profiles()
+    print("member profiles:", len(profiles), flush=True)
+    member_pull(profiles, "adzuna" in SOURCES and CALL_BUDGET > 0, fresh)
+    if MEMBERS_ONLY: SOURCES[:] = []
     if "adzuna" not in SOURCES: member_q_adz = []
     else: member_q_adz = member_q
     for q in member_q_adz:

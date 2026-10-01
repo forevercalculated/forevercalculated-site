@@ -17,7 +17,9 @@ JOOBLE_BUDGET = int(os.environ.get("JOOBLE_BUDGET", "150")); JOOBLE_TARGET = int
 ZR_URL = "https://api.ziprecruiter.com/mcp"; ZR_ID_OFFSET = 2 * 10**12
 ZR_MIN = int(os.environ.get("ZR_MIN", "1000")); ZR_TARGET = int(os.environ.get("ZR_TARGET", "1150")); ZR_CALLS = int(os.environ.get("ZR_CALLS", "320"))
 ZR_SLEEP = float(os.environ.get("ZR_SLEEP", "3")); ZR_ONLY = os.environ.get("ZR_ONLY", "") == "1"
-REED_BUDGET = int(os.environ.get("REED_BUDGET", "380"))
+REED_BUDGET = int(os.environ.get("REED_BUDGET", "900"))
+PRIMARY_SHARE = float(os.environ.get("PRIMARY_SHARE", "0.9"))  # share of roles kept for the countries most members are based in
+PRIMARY = {"UK": 1.0}  # country -> weight; set in main() from member countries (each country with 10%+ of members)
 REED_SHARE = float(os.environ.get("REED_SHARE", "0.45")); MIN_PER_COUNTRY = int(os.environ.get("MIN_PER_COUNTRY", "40")); REED_ID_OFFSET = 10**12
 MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", "21")); CAP = int(os.environ.get("CAP", "15000"))
 CALL_BUDGET = int(os.environ.get("CALL_BUDGET", "180")); SLEEP = 2.6
@@ -452,6 +454,13 @@ def member_pull(profiles, add_adzuna, fresh):
         print("  member pull", pr["email"].split("@")[0][:4] + "***", "titles", pr["titles"][:4], "part", pr["part"], "student", pr["student"], flush=True)
     print("member pull added:", len(fresh) - before, "| member hits", len(MEMBER_HITS), flush=True)
 
+def primary_countries(ctys):
+    tot = sum(ctys.values())
+    if not tot: return {"UK": 1.0}
+    p = {c: n / tot for c, n in ctys.items() if n / tot >= 0.1}
+    t = sum(p.values()) or 1
+    return {c: v / t for c, v in p.items()} or {"UK": 1.0}
+
 def fit_scorer(inds, ctys, work, cvwords):
     terms = []
     for ind, _ in inds.most_common(5): terms += IND_Q.get(ind, [])
@@ -486,27 +495,24 @@ def dedupe(jobs, score):
     return [v[1] for v in best.values()]
 
 def select(jobs, score):
-    """Balance sources and countries, then keep the best fits up to CAP."""
+    """PRIMARY_SHARE of roles from the countries members are based in (split by member weight), the rest from other
+    countries (ZipRecruiter first, up to ZR_MIN). If the primary pool is short, the total shrinks so the share still holds."""
     jobs = sorted(jobs, key=score, reverse=True)
-    zr_j = [j for j in jobs if is_zr(j)]; jb_j = [j for j in jobs if is_jooble(j)]
-    reed_j = [j for j in jobs if is_reed(j)]; adz_j = [j for j in jobs if j["id"] < REED_ID_OFFSET]
-    zr_quota = min(len(zr_j), max(ZR_MIN, int(CAP * 0.1)))
-    jb_quota = min(len(jb_j), int(CAP * JOOBLE_SHARE))
-    reed_quota = min(len(reed_j), int(CAP * REED_SHARE)); adz_quota = CAP - reed_quota - zr_quota - jb_quota
-    chosen, per_c = [], collections.Counter()
-    # every country keeps a base selection of its best-fitting roles
-    for j in adz_j:
-        if j["country"] != "UK" and per_c[j["country"]] < MIN_PER_COUNTRY: chosen.append(j); per_c[j["country"]] += 1
-    ids = {j["id"] for j in chosen}
-    for j in adz_j:
-        if len([x for x in chosen if x["id"] < REED_ID_OFFSET]) >= adz_quota: break
-        if j["id"] not in ids: chosen.append(j); ids.add(j["id"])
-    chosen += reed_j[:reed_quota]
-    chosen += zr_j[:zr_quota]
-    chosen += jb_j[:jb_quota]
-    if len(chosen) < CAP:  # fill any gap with the next best of either source
-        ids = {j["id"] for j in chosen}
-        chosen += [j for j in jobs if j["id"] not in ids][:CAP - len(chosen)]
+    p_target = int(CAP * PRIMARY_SHARE)
+    chosen, ids = [], set()
+    for c, w in sorted(PRIMARY.items(), key=lambda x: -x[1]):
+        want = int(round(p_target * w))
+        pick = [j for j in jobs if j["country"] == c][:want]
+        chosen += pick; ids.update(j["id"] for j in pick)
+    if len(chosen) < p_target:  # top up from any primary country
+        extra = [j for j in jobs if j["country"] in PRIMARY and j["id"] not in ids][:p_target - len(chosen)]
+        chosen += extra; ids.update(j["id"] for j in extra)
+    n_p = len(chosen)
+    o_target = min(CAP - n_p, int(n_p * (1 - PRIMARY_SHARE) / PRIMARY_SHARE)) if PRIMARY_SHARE < 1 else 0
+    others = [j for j in jobs if j["country"] not in PRIMARY]
+    zr_j = [j for j in others if is_zr(j)][:min(ZR_MIN, o_target)]
+    rest = [j for j in others if not is_zr(j)][:o_target - len(zr_j)]
+    chosen += zr_j + rest
     return chosen
 
 def load_current():
@@ -597,7 +603,11 @@ def main():
     for w, _ in cvwords.most_common(6): member_q.append(w)
     if work.get("Remote"): member_q += ["remote", "work from home"]
     member_q = list(dict.fromkeys(member_q))[:14]
-    target_cc = [CC[c] for c, _ in ctys.most_common(3)] or ["gb"]
+    global PRIMARY, JOOBLE_TARGET, JOOBLE_BUDGET
+    PRIMARY = primary_countries(ctys)
+    print("primary countries:", PRIMARY, "| share", PRIMARY_SHARE, flush=True)
+    if "US" not in PRIMARY and "CA" not in PRIMARY: JOOBLE_TARGET = min(JOOBLE_TARGET, 800); JOOBLE_BUDGET = min(JOOBLE_BUDGET, 40)
+    target_cc = [CC[c] for c in PRIMARY if c in CC] or ["gb"]
     if ZR_ONLY: return zr_only(current, member_q, t0)
     profiles = member_profiles()
     print("member profiles:", len(profiles), flush=True)
@@ -610,15 +620,15 @@ def main():
             got = add(adzuna(cc, 1, q), cc); print("  member", cc, q, "+", got, flush=True)
     # 2) target entry level roles: remote first, then hybrid, then any, in the UK and US; remote in other English speaking countries
     for q in (TARGET_Q if "adzuna" in SOURCES else []):
-        for cc, variants in (("gb", ("remote", "hybrid", "")), ("us", ("remote", ""))):
+        for cc, variants in tuple(x for x in (("gb", ("remote", "hybrid", "")), ("us", ("remote", ""))) if TAG[x[0]] in PRIMARY):
             for v in variants:
                 if add(adzuna(cc, 1, (q + " " + v).strip()), cc) is None: break
     for q in (["remote customer service", "remote administrator", "remote data entry", "remote it support", "work from home"] if "adzuna" in SOURCES else []):
-        for cc in ("ca", "au", "nz", "in", "sg", "za"):
+        for cc in (c for c in ("ca", "au", "nz", "in", "sg", "za") if TAG[c] in PRIMARY):
             add(adzuna(cc, 1, q), cc)
     print("after member + entry-level:", len(fresh), "| calls", calls, flush=True)
     # 3) broad newest roles (small, only if budget remains; non matching titles are filtered out later)
-    for cc, pages in ((("gb", 3), ("us", 3)) if "adzuna" in SOURCES else []):
+    for cc, pages in (tuple((CC[c], 30) for c in PRIMARY if c in CC) if "adzuna" in SOURCES else []):
         for p in range(1, pages + 1):
             res = adzuna(cc, p)
             if res is None: break
@@ -631,7 +641,7 @@ def main():
         if TOPUP: reed_q = []
         n0 = len(fresh)
         for q in reed_q:
-            for skip in (0, 100):
+            for skip in (0, 100, 200):
                 res = reed(q, skip)
                 if res is None: break
                 for r in res:
@@ -696,7 +706,7 @@ def main():
     meta = write_outputs(jobs, added, removed, member_q)
     reed_n = sum(1 for j in jobs if is_reed(j)); zr_n = sum(1 for j in jobs if is_zr(j)); jb_n = sum(1 for j in jobs if is_jooble(j))
     report = {"total": len(jobs), "reed_share": round(reed_n / max(1, len(jobs)), 2), "ziprecruiter_jobs": zr_n, "ziprecruiter_calls": zr_calls, "ziprecruiter_blocked": zr_blocked, "jooble_jobs": jb_n, "jooble_calls": jooble_calls, "duplicates_removed": dupes, "added": added, "removed_stale": removed, "adzuna_calls": calls, "filtered_out": before - len(kept), "remote": sum(1 for j in jobs if work_tier(j) == 2), "hybrid": sum(1 for j in jobs if work_tier(j) == 1), "onsite": sum(1 for j in jobs if work_tier(j) == 0), "reed_calls": reed_calls, "minutes": round((time.time() - t0) / 60, 1),
-              "per_country": meta["per_country"], "member_queries": member_q, "top_member_industries": dict(inds.most_common(5)), "cv_signals": dict(cvwords.most_common(8))}
+              "per_country": meta["per_country"], "member_queries": member_q, "top_member_industries": dict(inds.most_common(5)), "cv_signals": dict(cvwords.most_common(8)), "primary_countries": PRIMARY, "primary_share": round(sum(1 for j in jobs if j["country"] in PRIMARY) / max(1, len(jobs)), 3)}
     print("REPORT " + json.dumps(report), flush=True)
     open(os.path.join(ROOT, "scripts/last_refresh.json"), "w").write(json.dumps(report, indent=2))
 

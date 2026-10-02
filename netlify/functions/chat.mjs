@@ -22,6 +22,7 @@ MEMBERSHIP (job matches)
 OPTIONAL PAID SERVICES (one-off payments, priced in local currency where available, paid securely via Stripe)
 - CV Optimisation: 1 tailored CV £49, or 3 tailored CVs for 3 industries £99. Delivered within 24 hours of the order being confirmed.
 - Forever Careers Agent: £199 for 30 days (launch price £149 until 11 October 2026). 10 hand-picked roles a day checked against your CV, help tailoring and sending applications, weekly check-in.
+- The Forever Times: a free weekly jobs newsletter written by Zuri, our Global Jobs Correspondent. It arrives every Sunday at 9am UK, and people choose which of 19 countries they want news from. Sign up on the Newsletter page.
 - Tailored cover letter £25 (within 24 hours). LinkedIn rewrite £39 (within 48 hours). Written CV review £19 (within 24 hours). Interview prep £39 for a 45-minute call.
 - Refer a friend: £20 by bank transfer when a friend you refer pays for a service and names you in the "Referred by a friend" box.
 

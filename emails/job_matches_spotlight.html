@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+<title>Forever Careers</title>
+<!--
+  FOREVER CAREERS "SPOTLIGHT" JOB MATCH EMAIL TEMPLATE (approved by Kenneth, 2 Oct 2026; replaces Aurora)
+  How to use (for the Job match alerts and Urgent sign-up job matches tasks):
+  - Keep every inline style exactly as written. Only replace the {{PLACEHOLDERS}} and the sample text.
+  - JOB MATCHES EMAIL: keep TOP BAR, HERO, TOP MATCH SPOTLIGHT (role 1), then if there are 2 or more roles the MORE MATCHES HEADING and one MATCH CARD per further role (repeat the block), optional SKILLS BOX, EXTRA SUPPORT BOX, SIGN OFF, FOOTER. Delete the UPDATE BLOCK. With only 1 role, delete the MORE MATCHES HEADING and every MATCH CARD.
+  - UPDATE EMAIL (no roles): keep TOP BAR (write "Day X &middot; Update"), HERO (use the update headline), UPDATE BLOCK, optional SKILLS BOX, EXTRA SUPPORT BOX, SIGN OFF, FOOTER. Delete the TOP MATCH SPOTLIGHT, MORE MATCHES HEADING and every MATCH CARD.
+  - EXTRA SUPPORT BOX: REQUIRED in EVERY email (job matches and update, scheduled and urgent). Keep its wording, prices and order exactly as written; never shorten, reword or remove it. Only change: from 12 October 2026 onwards, delete the launch price line (the span marked LAUNCH PRICE) so the Agent shows £199 for 30 days only.
+  - Role 1 is the highest fit score. Later roles are labelled "MATCH 2", "MATCH 3" and so on, highest score first. The fit bar widths are the score and 100 minus the score (two td width values).
+  - Chips: working pattern and place, contract (full time or part time), salary if listed ("£28,222 to £30,023"). Direct employer or agency goes in the company line.
+  - Never use hyphens or dashes in the text you write.
+-->
+</head>
+<body style="margin:0;padding:0;background-color:#0B0912;">
+<!-- PREHEADER (inbox preview text) -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#0B0912;font-size:1px;line-height:1px;">{{PREHEADER e.g. Your top match today: Investigation Assistant at the NMC, 92% fit to your CV.}}</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B0912" style="background-color:#0B0912;">
+<tr><td align="center" style="padding:16px 8px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#0B0912;">
+
+  <!-- ===== TOP BAR ===== -->
+  <tr><td style="padding:6px 8px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:19px;font-weight:700;color:#FFFFFF;">Forever<span style="color:#5FE3B8;">Careers</span></td>
+      <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9A93B5;">Day {{X}} &middot; {{N}} matches</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- ===== HERO ===== -->
+  <tr><td style="padding:0 8px 18px;">
+    <h1 style="margin:0 0 8px;font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:30px;line-height:1.12;font-weight:700;color:#FFFFFF;">{{HEADLINE e.g. Amara, this one looks made for you.}}</h1>
+    <!-- Update email headline instead: "An update on your matches, {{FIRSTNAME}}." -->
+    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#9A93B5;">{{INTRO: the opening line, e.g. Hi Amara, it's Day 2 of your Forever Careers search, and I've found 3 job matches for you today. Your top match is first.}}</p>
+  </td></tr>
+
+  <!-- ===== TOP MATCH SPOTLIGHT (role 1, job matches email only) ===== -->
+  <tr><td bgcolor="#1A1233" style="background-color:#1A1233;background-image:radial-gradient(110% 80% at 0% 0%, #6D3BFF 0%, rgba(109,59,255,0) 62%), radial-gradient(90% 80% at 100% 0%, #1FC8C8 0%, rgba(31,200,200,0) 58%);border-radius:24px;padding:24px 22px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="top"><span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#0B0912;background-color:#8CF5E0;padding:5px 10px;border-radius:20px;">&#9733; TOP MATCH</span></td>
+      <td align="right" valign="top"><div style="font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:44px;line-height:.9;font-weight:700;color:#FFFFFF;">{{SCORE}}<span style="font-size:20px;color:#8CF5E0;">%</span></div><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#CFC8EA;">fit to your CV</div></td>
+    </tr></table>
+    <h2 style="margin:10px 0 4px;font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:26px;line-height:1.15;font-weight:700;color:#FFFFFF;">{{JOB TITLE}}</h2>
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#D4CEEA;">{{COMPANY}} &middot; {{Direct employer | Recruitment agency}}</div>
+    <div style="margin:14px 0 4px;">
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#EDE9FA;background-color:#221C38;padding:5px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Hybrid &middot; London}}</span>
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#EDE9FA;background-color:#221C38;padding:5px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Full time}}</span>
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#EDE9FA;background-color:#221C38;padding:5px 10px;border-radius:20px;margin:0 4px 6px 0;">{{£28,222 to £30,023}}</span>
+    </div>
+    <div style="background-color:#15102A;border:1px solid #3A3160;border-radius:16px;padding:14px 16px;margin-top:8px;">
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#8CF5E0;">WHY YOU'LL STAND OUT</div>
+      <div style="margin-top:6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#FFFFFF;">{{WHY IT SUITS YOU: 2 to 4 sentences naming specific experience and skills from their CV.}}</div>
+    </div>
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#8CF5E0;margin:16px 0 4px;">ABOUT THE ROLE</div>
+    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#E2DDF2;">{{ABOUT THE ROLE: 3 to 5 sentences from the advert, including the location condition exactly as the advert gives it.}}</div>
+    <div style="margin:14px 0 0;">
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8CF5E0;border:1px solid #2F6B62;padding:4px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Skill 1}}</span>
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8CF5E0;border:1px solid #2F6B62;padding:4px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Skill 2}}</span>
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8CF5E0;border:1px solid #2F6B62;padding:4px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Skill 3}}</span>
+    </div>
+    <div style="margin-top:10px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.55;color:#CFC8EA;"><b style="color:#8CF5E0;">Your CV:</b> {{Use CV_NAME and exactly what to adjust for this role.}}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;"><tr><td align="center" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border-radius:14px;">
+      <a href="{{APPLY_URL}}" target="_blank" style="display:block;padding:15px 10px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#120E22;text-decoration:none;">Apply for this role</a>
+    </td></tr></table>
+  </td></tr>
+  <!-- ===== END TOP MATCH SPOTLIGHT ===== -->
+
+  <!-- ===== MORE MATCHES HEADING (only when there are 2 or more roles) ===== -->
+  <tr><td style="padding:26px 8px 4px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#FFFFFF;">More matches</td>
+      <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9A93B5;">sorted by fit</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- ===== MATCH CARD (repeat once per role after role 1) ===== -->
+  <tr><td style="padding:10px 0 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#14111F" style="background-color:#14111F;border:1px solid #2A2540;border-radius:18px;"><tr><td style="padding:16px 18px 18px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td valign="top"><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#9A93B5;">MATCH {{2}}</div>
+          <div style="font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:19px;line-height:1.2;font-weight:700;color:#FFFFFF;margin-top:3px;">{{JOB TITLE}}</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#9A93B5;margin-top:2px;">{{COMPANY}} &middot; {{Direct employer | Recruitment agency}}</div></td>
+        <td width="70" align="right" valign="top"><div style="font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:24px;font-weight:700;color:#8CF5E0;line-height:1;">{{SCORE}}%</div><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#9A93B5;">fit</div></td>
+      </tr></table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:10px 0;"><tr>
+        <td width="{{SCORE}}%" height="4" bgcolor="#34D38C" style="height:4px;font-size:0;line-height:0;background-color:#34D38C;border-radius:4px 0 0 4px;">&nbsp;</td>
+        <td width="{{100 MINUS SCORE}}%" height="4" bgcolor="#2A2540" style="height:4px;font-size:0;line-height:0;background-color:#2A2540;border-radius:0 4px 4px 0;">&nbsp;</td>
+      </tr></table>
+      <div>
+        <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#EDE9FA;background-color:#221C38;padding:5px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Remote &middot; UK}}</span>
+        <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#EDE9FA;background-color:#221C38;padding:5px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Full time}}</span>
+        <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#EDE9FA;background-color:#221C38;padding:5px 10px;border-radius:20px;margin:0 4px 6px 0;">{{£25,500}}</span>
+      </div>
+      <div style="margin-top:6px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#DCD8EA;"><b style="color:#FFFFFF;">Why you:</b> {{WHY IT SUITS YOU: 2 to 4 sentences naming specific experience and skills from their CV.}}</div>
+      <div style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.6;color:#9A93B5;">{{ABOUT THE ROLE: 3 to 5 sentences from the advert, including the location condition exactly as the advert gives it.}}</div>
+      <div style="margin-top:10px;">
+        <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8CF5E0;border:1px solid #2F6B62;padding:4px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Skill 1}}</span>
+        <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8CF5E0;border:1px solid #2F6B62;padding:4px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Skill 2}}</span>
+        <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8CF5E0;border:1px solid #2F6B62;padding:4px 10px;border-radius:20px;margin:0 4px 6px 0;">{{Skill 3}}</span>
+      </div>
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#9A93B5;margin-top:4px;"><b style="color:#8CF5E0;">Your CV:</b> {{Use CV_NAME and exactly what to adjust for this role.}}</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;"><tr><td bgcolor="#2B2350" style="background-color:#2B2350;border:1px solid #4A3F84;border-radius:12px;">
+        <a href="{{APPLY_URL}}" target="_blank" style="display:inline-block;padding:11px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#FFFFFF;text-decoration:none;">Apply now &rarr;</a>
+      </td></tr></table>
+    </td></tr></table>
+  </td></tr>
+  <!-- ===== END MATCH CARD ===== -->
+
+  <!-- ===== UPDATE BLOCK (update email only) ===== -->
+  <tr><td style="padding:0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#14111F" style="background-color:#14111F;border:1px solid #2A2540;border-radius:18px;">
+      <tr><td style="padding:18px 18px 20px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#DCD8EA;">
+        {{UPDATE TEXT: apology, honest reason, reassurance about the next update (7:00, 13:00 or 19:00 UK time), optional practical tip, thanks. Paragraphs as <p style="margin:0 0 12px;">.}}
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- ===== SKILLS BOX (optional, see COURSES rules) ===== -->
+  <tr><td style="padding:14px 0 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px dashed #3A3360;border-radius:18px;"><tr><td style="padding:16px 18px;">
+      <div style="font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;">Build your skills</div>
+      <div style="margin:6px 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#DCD8EA;">{{One sentence on the gap seen in the adverts and the course name(s), e.g. Excel came up in all 3 of today's adverts. Our Microsoft Excel for the Workplace course can help you add it to your CV.}}</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#6D5AE6" style="background-color:#6D5AE6;background-image:linear-gradient(90deg,#7C4DFF,#1FC8C8);border-radius:12px;">
+        <a href="https://forevercalculatedcareers.com/?go=courses" target="_blank" style="display:inline-block;padding:10px 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#FFFFFF;text-decoration:none;">View courses</a>
+      </td></tr></table>
+    </td></tr></table>
+  </td></tr>
+
+  <!-- ===== EXTRA SUPPORT BOX (REQUIRED in every email; fixed text, do not edit) ===== -->
+  <tr><td style="padding:14px 0 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#14111F" style="background-color:#14111F;border:1px solid #2A2540;border-radius:18px;"><tr><td style="padding:18px 18px 20px;">
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#8CF5E0;">EXTRA SUPPORT</div>
+      <div style="margin:6px 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#DCD8EA;">If you would like extra support, these are available as single payments on the Pricing page:</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.4;">
+        <tr><td style="padding:9px 0;border-top:1px solid #2A2540;color:#FFFFFF;font-weight:700;">Forever Careers Agent<br><span style="font-weight:400;font-size:12px;color:#9A93B5;">30 days</span></td><td align="right" valign="top" style="padding:9px 0;border-top:1px solid #2A2540;color:#FFFFFF;font-weight:700;">£199<!-- LAUNCH PRICE --><br><span style="font-weight:400;font-size:12px;color:#8CF5E0;">launch price £149 until 11 October 2026</span><!-- END LAUNCH PRICE --></td></tr>
+        <tr><td style="padding:9px 0;border-top:1px solid #2A2540;color:#DCD8EA;">CV Optimisation</td><td align="right" style="padding:9px 0;border-top:1px solid #2A2540;color:#FFFFFF;">£49 <span style="color:#9A93B5;">or £99 for three</span></td></tr>
+        <tr><td style="padding:9px 0;border-top:1px solid #2A2540;color:#DCD8EA;">Cover letter</td><td align="right" style="padding:9px 0;border-top:1px solid #2A2540;color:#FFFFFF;">£25</td></tr>
+        <tr><td style="padding:9px 0;border-top:1px solid #2A2540;color:#DCD8EA;">LinkedIn rewrite</td><td align="right" style="padding:9px 0;border-top:1px solid #2A2540;color:#FFFFFF;">£39</td></tr>
+        <tr><td style="padding:9px 0;border-top:1px solid #2A2540;color:#DCD8EA;">CV review</td><td align="right" style="padding:9px 0;border-top:1px solid #2A2540;color:#FFFFFF;">£19</td></tr>
+        <tr><td style="padding:9px 0;border-top:1px solid #2A2540;border-bottom:1px solid #2A2540;color:#DCD8EA;">Interview prep</td><td align="right" style="padding:9px 0;border-top:1px solid #2A2540;border-bottom:1px solid #2A2540;color:#FFFFFF;">£39</td></tr>
+      </table>
+      <div style="margin-top:12px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#DCD8EA;">You can also earn <b style="color:#8CF5E0;">£20</b> for every friend you refer who pays for a service.</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;"><tr><td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border-radius:12px;">
+        <a href="https://forevercalculatedcareers.com" target="_blank" style="display:inline-block;padding:11px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#120E22;text-decoration:none;">See the Pricing page</a>
+      </td></tr></table>
+    </td></tr></table>
+  </td></tr>
+
+  <!-- ===== SIGN OFF ===== -->
+  <tr><td style="padding:24px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.6;color:#DCD8EA;">
+    Kind regards,<br><b style="color:#FFFFFF;">Kenneth Nzegbulem</b><br>Founder, Forever Careers
+  </td></tr>
+
+  <!-- ===== FOOTER ===== -->
+  <tr><td style="padding:18px 8px 20px;">
+    <div style="border-top:1px solid #221C38;padding-top:14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#7F789C;">
+      Reply stop if you'd like to pause these emails.<br>
+      <a href="https://forevercalculatedcareers.com" target="_blank" style="color:#8CF5E0;text-decoration:none;">forevercalculatedcareers.com</a>
+    </div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

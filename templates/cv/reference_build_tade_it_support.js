@@ -1,60 +1,99 @@
+// Forever Careers CV layout "Mono" (black and white), based on Kenneth's AI and Customer Success CV (approved 2 Oct 2026).
+// HOW TO USE: copy this file, replace EVERYTHING inside DATA (bottom of file) with the client's own facts, keep all styling code,
+// then run: node <file>.js Firstname_Surname_<Role>_CV   (writes the .docx), and convert with soffice to PDF.
+// The example DATA below is Tade's: none of it may appear in anyone else's CV.
 const fs = require('fs');
-const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, Table, TableRow, TableCell, WidthType, TabStopType } = require('docx');
-const ACC = "1F5E7A", INK = "1B2530", MUTED = "5B6773", FONT = "Calibri";
-const W = 11906 - 2 * 850; // A4 width minus margins (DXA)
-const r = (t, o = {}) => new TextRun({ text: t, font: FONT, size: o.size || 19, bold: o.bold, italics: o.italics, color: o.color || INK });
-const heading = (t) => new Paragraph({ spacing: { before: 150, after: 60 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: ACC, space: 2 } },
-  children: [new TextRun({ text: t.toUpperCase(), font: FONT, size: 21, bold: true, color: ACC, characterSpacing: 20 })] });
-const bullet = (t) => new Paragraph({ numbering: { reference: "b", level: 0 }, spacing: { after: 30 }, children: [r(t)] });
-const role = (title, org, place, dates) => [
-  new Paragraph({ spacing: { before: 90, after: 0 }, tabStops: [{ type: TabStopType.RIGHT, position: W }],
-    children: [r(title, { bold: true, size: 21 }), r("\t" + dates, { color: MUTED, size: 19 })] }),
-  new Paragraph({ spacing: { after: 40 }, children: [r(org + " | " + place, { italics: true, color: MUTED, size: 19 })] }),
+const { Document, Packer, Paragraph, TextRun, ExternalHyperlink, AlignmentType, BorderStyle, LevelFormat,
+        Table, TableRow, TableCell, WidthType, TabStopType, VerticalAlign } = require('docx');
+const BLACK = "000000", FONT = "Calibri";
+const PAGE_W = 11906, MX = 1080, W = PAGE_W - 2 * MX;           // A4, 0.75 inch side margins
+const NONE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+const noB = { top: NONE, bottom: NONE, left: NONE, right: NONE };
+const r = (t, o = {}) => new TextRun({ text: t, font: FONT, size: o.size || 19, bold: o.bold, italics: o.italics, color: BLACK, characterSpacing: o.cs });
+const p = (children, o = {}) => new Paragraph({ spacing: { before: o.before || 0, after: o.after == null ? 40 : o.after, line: o.line || 264 }, alignment: o.align, tabStops: o.tabs, numbering: o.num, children });
+const heading = (t) => p([r(t.toUpperCase(), { bold: true, size: 22 })], { before: 200, after: 90 });
+const bullet = (children, after = 50) => new Paragraph({ numbering: { reference: "sq", level: 0 }, spacing: { after, line: 252 }, children: Array.isArray(children) ? children : [r(children)] });
+const cell = (w, children, o = {}) => new TableCell({ width: { size: w, type: WidthType.DXA }, borders: o.borders || noB, verticalAlign: o.va,
+  margins: { top: 0, bottom: 0, left: o.ml == null ? 0 : o.ml, right: o.mr == null ? 80 : o.mr }, children: children.length ? children : [p([r("")], { after: 0 })] });
+const table = (widths, rows) => new Table({ width: { size: widths.reduce((a, b) => a + b, 0), type: WidthType.DXA }, columnWidths: widths, borders: { ...noB, insideHorizontal: NONE, insideVertical: NONE }, rows });
+// two column bullets, filled left, right, left, right (as in the approved layout)
+const twoCol = (items, w, mkBullet = (t) => bullet(t)) => {
+  const L = [], R = []; items.forEach((t, i) => (i % 2 ? R : L).push(mkBullet(t)));
+  return table([w / 2, w / 2], [new TableRow({ children: [cell(w / 2, L, { mr: 200 }), cell(w / 2, R, { mr: 0 })] })]);
+};
+// Experience block: a vertical line on the left with a square marker for each role
+const MARK = 300, IN = W - MARK;
+const lineB = { ...noB, right: { style: BorderStyle.SINGLE, size: 6, color: BLACK } };
+const roleRows = (x) => [
+  new TableRow({ children: [
+    cell(MARK, [p([r("■", { size: 16 })], { after: 0, align: AlignmentType.RIGHT })], { borders: lineB, mr: 0 }),
+    cell(IN, [
+      p([r(x.title.toUpperCase(), { bold: true, size: 20 }), r("  " + (x.org || ""), { size: 18 })], { after: 0 }),
+      p([r(x.place || "", { size: 18 }), r("\t" + (x.dates || ""), { italics: true, size: 18 })], { after: 90, tabs: [{ type: TabStopType.RIGHT, position: IN - 160 }] }),
+    ], { ml: 160 }) ] }),
+  new TableRow({ children: [cell(MARK, [], { borders: lineB, mr: 0 }), cell(IN, [twoCol(x.bullets, IN - 160), p([r("")], { after: 60 })], { ml: 160 })] }),
 ];
-const sub = (t) => new Paragraph({ spacing: { before: 60, after: 20 }, children: [r(t, { bold: true, color: ACC, size: 19 })] });
-const noB = { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
-const skills = (h1, a, h2, b) => new Table({ width: { size: W, type: WidthType.DXA }, columnWidths: [W / 2, W / 2], rows: [new TableRow({ children: [
-  new TableCell({ width: { size: W / 2, type: WidthType.DXA }, borders: noB, children: [sub(h1), ...a.map(bullet)] }),
-  new TableCell({ width: { size: W / 2, type: WidthType.DXA }, borders: noB, children: [sub(h2), ...b.map(bullet)] }) ] })] });
+const eduBlock = (x) => [
+  table([MARK, IN], [new TableRow({ children: [
+    cell(MARK, [p([r("■", { size: 16 })], { after: 0, align: AlignmentType.RIGHT })], { mr: 0 }),
+    cell(IN, [p([r(x.title.toUpperCase(), { bold: true, size: 20 })], { after: 0 }),
+              p([r(x.org || "", { size: 18 }), r(x.dates ? "\t" + x.dates : "", { italics: true, size: 18 })], { after: 70, tabs: [{ type: TabStopType.RIGHT, position: IN - 160 }] }),
+              ...(x.bullets || []).map((b) => new Paragraph({ numbering: { reference: "sq", level: 1 }, spacing: { after: 40 }, children: [r(b, { bold: !!x.boldBullets, size: 18 })] }))], { ml: 160 }) ] })]),
+  p([r("")], { after: 40 }),
+];
+module.exports = function build(d, out) {
+  const contact = [];
+  d.contact.forEach((c, i) => {
+    if (i) contact.push(r("   •   ", { size: 18 }));
+    if (/^https?:/.test(c)) contact.push(new ExternalHyperlink({ link: c, children: [new TextRun({ text: c, font: FONT, size: 18, color: BLACK, underline: {} })] }));
+    else contact.push(r(c, { size: 18 }));
+  });
+  const kids = [
+    p([r(d.name.toUpperCase(), { bold: true, size: 44 })], { after: 0, line: 240 }),
+    new Paragraph({ spacing: { after: 110 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: BLACK, space: 6 } }, children: [r(d.title.toUpperCase(), { bold: true, size: 24 })] }),
+    p(contact, { after: 60 }),
+  ];
+  for (const s of d.sections) {
+    kids.push(heading(s.heading));
+    if (s.type === "text") kids.push(p([r(s.text)], { after: 40, line: 276 }));
+    if (s.type === "columns") kids.push(twoCol(s.items, W));
+    if (s.type === "roles") kids.push(table([MARK, IN], s.items.flatMap(roleRows)));
+    if (s.type === "education") s.items.forEach((x) => kids.push(...eduBlock(x)));
+    if (s.type === "projects") s.items.forEach((x) => { kids.push(bullet([r(x.name, { bold: true, underline: {} })], 20)); if (x.tools) kids.push(bullet([r("TOOLS: ", { bold: true }), r(x.tools, { italics: true })], 20)); kids.push(bullet(x.text, 60)); });
+    if (s.type === "languages") s.items.forEach((x) => { kids.push(bullet([r(x.name, { bold: true })], 0)); kids.push(new Paragraph({ indent: { left: 420 }, spacing: { after: 60 }, children: [r(x.level, { size: 18 })] })); });
+    if (s.type === "lines") s.items.forEach((t) => kids.push(p([r(t)], { after: 30 })));
+  }
+  const doc = new Document({ creator: "Forever Careers", title: d.name + " CV",
+    styles: { default: { document: { run: { font: FONT, size: 19, color: BLACK } } } },
+    numbering: { config: [{ reference: "sq", levels: [
+      { level: 0, format: LevelFormat.BULLET, text: "▪", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 420, hanging: 240 } }, run: { color: BLACK } } },
+      { level: 1, format: LevelFormat.BULLET, text: "▪", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 420, hanging: 240 } }, run: { color: BLACK } } } ] }] },
+    sections: [{ properties: { page: { size: { width: PAGE_W, height: 16838 }, margin: { top: 720, bottom: 720, left: MX, right: MX } } }, children: kids }] });
+  return Packer.toBuffer(doc).then((b) => { fs.writeFileSync(out + ".docx", b); console.log("wrote " + out + ".docx"); });
+};
 
-const kids = [
-  new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: "TADE OLANREWAJU", font: FONT, size: 44, bold: true, color: INK, characterSpacing: 30 })] }),
-  new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: "Entry Level IT Support and Service Desk | Part Time", font: FONT, size: 24, color: ACC, bold: true })] }),
-  new Paragraph({ spacing: { after: 20 }, children: [r("07477 030678  |  tadeolanrewaju@gmail.com  |  London", { color: MUTED, size: 19 })] }),
-  new Paragraph({ spacing: { after: 60 }, children: [r("Available for part time, flexible or zero hours work alongside my degree. Remote or hybrid preferred.", { color: MUTED, size: 19, italics: true })] }),
-  heading("Profile"),
-  new Paragraph({ spacing: { after: 40 }, children: [r("Computer Science undergraduate at Canterbury Christ Church University (expected graduation 2028), with first class results in Mathematics for Computer Science and Computational Thinking. My technical knowledge is developing through my degree rather than professional IT employment, and I bring over three years of customer facing experience as a receptionist, managing bookings, enquiries and client records, alongside fast paced operational roles using scanning and stock systems. I am patient, reliable and quick to learn new systems, and I am looking for an entry level IT support, helpdesk or service desk role, or a student placement, that I can balance with my studies.")] }),
-  heading("Education"),
-  ...role("BSc (Hons) Computer Science with Foundation Year", "Canterbury Christ Church University", "Canterbury", "Expected 2028"),
-  bullet("First class results in Mathematics for Computer Science and Computational Thinking"),
-  ...role("A Level Mathematics", "Christ the King Sixth Form College", "Brockley", "2022"),
-  ...role("9 GCSEs including Maths, English Language and English Literature", "St Matthew Academy", "Blackheath", "2019"),
-  bullet("UK Mathematics Challenge Bronze Award"),
-  heading("Skills"),
-  skills("Developing through my degree", ["Computational thinking and problem solving", "Mathematical and logical reasoning", "Breaking problems down step by step", "Research and critical evaluation"],
-         "From work", ["Customer support by phone and in person", "Booking systems and accurate record keeping", "Handheld scanners and stock tracking systems", "Clear, patient communication", "Reporting issues and discrepancies promptly"]),
-  heading("Experience"),
-  ...role("Crew Member", "Olympus Crew", "London", "May 2024 to Present"),
-  bullet("Set up and break down event equipment, following detailed technical instructions accurately under time pressure"),
-  bullet("Adapt quickly to different venues, event requirements and equipment types"),
-  bullet("Communicate clearly with team leads to flag issues or delays so tasks finish on schedule"),
-  ...role("Despatch Warehouse Operative", "Ocado", "Erith, London", "Feb 2023 to Dec 2023"),
-  bullet("Scanned and tracked goods through the despatch system, keeping stock data accurate in a high volume automated warehouse"),
-  bullet("Reported discrepancies and system errors promptly to keep inventory records reliable"),
-  bullet("Worked to strict daily deadlines while following safety and process procedures precisely"),
-  ...role("Online Assistant", "Sainsbury's", "Charlton Riverside, London", "Oct 2022 to Jan 2023"),
-  bullet("Used handheld devices to log order status and update stock information in real time"),
-  bullet("Cross checked items against system records to make sure every order was accurate before dispatch"),
-  ...role("Receptionist", "Standard Studio", "Blackheath, London", "Aug 2019 to Oct 2022"),
-  bullet("First point of contact for clients in person and by phone, answering enquiries about availability, pricing and services"),
-  bullet("Managed the booking system, coordinating schedules to avoid overlaps and keep the studio running smoothly"),
-  bullet("Processed customer payments and kept accurate records of appointments and client details"),
-  ...role("Teaching Assistant", "Our Lady of Grace Primary School", "Charlton, London", "Feb 2019 to Aug 2019"),
-  bullet("Supported individual pupils one to one, adapting explanations to each person's pace of learning"),
-  bullet("Prepared materials and helped the class teacher deliver lessons, reporting observations back"),
-];
-const doc = new Document({ creator: "Forever Careers", title: "CV",
-  styles: { default: { document: { run: { font: FONT, size: 19 } } } },
-  numbering: { config: [{ reference: "b", levels: [{ level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 300, hanging: 220 } }, run: { color: ACC } } }] }] },
-  sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 680, bottom: 600, left: 850, right: 850 } } }, children: kids }] });
-Packer.toBuffer(doc).then(b => { fs.writeFileSync("CV.docx", b); console.log("ok"); });
+// ===================== DATA (replace all of this for each client) =====================
+const DATA = {
+ name: "Tade Olanrewaju",
+ title: "Entry Level IT Support and Service Desk | Part Time",
+ contact: ["07477 030678", "tadeolanrewaju@gmail.com", "London"],
+ sections: [
+  { heading: "Professional Summary", type: "text", text: "Computer Science undergraduate at Canterbury Christ Church University (expected graduation 2028), with first class results in Mathematics for Computer Science and Computational Thinking. My technical knowledge is developing through my degree rather than professional IT employment, and I bring over three years of customer facing experience as a receptionist, managing bookings, enquiries and client records. I am looking for part time, flexible or zero hours entry level IT support, helpdesk or service desk work, or a student placement, that I can balance with my studies." },
+  { heading: "Skills", type: "columns", items: ["Computational thinking and problem solving", "Customer support by phone and in person", "Mathematical and logical reasoning", "Booking systems and accurate record keeping", "Breaking problems down step by step", "Handheld scanners and stock tracking systems", "Research and critical evaluation", "Clear, patient communication"] },
+  { heading: "Experience", type: "roles", items: [
+   { title: "Crew Member", org: "Olympus Crew", place: "London", dates: "May 2024 - Present", bullets: [
+     "Set up and break down event equipment, following detailed instructions accurately under time pressure.",
+     "Adapt quickly to different venues, event requirements and equipment types.",
+     "Communicate clearly with team leads to flag issues or delays so tasks finish on schedule."] },
+   { title: "Online Assistant", org: "Sainsbury's", place: "Charlton Riverside, London", dates: "October 2022 - January 2023", bullets: [
+     "Used handheld devices to log order status and update stock information in real time.",
+     "Cross checked items against system records so every order was accurate before dispatch."] },
+   { title: "Receptionist", org: "Standard Studio", place: "Blackheath, London", dates: "August 2019 - October 2022", bullets: [
+     "First point of contact for clients in person and by phone, answering enquiries about availability, pricing and services.",
+     "Managed the booking system, coordinating schedules to avoid overlaps.",
+     "Processed customer payments and kept accurate records of appointments and client details."] } ] },
+  { heading: "Education", type: "education", items: [
+   { title: "BSc (Hons) Computer Science with Foundation Year", org: "Canterbury Christ Church University", dates: "Expected 2028", bullets: ["First class results in Mathematics for Computer Science and Computational Thinking"], boldBullets: true } ] }
+ ]
+};
+module.exports(DATA, process.argv[2] || "CV");

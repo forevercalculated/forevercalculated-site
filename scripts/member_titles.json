@@ -12,5 +12,29 @@
    "dental clinical director",
    "clinical product specialist"
   ]
+ },
+ "kennethnzegbulem@gmail.com": {
+  "senior": false,
+  "level": "junior to mid",
+  "cv_text": "scripts/member_cvs/kennethnzegbulem_ai_customer_success.txt",
+  "min_salary": 29000,
+  "salaried_only": true,
+  "work": "fully remote in the UK, or hybrid within a London commute",
+  "titles": [
+   "AI automation specialist",
+   "workflow automation specialist",
+   "AI operations associate",
+   "AI operations specialist",
+   "business automation analyst",
+   "process automation analyst",
+   "implementation specialist",
+   "onboarding specialist",
+   "customer success specialist",
+   "associate customer success manager",
+   "technical support specialist SaaS",
+   "operations analyst",
+   "business operations associate"
+  ],
+  "exclude": "AI or ML engineer, data scientist, software developer roles needing a CS degree or commercial coding experience; senior CSM roles asking 3+ years SaaS; sales, business development or commission only; freelance, contract, temporary or AI training gig work; anything under 29000 a year; on site or hybrid outside London"
  }
 }

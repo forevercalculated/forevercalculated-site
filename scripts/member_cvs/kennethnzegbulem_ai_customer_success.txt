@@ -1,10 +1,10 @@
 KENNETH NZEGBULEM
 FOUNDER AND DIRECTOR
-07404 921701 | hello@forevercareers.com | London | https://forevercalculatedcareers.com
-(CV name: Kenneth Nzegbulem - AI and Customer Success, received 2 Oct 2026. This is Kenneth's ONLY CV: use it instead of the CV in the members feed, and never use or refer to his old Customer Service CV. In emails, call it "your Kenneth Nzegbulem AI and Customer Success CV" (no dashes).)
+07404 921701 | hello@forevercareers.com | London | https://forevercalculatedcareers.com | linkedin.com/in/kenneth-nzegbulem-71434b292
+(CV name: Kenneth Nzegbulem - AI and Customer Success, updated version received 3 Oct 2026. This is Kenneth's ONLY CV: use it instead of the CV in the members feed, and never use or refer to his old Customer Service CV. In emails, call it "your Kenneth Nzegbulem AI and Customer Success CV" (no dashes).)
 
 PROFESSIONAL SUMMARY
-Founder of Forever Careers, a job matching platform I designed, built and automated as a solo operator, covering live roles across 19 countries. I combine AI agents, workflow automation and API integrations to turn manual business processes into systems that run themselves, from job sourcing and CV matching to subscription billing and member emails. Alongside this I bring several years of customer facing and operations experience at Apple and Southeastern Railway, a BSc (Hons) in Business and Management and 14 Google AI certifications. I am looking for a role where I can bring AI and automation into a great company, and I am also available for freelance automation projects.
+Founder of Forever Careers, a job matching platform I designed, built and automated as a solo operator, covering live roles across 19 countries. I combine AI agents, workflow automation and API integrations to turn manual business processes into systems that run themselves, from job sourcing and CV matching to subscription billing and member emails. Alongside this I bring several years of customer facing and operations experience at Apple, Southeastern Railway and Transport for London, a BSc (Hons) in Business and Management and 14 Google AI certifications. I am looking for a role where I can bring AI and automation into a great company, and I am also available for freelance automation projects.
 
 SKILLS
 AI agent design using the Claude API; Prompt engineering and AI guardrails; Workflow automation with scheduled AI tasks; API integrations: Stripe, Resend, Adzuna, Reed, ZipRecruiter; Website deployment on Netlify with serverless functions; Sign up flows; Form validation; Data capture; Version control and backups with GitHub; Domains; DNS; Business email setup; Subscription billing and payments with Stripe; Email delivery tracking with Resend; Sign up tracking; Analytics; Admin dashboards; Brand character design and illustration in code; Social content built from sourced labour market data; Customer service and operations; CV writing and career support; Microsoft Office; Google Workspace
@@ -17,31 +17,54 @@ FOUNDER AND DIRECTOR, Forever Careers, Hybrid, December 2024 to Present
 - Promote the service through Instagram, TikTok, LinkedIn and printed local marketing across North London.
 
 OPERATIONS SPECIALIST, Apple, London, December 2025 to February 2026
-- Supported customers in store with product advice, purchases and after sales queries, keeping service standards high at busy times.
-- Worked on store operations, helping keep stock, deliveries and the shop floor running smoothly.
+- Worked overnight shifts from 9pm to 5am, managing stock logistics and restocking so the store was fully prepared before opening each morning.
+- Set up and reconfigured the shop floor ahead of new product launches, making sure displays, demo devices and stock were ready for launch day.
+- Coordinated incoming product deliveries, checking stock in accurately and keeping inventory records up to date.
+- Supported customers with product advice, purchases and after sales queries when working daytime shifts, keeping service standards high at busy times.
+
+SPECIALIST, Apple, London, July 2025 to December 2025
+- Delivered product storytelling on the shop floor and hosted live Apple Vision Pro demonstrations, explaining complex technology to a wide range of customers in an accessible and engaging way.
+- Booked and managed Genius Bar technical appointments daily, assessing physical damage, software issues and hardware faults accurately.
+- Managed a high volume of customer interactions across sales, demonstrations and technical bookings at the same time.
 
 MARKET RESEARCH INTERVIEWER, Ipsos, Remote, February 2025 to March 2025
-- Conducted structured research interviews with members of the public, recording responses accurately and to deadline.
+- Conducted structured research interviews with members of the public across the UK, following strict quality and compliance standards for every interview.
+- Recorded responses accurately and to deadline, and managed my own output targets independently while working remotely.
 
-DELAY REPAY SPECIALIST, Southeastern Railway, Remote, June 2022 to December 2024
-- Assessed and processed Delay Repay compensation claims for passengers, checking each claim against journey and delay records.
-- Handled customer queries in writing and resolved issues fairly and in line with company policy, working independently from home for two and a half years.
+CUSTOMER SERVICE AND DELAY REPAY SPECIALIST, Southeastern Railway, Remote, June 2022 to December 2024
+- Handled inbound customer calls as a Customer Service Specialist, resolving queries about journeys, tickets, refunds and compensation clearly and in line with company policy.
+- Promoted into a dedicated Delay Repay role, processing 80 to 100 compensation claims a day against journey and delay records to consistent daily targets.
+- Managed escalations across the Refund, Assisted Travel and Complaints teams, and produced written communications to national rail operators including Network Rail, Thameslink and Southern.
+- Worked independently from home for two and a half years, balancing phone and written customer contact while keeping accuracy high.
+
+CUSTOMER SERVICE REPRESENTATIVE, Transport for London, London, August 2021 to February 2022
+- Processed a high volume of customer applications, focusing on accuracy and fast turnaround times, working across multiple systems to keep customer information accurate and consistent.
+- Spotted delays and inefficiencies in processes and raised them with the team so they could be fixed.
+
+OPERATIONS LEAD, Dutchie and Grill, February 2021 to August 2021
+- Led kitchen operations and trained new colleagues, coordinating delivery orders across Uber Eats, Just Eat and Deliveroo at the same time.
 
 BUSINESS ADMINISTRATION ASSISTANT, London Energy, London, November 2019 to January 2020
-- Provided day to day administrative support to the team, including data entry, record keeping and handling correspondence.
+- Provided day to day administrative support to the team, carried out accurate data entry, kept records organised, and handled incoming and outgoing correspondence professionally.
 
 EDUCATION
-BSc (Hons) Business and Management, University of Kent, 2:1
+BSc (Hons) Business and Management, University of Kent, June 2024, 2:1
+Haringey Sixth Form College, London, May 2021, Distinction* Distinction (D*D)
+Fortismere School, London, September 2018, 5 GCSEs at grades 4 to 6, including English and Maths
 
 CERTIFICATIONS (all Google, Sep 2026)
 Design Prompts for Everyday Work Tasks (RHWPH1T0DPE0); Speed Up Data Analysis and Presentation Building (L4L6WQCYU74K); Use AI as a Creative or Expert Partner (TKHBEHYCWRMH); AI Fundamentals; Google AI (ZNEOV90UI8NE); AI for Writing and Communicating (9YF4HGZQ4Q8T); AI for Research and Insights (BWZENK08SSHV); AI for Brainstorming and Planning (2HDSESKSDLUB); AI for Data Analysis (3SGCE1LBDBEO); AI for Content Creation (I5KYD4RR8MHN); AI for App Building (827DJIIAACYI); AI for App Deployment (8GGXNIJRMQS3)
 
 KEY PROJECTS
-AI Assistants and Member Wellbeing (Claude API, Netlify Functions, Resend): Designed and launched two AI assistants on the Forever Careers website: Christal answers visitor questions and emails enquiries with the chat attached, and David is a members only confidence coach. Built in usage limits and crisis safety responses that point anyone at risk to Samaritans, NHS 111 or 999, and added a How are you? check in on every page.
-Automated Global Job Board (Adzuna API, Reed API, Jooble API, ZipRecruiter, scheduled AI tasks): Built a job board of around 15,000 live roles across 19 countries that refreshes itself every three days, removes closed and duplicate listings, and weights new roles towards what members are most likely to land.
-Scheduled AI Workflows (Claude Cowork): Replaced manual daily work with 11 scheduled AI workflows, including a client brief that drafts replies for approval, job match alerts, urgent sign up matches, new member follow ups, unfinished checkout reminders, a weekly business dashboard and the job board refresh.
+AI Assistants and Member Wellbeing (Claude API, Netlify Functions, Resend): Designed and launched two AI assistants on the Forever Careers website: Christal answers visitor questions and emails enquiries to me with the chat attached, and David is a members only confidence coach. Built in usage limits and crisis safety responses that point anyone at risk to Samaritans, NHS 111 or 999, and added a How are you check in on every page.
+Automated Global Job Board (Adzuna API, Reed API, Jooble API, ZipRecruiter, scheduled AI tasks): Built a job board of around 15,000 live roles across 19 countries that refreshes every three days, removes closed and duplicate listings, and weights new roles towards what members are most likely to land.
+Scheduled AI Workflows (Claude Cowork): Replaced manual daily work with 11 scheduled AI workflows, including a client brief that drafts replies for my approval, job match alerts, urgent sign up matches, new member follow ups, unfinished checkout reminders, a weekly business dashboard and the job board refresh.
 Subscription Billing System (Stripe, Resend, Netlify Functions): Set up a 14 day free trial with card at sign up, automatic billing on day 14, retries on declined cards, and automated welcome, reminder and cancellation emails.
-CV Matched Job Alerts (Netlify, Reed API, Adzuna API, Jooble API, email automation): Created a sign up flow with mandatory CV upload that captures each member's location, industry, working style and urgency, then emails them jobs matched to their CV three times a day, sending only roles scoring 75 or above, each from a different company.
-AI Brand Team and Automated Social Content (Claude, Claude Cowork, HTML, SVG): Created four illustrated AI characters in code as a brand team, set up a daily scheduled task that drafts Instagram captions and slide images for approval, and produced carousels, Stories and highlight covers using labour market data from Bain & Company and the Learning and Work Institute.
+CV Matched Job Alerts (Netlify, Reed API, Adzuna API, Jooble API, email automation): Created a sign up flow with mandatory CV upload that captures each member's location, industry, working style and urgency, then emails them jobs matched to their CV three times a day, only sending roles scoring 75 or above, each from a different company.
+AI Brand Team and Automated Social Content (Claude, Claude Cowork, HTML, SVG): Created four illustrated AI characters in code as a consistent brand team: Christal, David, Damian and Zuri, and set up a daily scheduled task that drafts Instagram captions and slide images for my approval using labour market data from Bain and Company and the Learning and Work Institute.
 
-LANGUAGES: English (Advanced)
+LANGUAGES
+English (Advanced)
+
+WEBSITE, PORTFOLIO AND PROFILES
+forevercalculatedcareers.com | linkedin.com/in/kenneth-nzegbulem-71434b292

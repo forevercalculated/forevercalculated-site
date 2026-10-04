@@ -1,25 +1,25 @@
 {
-  "total": 9214,
-  "reed_share": 0.76,
+  "total": 9844,
+  "reed_share": 0.74,
   "ziprecruiter_jobs": 0,
-  "ziprecruiter_calls": 0,
-  "ziprecruiter_blocked": false,
-  "jooble_jobs": 749,
-  "jooble_calls": 0,
-  "duplicates_removed": 3905,
-  "added": 12391,
-  "removed_stale": 1,
-  "adzuna_calls": 0,
-  "filtered_out": 8002,
-  "remote": 1147,
-  "hybrid": 802,
-  "onsite": 7265,
-  "reed_calls": 700,
-  "minutes": 11.3,
+  "ziprecruiter_calls": 1,
+  "ziprecruiter_blocked": true,
+  "jooble_jobs": 862,
+  "jooble_calls": 9,
+  "duplicates_removed": 3809,
+  "added": 11873,
+  "removed_stale": 168,
+  "adzuna_calls": 180,
+  "filtered_out": 7044,
+  "remote": 1164,
+  "hybrid": 857,
+  "onsite": 7823,
+  "reed_calls": 556,
+  "minutes": 23.7,
   "per_country": {
-    "UK": 8342,
-    "US": 843,
-    "CA": 16,
+    "UK": 8861,
+    "US": 956,
+    "CA": 14,
     "ZA": 9,
     "SG": 3,
     "CH": 1
@@ -28,12 +28,12 @@
     "entry level",
     "trainee",
     "no experience",
-    "administrator",
-    "office assistant",
-    "data entry",
     "customer service advisor",
     "call centre",
     "customer support",
+    "administrator",
+    "office assistant",
+    "data entry",
     "care assistant",
     "healthcare assistant",
     "support worker",
@@ -42,9 +42,9 @@
   ],
   "top_member_industries": {
     "Open to anything": 9,
+    "Customer Service": 8,
     "Admin & Office": 6,
-    "Customer Service": 5,
-    "Healthcare & Care": 4,
+    "Healthcare & Care": 6,
     "IT & Data": 3
   },
   "cv_signals": {
@@ -54,11 +54,11 @@
     "admin": 3,
     "retail": 3,
     "driver": 2,
-    "data entry": 2,
-    "sales": 2
+    "sales": 2,
+    "warehouse": 2
   },
   "primary_countries": {
     "UK": 1.0
   },
-  "primary_share": 0.905
+  "primary_share": 0.9
 }

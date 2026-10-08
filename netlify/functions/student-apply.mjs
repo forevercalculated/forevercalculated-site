@@ -106,6 +106,10 @@ async function handle(req) {
 
 export default async (req) => {
   try { return await handle(req); }
-  catch (err) { console.error("student-apply", err); return json({ error: "We couldn't send your application just now. Please try again, or email hello@forevercalculatedcareers.com." }, 500); }
+  catch (err) {
+    console.error("student-apply", err);
+    const m = String((err && err.message) || "");
+    return json({ error: "We couldn't send your application just now. Please try again, or email hello@forevercalculatedcareers.com.", code: m.startsWith("Stripe") ? m.slice(0, 200) : (err && err.name) || "error" }, 500);
+  }
 };
 export const config = { path: "/api/student-apply" };

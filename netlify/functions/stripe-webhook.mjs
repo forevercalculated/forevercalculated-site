@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong, isStudentSub } from "../lib/billing.mjs";
 import { markCardSaved } from "../lib/student-flow.mjs";
-import { STUDENT_PRICE_ID, STUDENT_PRICE_TEXT } from "../lib/student.mjs";
+import { STUDENT_PRICE_ID, STUDENT_PRICE_TEXT, getStudent, setStudent, reviewInbox } from "../lib/student.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
 
 const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { status: 200, headers: { "content-type": "application/json" } });
@@ -39,6 +39,14 @@ async function handleEvent(ev) {
     case "customer.subscription.created":
     case "customer.subscription.updated": {
       const r = await applySubscription(o);
+      if (r && isStudentSub(o) && ["trialing", "active"].includes(o.status)) {
+        const st = await getStudent(r.email).catch(() => null);
+        if (st && st.status === "approved_pending_card") await setStudent(r.email, { status: "approved", subscriptionId: o.id }, "trial started from emailed link");
+        else if (!st || !["approved"].includes(st.status)) {
+          const b = (await getBilling(r.email)) || {};
+          if (b.unverifiedStudentAlertFor !== o.id) { await sendEmail({ to: reviewInbox(), ...mail.studentUnverified(r.email) }); await setBilling(r.email, { unverifiedStudentAlertFor: o.id }); }
+        }
+      }
       if (r && o.status === "trialing" && o.trial_end && enforcedFor(r.email) && r.saved.welcomedFor !== o.id && !(r.prev && r.prev.welcomedFor)) {
         const name = await nameFor(r.email);
         const w = isStudentSub(o) ? mail.studentWelcome : mail.welcome;

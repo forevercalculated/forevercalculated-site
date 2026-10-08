@@ -21,7 +21,7 @@ async function handle(req) {
 
   if (req.method === "GET") {
     const all = await listStudents();
-    const order = { pending_review: 0, awaiting_card: 1, approved: 2, rejected: 3, withdrawn: 4, expired: 5 };
+    const order = { pending_review: 0, awaiting_card: 1, approved_pending_card: 2, approved: 3, rejected: 4, withdrawn: 5, expired: 6 };
     const rows = await Promise.all(all.map(async (s) => {
       const b = (await getBilling(s.email).catch(() => null)) || {};
       return {

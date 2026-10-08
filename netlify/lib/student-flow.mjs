@@ -3,7 +3,19 @@ import crypto from "node:crypto";
 import { normEmail } from "./common.mjs";
 import { SITE, stripe, getBilling, applySubscription, sendEmail, mail } from "./billing.mjs";
 import { TRIAL_DAYS } from "./billing-core.mjs";
-import { getStudent, getStudentByKey, setStudentByKey, studentKey, deleteIdFile, maskId, reviewInbox, STUDENT_PRICE_ID } from "./student.mjs";
+import { getStudent, getStudentByKey, setStudentByKey, studentKey, deleteIdFile, maskId, reviewInbox, STUDENT_PRICE_ID, studentTrialUrl } from "./student.mjs";
+
+export const isPermissionError = (e) => /Stripe 403/.test(String((e && e.message) || e));
+
+// Used when the Stripe key can't save cards: go straight to review, card comes after approval.
+export async function submitWithoutCard(email, patch) {
+  email = normEmail(email);
+  const k = studentKey(email);
+  const next = await setStudentByKey(k, { ...patch, status: "pending_review", cardMode: "after_approval", paymentMethodId: null, setupSessionId: null }, "applied (card after approval)");
+  try { await sendEmail({ to: email, ...mail.studentReceived(niceName(next.firstName), true) }); } catch (e) { console.error("studentReceived", e); }
+  try { await sendEmail({ to: reviewInbox(), ...mail.studentAdmin(next, reviewLink()) }); } catch (e) { console.error("studentAdmin", e); }
+  return next;
+}
 
 const niceName = (n) => { n = String(n || ""); return n && n === n.toUpperCase() ? n.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase()) : n; };
 const reviewLink = () => `${SITE}/admin/students.html`;
@@ -57,11 +69,26 @@ export async function approveStudent(k, { trial = true } = {}) {
   const rec = await getStudentByKey(k);
   if (!rec) return { error: "Application not found.", status: 404 };
   if (rec.status === "approved") return { ok: true, already: true, record: rec };
+  if (rec.status === "approved_pending_card") return { ok: true, already: true, record: rec };
   if (rec.status !== "pending_review") return { error: "This application isn't waiting for review (status: " + rec.status + ").", status: 409 };
-  if (!rec.paymentMethodId || !rec.customerId) return { error: "No saved card on this application.", status: 409 };
   const email = normEmail(rec.email);
   const billing = (await getBilling(email)) || {};
   if (["trialing", "active", "past_due"].includes(billing.status)) return { error: "This person already has an active plan.", status: 409 };
+  if (!rec.paymentMethodId || !rec.customerId) return approveWithLink(k, rec, email);
+  try { return await approveWithCard(k, rec, email, trial); }
+  catch (e) { if (isPermissionError(e)) return approveWithLink(k, rec, email); throw e; }
+}
+
+// No saved card (or the key can't create subscriptions): email the student their personal trial link.
+async function approveWithLink(k, rec, email) {
+  const url = studentTrialUrl(email);
+  await deleteIdFile(k);
+  const next = await setStudentByKey(k, { status: "approved_pending_card", decidedAt: new Date().toISOString(), linkSentAt: new Date().toISOString(), studentId: maskId(rec.studentId), hasFile: false }, "approved, trial link emailed");
+  await sendEmail({ to: email, ...mail.studentApprovedLink(niceName(rec.firstName), url) });
+  return { ok: true, record: next, linkSent: true };
+}
+
+async function approveWithCard(k, rec, email, trial) {
 
   // make the saved card the customer's default for renewals
   await stripe("POST", "customers/" + encodeURIComponent(rec.customerId), { invoice_settings: { default_payment_method: rec.paymentMethodId } });

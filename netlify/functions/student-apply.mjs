@@ -1,7 +1,7 @@
 import { json, emailFromRequest } from "../lib/common.mjs";
 import { SITE, stripe, getBilling, setBilling, linkCustomer, membershipFor } from "../lib/billing.mjs";
 import { getStudent, setStudent, studentKey, saveIdFile, sniffType, ID_TYPES, MAX_ID_BYTES } from "../lib/student.mjs";
-import { closeStudent } from "../lib/student-flow.mjs";
+import { closeStudent, submitWithoutCard, isPermissionError } from "../lib/student-flow.mjs";
 import { getStore } from "@netlify/blobs";
 
 // POST /api/student-apply  (multipart form, signed in)
@@ -54,7 +54,7 @@ async function handle(req) {
   if (m.billing) return json({ error: "You already have an active plan, so you don't need the student plan.", alreadyActive: true }, 409);
   const prev = await getStudent(email);
   if (prev && prev.status === "pending_review") return json({ error: "Your student ID is already being reviewed. We'll email you within 24 hours." }, 409);
-  if (prev && prev.status === "approved") return json({ error: "Your student plan has already been approved." }, 409);
+  if (prev && (prev.status === "approved" || prev.status === "approved_pending_card")) return json({ error: "Your student plan has already been approved. Check your email for the link to start your trial." }, 409);
   const user = (await getStore({ name: "users", consistency: "strong" }).get(studentKey(email), { type: "json" })) || {};
 
   if (action === "card") {
@@ -93,14 +93,20 @@ async function handle(req) {
   const k = studentKey(email);
   const now = new Date().toISOString();
   await saveIdFile(k, buf, { email, type, size: f.size, ext, uploadedAt: now });
-  const customerId = await ensureCustomer(email, user);
-  const s = await cardSession(email, customerId);
-  await setStudent(email, {
+  const base = {
     email, firstName: user.firstName || "", lastName: user.lastName || "",
-    institution, course, gradYear, studentId, status: "awaiting_card", hasFile: true, fileType: type,
-    customerId, setupSessionId: s.id, paymentMethodId: null, submittedAt: now, reason: null, decidedAt: null,
-    tries: tries + 1, triesDay: today, consentAt: now,
-  }, prev ? "re-applied" : "applied");
+    institution, course, gradYear, studentId, hasFile: true, fileType: type,
+    submittedAt: now, reason: null, decidedAt: null, tries: tries + 1, triesDay: today, consentAt: now,
+  };
+  let customerId, s;
+  try { customerId = await ensureCustomer(email, user); s = await cardSession(email, customerId); }
+  catch (e) {
+    if (!isPermissionError(e)) throw e;
+    // The site's Stripe key can't save cards yet: review first, card + trial after approval.
+    await submitWithoutCard(email, base);
+    return json({ ok: true, pending: true, cardLater: true });
+  }
+  await setStudent(email, { ...base, status: "awaiting_card", customerId, setupSessionId: s.id, paymentMethodId: null, cardMode: "before_review" }, prev ? "re-applied" : "applied");
   return json({ url: s.url });
 }
 

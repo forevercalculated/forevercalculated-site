@@ -169,10 +169,10 @@ ${btn(SITE, "Start exploring your roles")}
   userCancelled: (name, link) => ({ subject: "Your Forever Careers plan has been cancelled", html: wrap(`<p>${first(name)}</p><p>Your Forever Careers plan is cancelled, so you won't be charged again.</p><p>If you change your mind, you can restart any time and your login stays the same.</p>${btn(link, "Restart my plan")}`) }),
   graceReminder: (name, daysLeft, dateText) => ({ subject: daysLeft <= 1 ? "Last day of your Forever Careers free trial" : `${daysLeft} days left of your Forever Careers free trial`, html: wrap(`<p>${first(name)}</p><p>Your free trial ends on <b>${dateText}</b>. To keep receiving your CV-matched jobs and full access, add your card now. Your card is only charged when the trial ends, then £50 a month. Cancel any time.</p>${btn(`${SITE}/?subscribe=1`, "Add card and keep my access")}`) }),
   checkoutReminder: (name) => ({ subject: "Your job matches are ready to switch on", html: wrap(`<p>${first(name)}</p><p>Thanks for signing up to Forever Careers. You're one step away from getting jobs matched to your CV sent to your inbox every morning and evening.</p><p>Your <b>14 day free trial</b> hasn't started yet. Your card isn't charged today, and you can cancel any time before day 14 and pay nothing.</p>${btn(`${SITE}/?subscribe=1`, "Start my free trial")}<p>If something went wrong at checkout or you have a question, just reply to this email and Kenneth will help.</p>`) }),
-  studentReceived: (name) => ({ subject: "We're reviewing your student ID", html: wrap(`<p>${first(name)}</p>
+  studentReceived: (name, cardLater) => ({ subject: "We're reviewing your student ID", html: wrap(`<p>${first(name)}</p>
 <p>Thank you for applying for the Forever Careers student plan. Your student ID is now being reviewed.</p>
 <p>You'll get access to the website and start receiving your job alerts <b>within 24 hours</b>, as soon as your ID is approved. We'll email you the moment it is.</p>
-<p>Your <b>14-day free trial starts on the day you're approved</b>, not today. Your card has been saved securely by Stripe and <b>is not charged during the review</b>. After your trial it's ${"£19.99"} a month, and you can cancel any time.</p>
+${cardLater ? `<p>Once you're approved we'll email you a secure Stripe link to add your card. Your <b>14-day free trial starts then</b>, and nothing is charged until it ends. After your trial it's £19.99 a month, and you can cancel any time.</p>` : `<p>Your <b>14-day free trial starts on the day you're approved</b>, not today. Your card has been saved securely by Stripe and <b>is not charged during the review</b>. After your trial it's £19.99 a month, and you can cancel any time.</p>`}
 <p>Any questions, just reply to this email or write to <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>.</p>
 <p>Kenneth and the Forever Careers team</p>`) }),
   studentWelcome: (name, dateText) => ({ subject: `You're approved${name ? ", " + name : ""}. Your Forever Careers student trial has started`, html: wrap(`<p>${first(name)}</p>
@@ -186,6 +186,14 @@ ${li("<b>Student price.</b> £19.99 a month after your trial, instead of £50.")
 ${btn(SITE, "Start exploring your roles")}
 <p>Any questions, email <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>.</p>
 <p>Kenneth and the Forever Careers team</p>`) }),
+  studentApprovedLink: (name, url) => ({ subject: `You're approved${name ? ", " + name : ""}. Start your Forever Careers student trial`, html: wrap(`<p>${first(name)}</p>
+<p>Great news: your student ID has been <b>approved</b>.</p>
+<p>The last step is to add your card on our secure Stripe page. Your <b>14-day free trial starts the moment you do</b>, every role on the site unlocks, and your CV-matched job alerts start arriving every morning and evening.</p>
+<p>Your card is not charged today. After the 14 days it's <b>£19.99 a month</b> (instead of £50), and you can cancel any time from <b>Manage plan</b> on the site.</p>
+${btn(url, "Add card and start my free trial")}
+<p>Please use the same email address as your Forever Careers account. Any questions, just reply to this email.</p>
+<p>Kenneth and the Forever Careers team</p>`) }),
+  studentUnverified: (email) => ({ subject: `Student plan started without an approved ID: ${email}`, html: wrap(`<p>${email} has started a £19.99 student subscription, but they don't have an approved student ID on file.</p><p>This can happen if the student trial link was shared. Check them in Stripe and cancel if needed.</p>`) }),
   studentRejected: (name, reason) => ({ subject: "About your Forever Careers student application", html: wrap(`<p>${first(name)}</p>
 <p>Thank you for applying for the Forever Careers student plan. Unfortunately we weren't able to approve your student ID${reason ? ":" : "."}</p>
 ${reason ? `<p style="background:#f4f6f8;border-radius:8px;padding:12px 14px">${String(reason).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c])}</p>` : ""}

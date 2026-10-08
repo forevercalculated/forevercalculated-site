@@ -9,7 +9,12 @@ export const STUDENT_PRICE_TEXT = "£19.99";
 export const reviewInbox = () => process.env.STUDENT_REVIEW_EMAIL || "hello@forevercalculatedcareers.com";
 
 // awaiting_card -> pending_review -> approved | rejected   (expired = never finished / never reviewed in 30 days)
-export const BLOCKING = ["awaiting_card", "pending_review"];
+// If the site's Stripe key can't save cards (restricted key), the card is added AFTER approval instead:
+// pending_review (no card) -> approved_pending_card (emailed a student trial link) -> approved (when they start the trial)
+export const BLOCKING = ["awaiting_card", "pending_review", "approved_pending_card"];
+// £19.99/month Payment Link with the 14-day trial (made in Stripe on 8 Oct 2026). Only ever emailed to approved students.
+export const STUDENT_TRIAL_LINK = process.env.STUDENT_TRIAL_LINK || "https://buy.stripe.com/dRmaEY01r0gYfxAg3Hes00O";
+export const studentTrialUrl = (email) => `${STUDENT_TRIAL_LINK}?${new URLSearchParams({ prefilled_email: String(email || "").toLowerCase(), client_reference_id: studentKey(email) }).toString()}`;
 export const ID_TYPES = { pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", heic: "image/heic", heif: "image/heif" };
 export const MAX_ID_BYTES = 4 * 1024 * 1024; // Netlify function bodies are capped at 6MB
 
@@ -65,7 +70,7 @@ export function studentGate(member, student, billing) {
   if (st === "trialing" || st === "active" || st === "past_due") return member;
   return {
     active: false, free: false, needsCard: false, studentReview: true,
-    student: { status: student.status },
-    plan: student.status === "awaiting_card" ? "Student application not finished" : "Student ID under review",
+    student: { status: student.status, ...(student.status === "approved_pending_card" ? { payUrl: studentTrialUrl(student.email) } : {}) },
+    plan: student.status === "awaiting_card" ? "Student application not finished" : student.status === "approved_pending_card" ? "Student ID approved: add your card" : "Student ID under review",
   };
 }

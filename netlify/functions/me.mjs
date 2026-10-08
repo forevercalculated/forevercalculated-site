@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { json, emailFromRequest, getMembership, userKey } from "../lib/common.mjs";
-import { getStudent } from "../lib/student.mjs";
+import { getStudent, studentTrialUrl } from "../lib/student.mjs";
 import { reconcileStudent } from "../lib/student-flow.mjs";
 
 async function handle(req) {
@@ -30,7 +30,7 @@ async function handle(req) {
     try {
       let s = await getStudent(email);
       if (s && s.status === "awaiting_card") s = await reconcileStudent(email, s);
-      if (s) student = { status: s.status, submittedAt: s.submittedAt || null, reason: s.status === "rejected" ? s.reason || null : null };
+      if (s) student = { status: s.status, submittedAt: s.submittedAt || null, cardLater: s.cardMode === "after_approval", reason: s.status === "rejected" ? s.reason || null : null, ...(s.status === "approved_pending_card" ? { payUrl: studentTrialUrl(s.email || email) } : {}) };
     } catch (e) { console.error("student", e); }
     const mem = await getMembership(email);
     return json({ email, jobAlerts, ...mem, student });

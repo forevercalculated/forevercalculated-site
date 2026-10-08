@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Student ID Reviews</title>
+<style>
+  :root { --bg:#07090B; --card:#0F1318; --line:rgba(255,255,255,0.09); --text:#F4F6F8; --muted:#8A939E; --teal:#5FC9BF; --green:#34D38C; --red:#F59E8B; --amber:#F5C76B; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1000px; margin:0 auto; padding:24px 16px 60px; }
+  header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .brand { font-size:22px; font-weight:800; } .brand span { color:var(--green); }
+  .brand small { display:block; font-size:13px; font-weight:500; color:var(--muted); margin-top:2px; }
+  .btn { font:inherit; font-size:14px; font-weight:700; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--text); cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  .btn.approve { background:var(--green); border-color:var(--green); color:#04210F; }
+  .btn.reject { border-color:var(--red); color:var(--red); }
+  .btn:disabled { opacity:.5; cursor:default; }
+  h2 { font-size:16px; margin:28px 0 12px; color:var(--muted); font-weight:700; letter-spacing:.02em; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:12px; }
+  .card h3 { margin:0 0 4px; font-size:18px; }
+  .meta { color:#C9D1D8; font-size:14px; line-height:1.6; }
+  .meta b { color:var(--text); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  .warn { color:var(--amber); font-size:13px; margin-top:8px; }
+  .tag { display:inline-block; font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
+  .tag.pending_review { border-color:var(--amber); color:var(--amber); }
+  .tag.approved { border-color:var(--green); color:var(--green); }
+  .tag.rejected, .tag.expired, .tag.withdrawn { border-color:var(--red); color:var(--red); }
+  label.chk { display:flex; align-items:center; gap:8px; font-size:14px; color:#C9D1D8; }
+  label.chk input { width:17px; height:17px; accent-color:var(--teal); }
+  table { width:100%; border-collapse:collapse; font-size:14px; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; color:var(--muted); }
+  .empty { padding:24px; text-align:center; color:var(--muted); background:var(--card); border:1px solid var(--line); border-radius:14px; }
+  .gate { max-width:420px; margin:12vh auto; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:26px; }
+  .gate input { width:100%; font:inherit; font-size:15px; color:var(--text); background:#0A0D11; border:1px solid var(--line); border-radius:10px; padding:12px; margin:12px 0; }
+  .err { color:var(--red); font-size:14px; margin-top:8px; }
+  .msg { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:#11161C; border:1px solid var(--line); border-radius:12px; padding:12px 16px; font-size:14px; display:none; max-width:92vw; }
+  .viewer { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; padding:20px; z-index:5; }
+  .viewer.open { display:flex; }
+  .viewer img { max-width:100%; max-height:86vh; border-radius:8px; background:#fff; }
+  .viewer .close { position:absolute; top:14px; right:16px; }
+  .note { color:var(--muted); font-size:13px; line-height:1.5; margin-top:24px; }
+  @media (max-width:640px){ table { display:block; overflow-x:auto; } }
+</style>
+</head>
+<body>
+<div id="gate" class="gate" style="display:none">
+  <div class="brand">Student ID Reviews</div>
+  <input id="keyIn" type="password" autocomplete="off" placeholder="Admin key">
+  <button class="btn approve" id="keyGo">Open</button>
+  <div class="err" id="gateErr"></div>
+</div>
+<div id="app" class="wrap" style="display:none">
+  <header>
+    <div class="brand">Forever<span>Careers</span><small>Student ID reviews &middot; &pound;19.99/month student plan</small></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="refresh">Refresh</button><a class="btn" href="/admin/">Admin dashboard</a></div>
+  </header>
+  <h2 id="pendTitle">Waiting for review</h2>
+  <div id="pending"></div>
+  <h2>All applications</h2>
+  <div id="others"></div>
+  <p class="note">Approving starts the student's 14-day free trial on their saved card (then &pound;19.99/month), switches on site access and job alerts, emails them, and deletes their ID file. Rejecting removes their saved card, deletes the ID and emails them your reason. Nobody is charged before you approve. IDs not reviewed within 30 days are deleted automatically.</p>
+</div>
+<div class="viewer" id="viewer"><button class="btn close" id="vClose">Close</button><img id="vImg" alt="Student ID"></div>
+<div class="msg" id="msg"></div>
+<script>
+(function(){
+  var KEY_STORE = 'fc_admin_k', key = '';
+  try { localStorage.setItem('fc_nocount','1'); key = localStorage.getItem(KEY_STORE) || ''; } catch (e) {}
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var when = function(iso){ if (!iso) return ''; var d = new Date(iso); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); };
+  var label = { pending_review:'Waiting for review', awaiting_card:'Card not added yet', approved:'Approved', rejected:'Rejected', withdrawn:'Withdrawn', expired:'Expired' };
+  function say(t){ var m = $('msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(say.t); say.t = setTimeout(function(){ m.style.display = 'none'; }, 6000); }
+  function gate(e){ $('app').style.display = 'none'; $('gate').style.display = 'block'; $('gateErr').textContent = e || ''; }
+  function call(method, body, qs){ return fetch('/api/student-admin' + (qs || ''), { method: method, headers: { 'x-admin-key': key, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }); }
+
+  function load(){
+    if (!key) return gate('');
+    call('GET').then(function(r){ if (r.status === 404) { gate('That key did not work.'); return null; } return r.json(); }).then(function(d){
+      if (!d) return;
+      $('gate').style.display = 'none'; $('app').style.display = 'block';
+      var pend = d.rows.filter(function(r){ return r.status === 'pending_review'; });
+      $('pendTitle').textContent = 'Waiting for review (' + pend.length + ')';
+      $('pending').innerHTML = pend.length ? '' : '<div class="empty">Nothing to review right now.</div>';
+      pend.forEach(function(r){ $('pending').appendChild(card(r)); });
+      var rest = d.rows.filter(function(r){ return r.status !== 'pending_review'; });
+      $('others').innerHTML = rest.length ? '<table><thead><tr><th>Name</th><th>Email</th><th>Institution</th><th>Status</th><th>Submitted</th><th>Decided</th><th>Note</th></tr></thead><tbody>' + rest.map(function(r){
+        return '<tr><td>' + esc(r.name) + '</td><td>' + esc(r.email) + '</td><td>' + esc(r.institution) + '</td><td><span class="tag ' + esc(r.status) + '">' + esc(label[r.status] || r.status) + '</span></td><td>' + esc(when(r.submittedAt)) + '</td><td>' + esc(when(r.decidedAt)) + '</td><td>' + esc(r.reason || '') + '</td></tr>';
+      }).join('') + '</tbody></table>' : '<div class="empty">No other applications yet.</div>';
+    }).catch(function(){ say('Could not load applications. Check your connection.'); });
+  }
+
+  function card(r){
+    var el = document.createElement('div'); el.className = 'card';
+    el.innerHTML = '<h3>' + esc(r.name || r.email) + ' <span class="tag pending_review">Waiting ' + esc(hoursSince(r.cardSavedAt || r.submittedAt)) + '</span></h3>' +
+      '<div class="meta">' + esc(r.email) + '<br><b>' + esc(r.institution) + '</b> &middot; ' + esc(r.course) + ' &middot; finishing ' + esc(r.gradYear) +
+      '<br>Student ID number: <b>' + esc(r.studentId) + '</b><br>Submitted ' + esc(when(r.submittedAt)) + ', card saved ' + esc(when(r.cardSavedAt)) + '</div>' +
+      (r.trialUsedBefore ? '<div class="warn">This person has had a Forever Careers free trial before.</div>' : '') +
+      '<div class="row"><button class="btn" data-a="view">View student ID</button>' +
+      '<label class="chk"><input type="checkbox" data-a="trial" checked> Give 14-day free trial</label></div>' +
+      '<div class="row"><button class="btn approve" data-a="approve">Approve and start trial</button><button class="btn reject" data-a="reject">Reject</button></div>';
+    el.querySelector('[data-a=view]').onclick = function(){ view(r); };
+    var trial = el.querySelector('[data-a=trial]');
+    trial.onchange = function(){ el.querySelector('[data-a=approve]').textContent = trial.checked ? 'Approve and start trial' : 'Approve and charge £19.99 now'; };
+    el.querySelector('[data-a=approve]').onclick = function(){
+      var t = trial.checked;
+      if (!confirm('Approve ' + (r.name || r.email) + '?\n\n' + (t ? 'Their 14-day free trial starts now, then £19.99/month.' : 'Their card is charged £19.99 now, then monthly.') + ' They get site access and job alerts straight away.')) return;
+      act(el, { action: 'approve', key: r.key, trial: t }, 'Approved. ' + (r.name || r.email) + ' now has access and has been emailed.');
+    };
+    el.querySelector('[data-a=reject]').onclick = function(){
+      var why = prompt('Reason for rejecting (this is emailed to the student):', 'The ID was unclear or did not show a current enrolment date. Please upload a clear photo of your current student ID card.');
+      if (why === null) return;
+      act(el, { action: 'reject', key: r.key, reason: why }, 'Rejected. Their card was removed and they have been emailed.');
+    };
+    return el;
+  }
+  function hoursSince(iso){ if (!iso) return ''; var h = Math.floor((Date.now() - Date.parse(iso)) / 3600000); return h < 1 ? 'under 1h' : h + 'h'; }
+  function act(el, body, ok){
+    el.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+    call('POST', body).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); }).then(function(res){
+      if (!res.ok) { say(res.j.error || 'That did not work.'); el.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
+      say(ok); load();
+    }).catch(function(){ say('Network error. Nothing was changed if this message stays; refresh to check.'); el.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); });
+  }
+  function view(r){
+    call('GET', null, '?file=' + encodeURIComponent(r.key)).then(function(res){ if (!res.ok) throw 0; return res.blob(); }).then(function(b){
+      var u = URL.createObjectURL(b);
+      if (/pdf/.test(b.type)) { window.open(u, '_blank', 'noopener'); return; }
+      $('vImg').src = u; $('viewer').classList.add('open');
+    }).catch(function(){ say('Could not open the ID file. HEIC photos may need Safari; otherwise ask the student to resend.'); });
+  }
+  $('vClose').onclick = function(){ $('viewer').classList.remove('open'); $('vImg').src = ''; };
+  $('viewer').onclick = function(e){ if (e.target.id === 'viewer') $('vClose').onclick(); };
+  $('keyGo').onclick = function(){ key = $('keyIn').value.trim(); try { localStorage.setItem(KEY_STORE, key); } catch (e) {} load(); };
+  $('refresh').onclick = load;
+  load();
+  setInterval(load, 120000);
+})();
+</script>
+</body>
+</html>

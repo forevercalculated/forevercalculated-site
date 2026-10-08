@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { json, emailFromRequest, userKey } from "../lib/common.mjs";
 import { SITE, stripe, enforcedFor, trialFor, setBilling, linkCustomer, membershipFor, PRICE_ID, TRIAL_DAYS } from "../lib/billing.mjs";
+import { getStudent, BLOCKING } from "../lib/student.mjs";
 
 async function handle(req) {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -10,6 +11,8 @@ async function handle(req) {
 
   const m = await membershipFor(email);
   if (m.billing) return json({ error: "You already have an active plan.", alreadyActive: true }, 409);
+  const stu = await getStudent(email);
+  if (stu && BLOCKING.includes(stu.status)) return json({ error: stu.status === "awaiting_card" ? "You have an unfinished student application. Finish it from the top of the page, or cancel it to use the standard plan." : "Your student ID is being reviewed. You'll get access within 24 hours of approval, so there's no need to start another plan.", student: true }, 409);
 
   const { billing, trial } = await trialFor(email);
   const sub = { metadata: { email, uk: userKey(email) }, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } };

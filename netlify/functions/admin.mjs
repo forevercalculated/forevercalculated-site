@@ -4,6 +4,7 @@ import { json, adminOk } from "../lib/common.mjs";
 import jobsMeta from "../lib/jobs-meta.mjs";
 import jobsData from "../lib/jobs-data.mjs";
 import { billingEnforced, launchMsFrom, decideMembership } from "../lib/billing-core.mjs";
+import { studentGate } from "../lib/student.mjs";
 
 async function stripePayments() {
   const key = process.env.STRIPE_SECRET_KEY; if (!key) return [];
@@ -50,18 +51,18 @@ export default async (req) => {
       const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
       if (!email) return json({ error: "email required" }, 400);
       const key = crypto.createHash("sha256").update(email).digest("hex");
-      const stores = ["users", "activity", "applied-v2", "apply-log", "cvs", "cv-files", "billing"];
+      const stores = ["users", "activity", "applied-v2", "apply-log", "cvs", "cv-files", "billing", "students", "student-ids"];
       await Promise.all(stores.map((n) => getStore({ name: n, consistency: "strong" }).delete(key).catch(() => {})));
       return json({ ok: true, email });
     }
     if (view === "billing-members") {
       // who should receive job emails: active = free (billing off) or trial/paid/in grace
-      const [us, bs] = [await all("users"), await all("billing")];
+      const [us, bs, ss] = [await all("users"), await all("billing"), await all("students")];
       const now = Date.now(), lm = launchMsFrom(process.env);
       const active = [], inactive = [];
       for (const [k, u] of Object.entries(us)) {
         if (!u || !u.email) continue;
-        const m = decideMembership({ enforced: billingEnforced(process.env, u.email), user: u, billing: bs[k] || null, now, launchMs: lm });
+        const m = studentGate(decideMembership({ enforced: billingEnforced(process.env, u.email), user: u, billing: bs[k] || null, now, launchMs: lm }), ss[k] || null, bs[k] || null);
         (m.active ? active : inactive).push(u.email);
       }
       return json({ mode: process.env.BILLING_MODE || "off", total: active.length + inactive.length, active, inactive });
@@ -88,6 +89,7 @@ export default async (req) => {
       // Only members with access (free trial, paying, or inside the launch countdown) are returned,
       // so the job-match emails stop for anyone whose trial ended without paying. ?all=1 shows everyone.
       const billing = getStore({ name: "billing", consistency: "strong" });
+      const students = getStore({ name: "students", consistency: "strong" });
       const showAll = url.searchParams.get("all") === "1";
       const now = Date.now(), lm = launchMsFrom(process.env);
       const l = await cvs.list(); const out = []; let skipped = 0;
@@ -97,7 +99,8 @@ export default async (req) => {
         const u = (await users.get(b.key, { type: "json" })) || {};
         const email = m.email || u.email;
         if (!u.email) { skipped++; return; } // account deleted
-        const mem = decideMembership({ enforced: billingEnforced(process.env, email), user: u, billing: (await billing.get(b.key, { type: "json" })) || null, now, launchMs: lm });
+        const bill = (await billing.get(b.key, { type: "json" })) || null;
+        const mem = studentGate(decideMembership({ enforced: billingEnforced(process.env, email), user: u, billing: bill, now, launchMs: lm }), (await students.get(b.key, { type: "json" })) || null, bill);
         if (!mem.active && !showAll) { skipped++; return; }
         out.push({ key: b.key, email, first_name: u.firstName || "", country: u.country || "", city: u.city || "", industry: u.industry || "", work_pref: u.workPref || "", urgency: u.urgency || "", about: u.about || "", cv_name: m.name, cv_download: "/api/admin?view=cvfile&u=" + encodeURIComponent(b.key), opted_in: m.consentAt || m.uploadedAt, plan: mem.plan, access: mem.active ? "active" : "no access" });
       }));

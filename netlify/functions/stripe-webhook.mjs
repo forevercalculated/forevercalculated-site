@@ -1,5 +1,7 @@
 import { getStore } from "@netlify/blobs";
-import { getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong } from "../lib/billing.mjs";
+import { getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong, isStudentSub } from "../lib/billing.mjs";
+import { markCardSaved } from "../lib/student-flow.mjs";
+import { STUDENT_PRICE_ID, STUDENT_PRICE_TEXT } from "../lib/student.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
 
 const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { status: 200, headers: { "content-type": "application/json" } });
@@ -11,6 +13,11 @@ async function handleEvent(ev) {
   const o = ev.data && ev.data.object;
   switch (ev.type) {
     case "checkout.session.completed": {
+      if (o.mode === "setup" && o.metadata && o.metadata.purpose === "student") {
+        const email = normEmail(o.metadata.email || "");
+        if (email) await markCardSaved(email, typeof o.setup_intent === "string" ? o.setup_intent : o.setup_intent && o.setup_intent.id);
+        return;
+      }
       if (o.mode !== "subscription") return;
       const email = normEmail((o.metadata && o.metadata.email) || (o.customer_details && o.customer_details.email) || o.customer_email || "");
       if (email && o.customer) { await linkCustomer(o.customer, email); await setBilling(email, { customerId: o.customer, subscriptionId: o.subscription || null, trialUsed: true }); }
@@ -34,7 +41,8 @@ async function handleEvent(ev) {
       const r = await applySubscription(o);
       if (r && o.status === "trialing" && o.trial_end && enforcedFor(r.email) && r.saved.welcomedFor !== o.id && !(r.prev && r.prev.welcomedFor)) {
         const name = await nameFor(r.email);
-        await sendEmail({ to: r.email, ...mail.welcome(name, fmtLong(o.trial_end * 1000)) });
+        const w = isStudentSub(o) ? mail.studentWelcome : mail.welcome;
+        await sendEmail({ to: r.email, ...w(name, fmtLong(o.trial_end * 1000)) });
         await setBilling(r.email, { welcomedFor: o.id, welcomedAt: new Date().toISOString() });
       }
       return;
@@ -44,9 +52,10 @@ async function handleEvent(ev) {
       if (!r || !enforcedFor(r.email)) return;
       if (r.saved.lastCancelEmailFor === o.id) return; // already emailed for this subscription
       const reason = o.cancellation_details && o.cancellation_details.reason;
-      const link = await reactivationLink(r.email);
+      const student = isStudentSub(o);
+      const link = await reactivationLink(r.email, student ? STUDENT_PRICE_ID : undefined);
       const name = await nameFor(r.email);
-      const m = reason === "payment_failed" ? mail.paymentCancelled(name, link) : mail.userCancelled(name, link);
+      const m = reason === "payment_failed" ? mail.paymentCancelled(name, link, student ? STUDENT_PRICE_TEXT : undefined) : mail.userCancelled(name, link);
       await sendEmail({ to: r.email, ...m });
       await setBilling(r.email, { lastCancelEmailFor: o.id, cancelReason: reason || "cancelled", cancelledAt: new Date().toISOString() });
       return;

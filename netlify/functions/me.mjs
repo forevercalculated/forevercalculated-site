@@ -1,5 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { json, emailFromRequest, getMembership, userKey } from "../lib/common.mjs";
+import { getStudent } from "../lib/student.mjs";
+import { reconcileStudent } from "../lib/student-flow.mjs";
 
 async function handle(req) {
   const email = emailFromRequest(req);
@@ -24,7 +26,14 @@ async function handle(req) {
         jobAlerts = { opted: true, urgency: u.urgency || "", firstSentAt: meta.firstSentAt || null, consentAt: meta.consentAt || meta.uploadedAt || null };
       }
     } catch (e) { console.error("jobAlerts", e); }
-    return json({ email, jobAlerts, ...(await getMembership(email)) });
+    let student = null;
+    try {
+      let s = await getStudent(email);
+      if (s && s.status === "awaiting_card") s = await reconcileStudent(email, s);
+      if (s) student = { status: s.status, submittedAt: s.submittedAt || null, reason: s.status === "rejected" ? s.reason || null : null };
+    } catch (e) { console.error("student", e); }
+    const mem = await getMembership(email);
+    return json({ email, jobAlerts, ...mem, student });
   } catch (err) {
     console.error(err);
     return json({ email, active: false, error: "We couldn't check your plan just now. Please try again shortly." }, 503);

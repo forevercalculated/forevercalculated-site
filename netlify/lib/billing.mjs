@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { userKey, normEmail } from "./common.mjs";
 import { PRICE_ID, TRIAL_DAYS, DAY, billingEnforced, launchMsFrom, decideMembership, decideTrial, formEncode } from "./billing-core.mjs";
+import { getStudent, studentGate, STUDENT_PRICE_ID } from "./student.mjs";
 
 export const SITE = "https://forevercalculatedcareers.com";
 const store = () => getStore({ name: "billing", consistency: "strong" });
@@ -74,9 +75,9 @@ export async function reconcile(email, billing) {
 export async function membershipFor(email) {
   const e = normEmail(email);
   if (!enforcedFor(e)) return decideMembership({ enforced: false });
-  const [user, b0] = await Promise.all([users().get(userKey(e), { type: "json" }), getBilling(e)]);
+  const [user, b0, student] = await Promise.all([users().get(userKey(e), { type: "json" }), getBilling(e), getStudent(e).catch(() => null)]);
   const billing = await reconcile(e, b0);
-  return decideMembership({ enforced: true, user, billing, now: Date.now(), launchMs: launchMs() });
+  return studentGate(decideMembership({ enforced: true, user, billing, now: Date.now(), launchMs: launchMs() }), student, billing);
 }
 export async function trialFor(email) {
   const e = normEmail(email);
@@ -106,18 +107,22 @@ export function verifyStripeSignature(raw, header, secret) {
   return sigs.some((s) => s.length === exp.length && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(exp)));
 }
 
-// Permanent "pay to reactivate" link (Stripe Payment Link), created once and cached.
-export async function reactivationLink(email) {
+// Is this Stripe subscription on the student price?
+export const isStudentSub = (sub) => !!(sub && sub.items && (sub.items.data || []).some((i) => i.price && i.price.id === STUDENT_PRICE_ID));
+
+// Permanent "pay to reactivate" link (Stripe Payment Link), created once per price and cached.
+export async function reactivationLink(email, price = PRICE_ID) {
   const s = store();
-  let pl = await s.get("_paylink", { type: "json" });
+  const cacheKey = price === PRICE_ID ? "_paylink" : "_paylink_" + price;
+  let pl = await s.get(cacheKey, { type: "json" });
   if (!pl || !pl.url) {
     const r = await stripe("POST", "payment_links", {
-      line_items: { 0: { price: PRICE_ID, quantity: 1 } },
+      line_items: { 0: { price, quantity: 1 } },
       after_completion: { type: "redirect", redirect: { url: `${SITE}/?paid=1` } },
       billing_address_collection: "auto",
     });
     pl = { id: r.id, url: r.url };
-    await s.setJSON("_paylink", pl);
+    await s.setJSON(cacheKey, pl);
   }
   const q = new URLSearchParams({ client_reference_id: userKey(normEmail(email)), prefilled_email: normEmail(email) });
   return `${pl.url}?${q.toString()}`;
@@ -160,10 +165,38 @@ ${btn(SITE, "Start exploring your roles")}
 <p>If anything doesn't feel right, or you'd just like to talk something through, email us at <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>. We read every message and we'll get back to you.</p>
 <p>Here's to your next role.</p>
 <p>Kenneth and the Forever Careers team</p>`) }),
-  paymentCancelled: (name, link) => ({ subject: "Your Forever Careers account has been cancelled", html: wrap(`<p>${first(name)}</p><p>We couldn't take your £50 monthly payment, so your Forever Careers account has been cancelled and your job emails have stopped.</p><p>To restart, make your payment with the secure link below. Your account reactivates automatically with the same login details.</p>${btn(link, "Pay £50 and reactivate")}<p>If you think this is a mistake, just reply to this email.</p>`) }),
+  paymentCancelled: (name, link, amount = "£50") => ({ subject: "Your Forever Careers account has been cancelled", html: wrap(`<p>${first(name)}</p><p>We couldn't take your ${amount} monthly payment, so your Forever Careers account has been cancelled and your job emails have stopped.</p><p>To restart, make your payment with the secure link below. Your account reactivates automatically with the same login details.</p>${btn(link, `Pay ${amount} and reactivate`)}<p>If you think this is a mistake, just reply to this email.</p>`) }),
   userCancelled: (name, link) => ({ subject: "Your Forever Careers plan has been cancelled", html: wrap(`<p>${first(name)}</p><p>Your Forever Careers plan is cancelled, so you won't be charged again.</p><p>If you change your mind, you can restart any time and your login stays the same.</p>${btn(link, "Restart my plan")}`) }),
   graceReminder: (name, daysLeft, dateText) => ({ subject: daysLeft <= 1 ? "Last day of your Forever Careers free trial" : `${daysLeft} days left of your Forever Careers free trial`, html: wrap(`<p>${first(name)}</p><p>Your free trial ends on <b>${dateText}</b>. To keep receiving your CV-matched jobs and full access, add your card now. Your card is only charged when the trial ends, then £50 a month. Cancel any time.</p>${btn(`${SITE}/?subscribe=1`, "Add card and keep my access")}`) }),
   checkoutReminder: (name) => ({ subject: "Your job matches are ready to switch on", html: wrap(`<p>${first(name)}</p><p>Thanks for signing up to Forever Careers. You're one step away from getting jobs matched to your CV sent to your inbox every morning and evening.</p><p>Your <b>14 day free trial</b> hasn't started yet. Your card isn't charged today, and you can cancel any time before day 14 and pay nothing.</p>${btn(`${SITE}/?subscribe=1`, "Start my free trial")}<p>If something went wrong at checkout or you have a question, just reply to this email and Kenneth will help.</p>`) }),
+  studentReceived: (name) => ({ subject: "We're reviewing your student ID", html: wrap(`<p>${first(name)}</p>
+<p>Thank you for applying for the Forever Careers student plan. Your student ID is now being reviewed.</p>
+<p>You'll get access to the website and start receiving your job alerts <b>within 24 hours</b>, as soon as your ID is approved. We'll email you the moment it is.</p>
+<p>Your <b>14-day free trial starts on the day you're approved</b>, not today. Your card has been saved securely by Stripe and <b>is not charged during the review</b>. After your trial it's ${"£19.99"} a month, and you can cancel any time.</p>
+<p>Any questions, just reply to this email or write to <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>.</p>
+<p>Kenneth and the Forever Careers team</p>`) }),
+  studentWelcome: (name, dateText) => ({ subject: `You're approved${name ? ", " + name : ""}. Your Forever Careers student trial has started`, html: wrap(`<p>${first(name)}</p>
+<p>Great news: your student ID has been approved and your <b>14-day free trial has started today</b>. Every role on the site is now unlocked, and your CV-matched job alerts will start arriving by email every morning and evening.</p>
+<table style="border-collapse:collapse;font-size:15px;line-height:1.5">
+${li("<b>Full access to our job board.</b> Thousands of live remote, hybrid and on-site roles across 19 countries.")}
+${li("<b>Jobs matched to your CV, twice a day.</b> Straight to your inbox.")}
+${li("<b>Student price.</b> £19.99 a month after your trial, instead of £50.")}
+</table>
+<p style="margin-top:18px">Your free trial runs until <b>${dateText}</b>. After that it's <b>£19.99 a month</b>, and you can cancel any time from <b>Manage plan</b> on the site. We'll remind you before your trial ends.</p>
+${btn(SITE, "Start exploring your roles")}
+<p>Any questions, email <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>.</p>
+<p>Kenneth and the Forever Careers team</p>`) }),
+  studentRejected: (name, reason) => ({ subject: "About your Forever Careers student application", html: wrap(`<p>${first(name)}</p>
+<p>Thank you for applying for the Forever Careers student plan. Unfortunately we weren't able to approve your student ID${reason ? ":" : "."}</p>
+${reason ? `<p style="background:#f4f6f8;border-radius:8px;padding:12px 14px">${String(reason).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c])}</p>` : ""}
+<p>Your card has <b>not been charged</b> and we've removed it from your account. We've also deleted the ID you uploaded.</p>
+<p>You're welcome to apply again with a clear photo of a current student ID, or start the standard 14-day free trial (then £50 a month) from the site.</p>
+${btn(SITE, "Go to Forever Careers")}
+<p>If you think this is a mistake, just reply to this email.</p>`) }),
+  studentAdmin: (s, link) => ({ subject: `Student ID to review: ${s.firstName || ""} ${s.lastName || ""} (${s.institution || "student"})`.replace(/\s+/g, " "), html: wrap(`<p>A new student application is waiting for your review.</p>
+<p><b>${s.firstName || ""} ${s.lastName || ""}</b><br>${s.email}<br>${s.institution || ""}, ${s.course || ""} (graduating ${s.gradYear || "?"})</p>
+<p>Their card is saved and they have no access until you approve. Promised turnaround: 24 hours.</p>
+${btn(link, "Review student ID")}`) }),
   accessPaused: (name) => ({ subject: "Your Forever Careers free trial has ended", html: wrap(`<p>${first(name)}</p><p>Your free trial has ended, so your job emails are paused. Add your card to switch everything back on with the same login.</p>${btn(`${SITE}/?subscribe=1`, "Restart for £50 a month")}`) }),
 };
 export const fmtLong = (ms) => new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });

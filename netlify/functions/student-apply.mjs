@@ -25,7 +25,7 @@ async function cardSession(email, customerId) {
     metadata: { email, uk, purpose: "student" },
     setup_intent_data: { metadata: { email, uk, purpose: "student" } },
     locale: "en-GB",
-    custom_text: { submit: { message: "Your card is saved but NOT charged today. Your 14-day free trial starts only when we approve your student ID (within 24 hours), then £19.99 per month unless you cancel." } },
+    custom_text: { submit: { message: "Your card is saved but NOT charged today. Your 3 free months start only when we approve your student ID (within 24 hours), then £19.99 per month unless you cancel." } },
     expires_at: Math.floor(Date.now() / 1000) + 3600,
   });
 }

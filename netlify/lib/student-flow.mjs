@@ -2,8 +2,7 @@
 import crypto from "node:crypto";
 import { normEmail } from "./common.mjs";
 import { SITE, stripe, getBilling, applySubscription, sendEmail, mail } from "./billing.mjs";
-import { TRIAL_DAYS } from "./billing-core.mjs";
-import { getStudent, getStudentByKey, setStudentByKey, studentKey, deleteIdFile, maskId, reviewInbox, STUDENT_PRICE_ID, studentTrialUrl } from "./student.mjs";
+import { getStudent, getStudentByKey, setStudentByKey, studentKey, deleteIdFile, maskId, reviewInbox, STUDENT_PRICE_ID, STUDENT_TRIAL_DAYS, studentTrialUrl } from "./student.mjs";
 
 export const isPermissionError = (e) => /Stripe 403/.test(String((e && e.message) || e));
 
@@ -96,14 +95,14 @@ async function approveWithCard(k, rec, email, trial) {
     customer: rec.customerId,
     items: { 0: { price: STUDENT_PRICE_ID, quantity: 1 } },
     default_payment_method: rec.paymentMethodId,
-    ...(trial ? { trial_period_days: TRIAL_DAYS, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } } : {}),
+    ...(trial ? { trial_period_days: STUDENT_TRIAL_DAYS, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } } : {}),
     payment_behavior: "allow_incomplete",
     metadata: { email, uk: k, plan: "student" },
   }, "student-approve-" + k + "-" + crypto.createHash("sha256").update(String(rec.submittedAt)).digest("hex").slice(0, 16));
   await applySubscription(sub, email); // access + job alerts switch on straight away; the webhook sends the welcome email
 
   await deleteIdFile(k);
-  const next = await setStudentByKey(k, { status: "approved", subscriptionId: sub.id, decidedAt: new Date().toISOString(), studentId: maskId(rec.studentId), hasFile: false, trialGiven: !!trial }, "approved" + (trial ? " with 14-day trial" : " without trial"));
+  const next = await setStudentByKey(k, { status: "approved", subscriptionId: sub.id, decidedAt: new Date().toISOString(), studentId: maskId(rec.studentId), hasFile: false, trialGiven: !!trial }, "approved" + (trial ? " with 3 free months" : " without free months"));
   return { ok: true, record: next, subscription: { id: sub.id, status: sub.status, trial_end: sub.trial_end || null } };
 }
 

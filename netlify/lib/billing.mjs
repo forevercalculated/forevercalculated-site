@@ -157,7 +157,7 @@ export const mail = {
 <p style="margin:22px 0 10px"><b>Here's what your 14-day free trial includes</b></p>
 <table style="border-collapse:collapse;font-size:15px;line-height:1.5">
 ${li("<b>Full access to our job board.</b> Thousands of live remote, hybrid and on-site roles across 19 countries, with direct links to apply.")}
-${li("<b>Jobs matched to your CV, twice a day.</b> Every morning and evening we send you the roles that best fit your skills and experience, straight to your inbox.")}
+${li("<b>Jobs matched to your CV, three times a day.</b> Every morning, afternoon and evening we send you the roles that best fit your skills and experience, straight to your inbox.")}
 ${li("<b>Roles you can trust.</b> We check the board every day and remove closed and duplicate listings, so your time goes on real opportunities.")}
 </table>
 <p style="margin-top:18px">Your free trial runs until <b>${dateText}</b>. After that it's <b>£50 a month</b>, and you can cancel at any time from <b>Manage plan</b> on the site. No awkward phone calls, no fuss. We'll send you a reminder before your trial ends.</p>
@@ -172,25 +172,25 @@ ${btn(SITE, "Start exploring your roles")}
   studentReceived: (name, cardLater) => ({ subject: "We're reviewing your student ID", html: wrap(`<p>${first(name)}</p>
 <p>Thank you for applying for the Forever Careers student plan. Your student ID is now being reviewed.</p>
 <p>You'll get access to the website and start receiving your job alerts <b>within 24 hours</b>, as soon as your ID is approved. We'll email you the moment it is.</p>
-${cardLater ? `<p>Once you're approved we'll email you a secure Stripe link to add your card. Your <b>14-day free trial starts then</b>, and nothing is charged until it ends. After your trial it's £19.99 a month, and you can cancel any time.</p>` : `<p>Your <b>14-day free trial starts on the day you're approved</b>, not today. Your card has been saved securely by Stripe and <b>is not charged during the review</b>. After your trial it's £19.99 a month, and you can cancel any time.</p>`}
+${cardLater ? `<p>Once you're approved we'll email you a secure Stripe link to add your card. Your <b>3 free months start then</b>, and nothing is charged until they end. After your 3 free months it's £19.99 a month, and you can cancel any time.</p>` : `<p>Your <b>3 free months start on the day you're approved</b>, not today. Your card has been saved securely by Stripe and <b>is not charged during the review or the 3 free months</b>. After that it's £19.99 a month, and you can cancel any time.</p>`}
 <p>Any questions, just reply to this email or write to <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>.</p>
 <p>Kenneth and the Forever Careers team</p>`) }),
-  studentWelcome: (name, dateText) => ({ subject: `You're approved${name ? ", " + name : ""}. Your Forever Careers student trial has started`, html: wrap(`<p>${first(name)}</p>
-<p>Great news: your student ID has been approved and your <b>14-day free trial has started today</b>. Every role on the site is now unlocked, and your CV-matched job alerts will start arriving by email every morning and evening.</p>
+  studentWelcome: (name, dateText) => ({ subject: `You're approved${name ? ", " + name : ""}. Your 3 free months have started`, html: wrap(`<p>${first(name)}</p>
+<p>Great news: your student ID has been approved and your <b>3 free months have started today</b>. Every role on the site is now unlocked, and your CV-matched job alerts will start arriving by email.</p>
 <table style="border-collapse:collapse;font-size:15px;line-height:1.5">
 ${li("<b>Full access to our job board.</b> Thousands of live remote, hybrid and on-site roles across 19 countries.")}
-${li("<b>Jobs matched to your CV, twice a day.</b> Straight to your inbox.")}
-${li("<b>Student price.</b> £19.99 a month after your trial, instead of £50.")}
+${li("<b>Jobs matched to your CV, 3 times a day.</b> Morning, afternoon and evening, straight to your inbox. Your evening matches come with a tailored CV attached.")}
+${li("<b>Student price.</b> £19.99 a month after your 3 free months, instead of £50.")}
 </table>
-<p style="margin-top:18px">Your free trial runs until <b>${dateText}</b>. After that it's <b>£19.99 a month</b>, and you can cancel any time from <b>Manage plan</b> on the site. We'll remind you before your trial ends.</p>
+<p style="margin-top:18px">Your 3 free months run until <b>${dateText}</b>. Your card is only charged after that date, then it's <b>£19.99 a month</b>. You can cancel any time from <b>Manage plan</b> on the site and pay nothing if you cancel before then.</p>
 ${btn(SITE, "Start exploring your roles")}
 <p>Any questions, email <a href="mailto:hello@forevercalculatedcareers.com">hello@forevercalculatedcareers.com</a>.</p>
 <p>Kenneth and the Forever Careers team</p>`) }),
-  studentApprovedLink: (name, url) => ({ subject: `You're approved${name ? ", " + name : ""}. Start your Forever Careers student trial`, html: wrap(`<p>${first(name)}</p>
+  studentApprovedLink: (name, url) => ({ subject: `You're approved${name ? ", " + name : ""}. Start your 3 free months`, html: wrap(`<p>${first(name)}</p>
 <p>Great news: your student ID has been <b>approved</b>.</p>
-<p>The last step is to add your card on our secure Stripe page. Your <b>14-day free trial starts the moment you do</b>, every role on the site unlocks, and your CV-matched job alerts start arriving every morning and evening.</p>
-<p>Your card is not charged today. After the 14 days it's <b>£19.99 a month</b> (instead of £50), and you can cancel any time from <b>Manage plan</b> on the site.</p>
-${btn(url, "Add card and start my free trial")}
+<p>The last step is to add your card on our secure Stripe page. Your <b>3 free months start the moment you do</b>, every role on the site unlocks, and your CV-matched job alerts start arriving 3 times a day, with a tailored CV attached to your evening matches.</p>
+<p>Your card is not charged today or for the 3 free months. After that it's <b>£19.99 a month</b> (instead of £50), and you can cancel any time from <b>Manage plan</b> on the site.</p>
+${btn(url, "Add card and start my 3 free months")}
 <p>Please use the same email address as your Forever Careers account. Any questions, just reply to this email.</p>
 <p>Kenneth and the Forever Careers team</p>`) }),
   studentUnverified: (email) => ({ subject: `Student plan started without an approved ID: ${email}`, html: wrap(`<p>${email} has started a £19.99 student subscription, but they don't have an approved student ID on file.</p><p>This can happen if the student trial link was shared. Check them in Stripe and cancel if needed.</p>`) }),

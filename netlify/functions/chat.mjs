@@ -16,7 +16,8 @@ const FACTS = `ABOUT FOREVER CAREERS
 MEMBERSHIP (job matches)
 - Signing up starts a 14-day free trial, then £50 per month. Card details are entered at sign-up but not charged today; the first payment is taken automatically when the trial ends unless you cancel before then.
 - Cancel any time from your account page. If a payment fails it is retried once; if it still fails the account is cancelled.
-- Members can upload their CV (PDF or Word) and get job matches emailed twice a day, morning and evening. A Forever Careers agent may follow up. Reply "stop" to any match email to stop them.
+- Members can upload their CV (PDF or Word) and get job matches emailed three times a day: morning, afternoon and evening. A Forever Careers agent may follow up. Reply "stop" to any match email to stop them.
+- Student plan: students tick "I'm a student" at sign-up, upload their student ID (reviewed by hand within 24 hours) and save a card. They get 3 months free from the day the ID is approved, nothing is charged during those 3 months, then £19.99 per month unless they cancel before then. Students get job matches three times a day, with a tailored CV attached to the evening matches.
 - Sign-up problems: email hello@forevercalculatedcareers.com.
 
 OPTIONAL PAID SERVICES (one-off payments, priced in local currency where available, paid securely via Stripe)

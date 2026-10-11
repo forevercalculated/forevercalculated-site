@@ -73,3 +73,55 @@ export async function wipeUser(email) {
   }
   return done;
 }
+
+// ---- automatic exit flow: used when a member's cancelled membership ends ----
+const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const niceName = (s) => String(s || "").toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
+export function exitEmail(firstName, expiresAt) {
+  const n = esc(niceName(firstName));
+  const hi = n ? `Hi ${n},` : "Hi there,";
+  const until = new Date(expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });
+  const P = (t) => `<p style="margin:0 0 14px;">${t}</p>`;
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0B0912;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#0B0912;font-size:1px;line-height:1px;">Could you tell us why you cancelled? It takes about three minutes.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B0912" style="background:#0B0912;"><tr><td align="center" style="padding:16px 8px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+<tr><td style="padding:6px 8px 18px;font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:19px;font-weight:700;color:#FFFFFF;">Forever<span style="color:#5FE3B8;">Careers</span></td></tr>
+<tr><td style="padding:0 8px 18px;"><h1 style="margin:0 0 8px;font-family:'Space Grotesk',Arial,Helvetica,sans-serif;font-size:28px;line-height:1.15;font-weight:700;color:#FFFFFF;">${n ? n + ", could" : "Could"} you tell us how we did?</h1></td></tr>
+<tr><td style="padding:0 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#DCD8EA;">
+${P(hi)}
+${P("Your Forever Careers membership has now ended, so you won't receive any more job emails from us and you won't be charged. Thank you for giving us a try.")}
+${P("I'd really value hearing why you decided to cancel, so we can keep improving the service. I've put together a short feedback form of 10 multiple choice questions and a rating out of 10. It takes about three minutes. If anything went well for you, there's also space to share a few words as a testimonial, but only if you're happy for us to use them.")}
+</td></tr>
+<tr><td style="padding:6px 8px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#14111F" style="background:#14111F;border:1px solid #2A2540;border-radius:18px;"><tr><td style="padding:18px;font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.7;color:#DCD8EA;">
+<div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:#8CF5E0;margin-bottom:6px;">HOW IT WORKS</div>
+1. Click the button below and sign in with your usual Forever Careers email address and password. You'll be taken straight to the form.<br>
+2. You have <b style="color:#FFFFFF;">one attempt</b> to complete it.<br>
+3. When you submit, your answers are saved and your Forever Careers account and personal details are <b style="color:#FFFFFF;">permanently deleted</b>, so you won't be able to sign in again.<br>
+4. The form is open until <b style="color:#FFFFFF;">${esc(until)}</b>. If it isn't completed by then, your account and details will be deleted automatically.
+</td></tr></table></td></tr>
+<tr><td style="padding:18px 8px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#FFFFFF" style="background-color:#FFFFFF;border-radius:14px;"><a href="https://forevercalculatedcareers.com/feedback/" target="_blank" style="display:block;padding:15px 10px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#120E22;text-decoration:none;">Share my feedback</a></td></tr></table></td></tr>
+<tr><td style="padding:18px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#DCD8EA;">
+${P("If you can't sign in, or you'd simply rather reply to this email with a line or two, that's absolutely fine too.")}
+${P(`Thank you again${n ? ", " + n : ""}, and I wish you every success with your search.`)}
+</td></tr>
+<tr><td style="padding:10px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.6;color:#DCD8EA;">Kind regards,<br><b style="color:#FFFFFF;">Kenneth Nzegbulem</b><br>Founder, Forever Careers</td></tr>
+<tr><td style="padding:18px 8px 20px;"><div style="border-top:1px solid #221C38;padding-top:14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#7F789C;"><a href="https://forevercalculatedcareers.com" style="color:#8CF5E0;text-decoration:none;">forevercalculatedcareers.com</a></div></td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject: `${n ? n + ", could" : "Could"} you tell us why you cancelled?`, html };
+}
+
+// Opens an exit feedback request (closing the account to everything except /feedback) and emails the member.
+// Returns false if a request already exists for this member, so nobody is asked twice.
+export async function startExitFlow(email, sendEmail) {
+  email = normEmail(email);
+  const k = userKey(email);
+  if (await requests().get(k, { type: "json" })) return false;
+  const u = await st("users").get(k, { type: "json" });
+  if (!u) return false;
+  const now = Date.now();
+  const r = await setRequest(email, { email, firstName: niceName(u.firstName), status: "pending", createdAt: new Date(now).toISOString(), expiresAt: new Date(now + REQUEST_DAYS * DAY).toISOString(), wipeAfter: true, auto: true });
+  await sendEmail({ to: email, ...exitEmail(u.firstName, r.expiresAt) });
+  return true;
+}

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Your feedback | Forever Careers</title>
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0912;--card:#14111F;--line:#2A2540;--text:#EDE9FA;--muted:#9A93B5;--mint:#8CF5E0;--violet:#6D3BFF;--err:#FF8A8A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif;line-height:1.55}
+.wrap{max-width:720px;margin:0 auto;padding:28px 16px 64px}
+.brand{font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;font-size:20px;color:#fff;text-decoration:none}
+.brand span{color:#5FE3B8}
+h1{font-family:'Space Grotesk',Arial,sans-serif;font-size:32px;line-height:1.15;margin:26px 0 10px;color:#fff}
+p.lead{color:var(--muted);font-size:16px;margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 18px;margin:14px 0}
+.hero{background:#1A1233;background-image:radial-gradient(110% 80% at 0% 0%,#6D3BFF 0%,rgba(109,59,255,0) 62%),radial-gradient(90% 80% at 100% 0%,#1FC8C8 0%,rgba(31,200,200,0) 58%);border:0}
+.notice{border:1px solid #6b5220;background:#1d1708;color:#F6DC8A;border-radius:14px;padding:12px 14px;font-size:14px;margin:12px 0}
+label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+input[type=email],input[type=password],textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0F0C18;color:var(--text);font:inherit;font-size:16px}
+textarea{min-height:96px;resize:vertical}
+.q{font-weight:600;color:#fff;margin:0 0 10px}
+.q small{display:block;color:var(--muted);font-weight:400;font-size:12px;letter-spacing:.08em;margin-bottom:4px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin:6px 0;cursor:pointer}
+.opt:hover{border-color:#4A3F84}
+.opt input{margin-top:4px;accent-color:#5FE3B8}
+.opt.sel{border-color:var(--mint);background:#10221F}
+.rating{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.rating button{padding:12px 0;border-radius:10px;border:1px solid var(--line);background:#0F0C18;color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.rating button.sel{background:var(--mint);color:#0B0912;border-color:var(--mint)}
+.scale{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:6px}
+.btn{display:inline-block;width:100%;padding:15px 18px;border-radius:14px;border:0;background:#fff;color:#120E22;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+.btn[disabled]{opacity:.6;cursor:default}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--text)}
+.check input{margin-top:4px;accent-color:#5FE3B8}
+.err{color:var(--err);font-size:14px;margin:10px 0 0;min-height:1em}
+.muted{color:var(--muted);font-size:14px}
+.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 0}
+.progress i{display:block;height:100%;width:0;background:var(--mint);transition:width .2s}
+.hidden{display:none}
+a{color:var(--mint)}
+@media (max-width:520px){h1{font-size:26px}.rating{grid-template-columns:repeat(5,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/">Forever<span>Careers</span></a>
+
+  <div id="loading" class="card"><p class="muted">Loading your feedback page…</p></div>
+
+  <!-- Sign in -->
+  <div id="signin" class="hidden">
+    <h1>Tell us how we did</h1>
+    <p class="lead">Please sign in with the email address and password you used for Forever Careers to open your feedback form.</p>
+    <div class="card">
+      <form id="loginForm" novalidate>
+        <label class="f" for="em">Email address</label>
+        <input id="em" type="email" autocomplete="email" required>
+        <label class="f" for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password" required>
+        <div class="err" id="loginErr"></div>
+        <p style="margin:14px 0 0"><button class="btn" id="loginBtn" type="submit">Sign in and continue</button></p>
+      </form>
+      <p class="muted" style="margin:14px 0 0">Can't sign in? Just reply to our email and we'll help.</p>
+    </div>
+  </div>
+
+  <!-- Not available -->
+  <div id="closed" class="hidden">
+    <h1 id="closedTitle">This feedback form isn't available</h1>
+    <p class="lead" id="closedText">There is no open feedback request for this account.</p>
+    <p><a href="/">Go to forevercalculatedcareers.com</a></p>
+  </div>
+
+  <!-- Survey -->
+  <div id="survey" class="hidden">
+    <h1 id="hello">Tell us how we did</h1>
+    <p class="lead">It takes about three minutes. Your answers help us improve Forever Careers for everyone who is looking for work.</p>
+    <div class="notice"><b>Please read before you start:</b> you have <b>one attempt</b>. When you press Submit, your answers are saved and your Forever Careers account and personal details are permanently deleted, so you won't be able to sign in again.</div>
+    <div class="card"><div class="muted" id="progText">0 of 11 answered</div><div class="progress"><i id="prog"></i></div></div>
+    <form id="surveyForm" novalidate>
+      <div id="qs"></div>
+      <div class="card">
+        <p class="q"><small>QUESTION 11</small>Overall, how would you rate your experience with Forever Careers out of 10?</p>
+        <div class="rating" id="rating"></div>
+        <div class="scale"><span>1 = very poor</span><span>10 = excellent</span></div>
+      </div>
+      <div class="card hidden" id="otherWrap">
+        <label class="f" for="otherReason" style="margin-top:0">You chose "Another reason". What was it? (optional)</label>
+        <textarea id="otherReason" maxlength="300"></textarea>
+      </div>
+      <div class="card">
+        <label class="f" for="comments" style="margin-top:0">Is there anything else you'd like to tell us about why you cancelled, or what we could do better? (optional)</label>
+        <textarea id="comments" maxlength="1500"></textarea>
+      </div>
+      <div class="card">
+        <label class="f" for="testimonial" style="margin-top:0">If anything went well, would you share a few words we could use as a testimonial? (optional)</label>
+        <textarea id="testimonial" maxlength="1200" placeholder="For example, what you liked about the roles, the emails or the support."></textarea>
+        <label class="check" style="margin-top:12px"><input type="checkbox" id="consent"> <span>I'm happy for Forever Careers to use my testimonial in its promotion, shown with my first name, the initial of my surname and my country.</span></label>
+      </div>
+      <div class="err" id="surveyErr"></div>
+      <p><button class="btn" id="submitBtn" type="submit">Submit my feedback</button></p>
+      <p class="muted">By submitting you confirm you understand this is your only attempt and that your account will then be deleted.</p>
+    </form>
+  </div>
+
+  <!-- Thank you -->
+  <div id="thanks" class="hidden">
+    <div class="card hero" style="margin-top:26px">
+      <h1 style="margin-top:0" id="thanksTitle">Thank you</h1>
+      <p style="margin:0">Your feedback has been received. As promised, your Forever Careers account and personal details have now been deleted.</p>
+    </div>
+    <p class="muted">We wish you every success with your search. If you ever want to come back, you're always welcome to create a new account.</p>
+    <p><a href="/">Go to forevercalculatedcareers.com</a></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var TOKEN_KEY = 'fc_token';
+  var $ = function (id) { return document.getElementById(id); };
+  function token() { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } }
+  function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {} }
+  function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+  function show(id) { ['loading', 'signin', 'closed', 'survey', 'thanks'].forEach(function (x) { $(x).classList.toggle('hidden', x !== id); }); window.scrollTo(0, 0); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  var QS = [], rating = 0;
+
+  function load() {
+    if (!token()) { show('signin'); return; }
+    fetch('/api/feedback', { headers: { authorization: 'Bearer ' + token() } })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.s === 401) { clearToken(); show('signin'); return; }
+        if (!x.d.eligible) { closed(x.d.reason); return; }
+        QS = x.d.questions; render(x.d.firstName); show('survey');
+      })
+      .catch(function () { $('loading').innerHTML = '<p class="muted">We couldn\'t load the form. Please refresh the page.</p>'; });
+  }
+  function closed(reason) {
+    if (reason === 'completed') { $('closedTitle').textContent = 'Feedback already received'; $('closedText').textContent = 'This feedback form has already been completed. Thank you.'; }
+    else if (reason === 'expired') { $('closedTitle').textContent = 'This feedback form has closed'; $('closedText').textContent = 'The time to complete this form has passed. Thank you for being part of Forever Careers.'; }
+    show('closed');
+  }
+  function render(first) {
+    if (first) $('hello').textContent = first + ', tell us how we did';
+    var h = '';
+    QS.forEach(function (q, i) {
+      h += '<div class="card"><p class="q"><small>QUESTION ' + (i + 1) + '</small>' + esc(q.text) + '</p>';
+      q.options.forEach(function (o, j) {
+        var id = q.id + '_' + j;
+        h += '<label class="opt" for="' + id + '"><input type="radio" name="' + q.id + '" id="' + id + '" value="' + esc(o) + '"> <span>' + esc(o) + '</span></label>';
+      });
+      h += '</div>';
+    });
+    $('qs').innerHTML = h;
+    var rb = '';
+    for (var n = 1; n <= 10; n++) rb += '<button type="button" data-v="' + n + '">' + n + '</button>';
+    $('rating').innerHTML = rb;
+    $('rating').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      rating = Number(b.getAttribute('data-v'));
+      Array.prototype.forEach.call($('rating').children, function (x) { x.classList.toggle('sel', x === b); });
+      progress();
+    });
+    $('qs').addEventListener('change', function (e) {
+      var name = e.target.name;
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="' + name + '"]'), function (x) { x.parentNode.classList.toggle('sel', x.checked); });
+      $('otherWrap').classList.toggle('hidden', val('q1') !== 'Another reason');
+      progress();
+    });
+  }
+  function val(id) { var c = document.querySelector('input[name="' + id + '"]:checked'); return c ? c.value : ''; }
+  function progress() {
+    var n = QS.filter(function (q) { return val(q.id); }).length + (rating ? 1 : 0);
+    $('progText').textContent = n + ' of 11 answered';
+    $('prog').style.width = Math.round(n / 11 * 100) + '%';
+  }
+
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault(); $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+    fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'login', email: $('em').value, password: $('pw').value }) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (x) {
+        $('loginBtn').disabled = false;
+        if (!x.ok || !x.d.token) { $('loginErr').textContent = x.d.error || 'Email or password is incorrect.'; return; }
+        setToken(x.d.token); show('loading'); load();
+      })
+      .catch(function () { $('loginBtn').disabled = false; $('loginErr').textContent = 'Something went wrong. Please try again.'; });
+  });
+
+  $('surveyForm').addEventListener('submit', function (e) {
+    e.preventDefault(); $('surveyErr').textContent = '';
+    var answers = {}, missing = [];
+    QS.forEach(function (q, i) { var v = val(q.id); if (!v) missing.push(i + 1); answers[q.id] = v; });
+    if (!rating) missing.push(11);
+    if (missing.length) { $('surveyErr').textContent = 'Please answer question' + (missing.length > 1 ? 's ' : ' ') + missing.join(', ') + ' before submitting.'; return; }
+    if ($('consent').checked && !$('testimonial').value.trim()) { $('surveyErr').textContent = 'Please write your testimonial, or untick the box.'; return; }
+    if (!window.confirm('This is your only attempt. When you submit, your answers are saved and your Forever Careers account will be permanently deleted. Submit now?')) return;
+    $('submitBtn').disabled = true; $('submitBtn').textContent = 'Submitting…';
+    fetch('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token() },
+      body: JSON.stringify({ answers: answers, rating: rating, otherReason: $('otherReason').value, comments: $('comments').value, testimonial: $('testimonial').value, consent: $('consent').checked }) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.ok && x.d.ok) {
+          clearToken();
+          try { localStorage.removeItem('fc_links_cache'); } catch (er) {}
+          if (x.d.firstName) $('thanksTitle').textContent = 'Thank you, ' + x.d.firstName;
+          show('thanks'); return;
+        }
+        if (x.s === 403) { closed(x.d.reason); return; }
+        $('submitBtn').disabled = false; $('submitBtn').textContent = 'Submit my feedback';
+        $('surveyErr').textContent = x.d.error || 'Something went wrong. Please try again.';
+      })
+      .catch(function () { $('submitBtn').disabled = false; $('submitBtn').textContent = 'Submit my feedback'; $('surveyErr').textContent = 'Something went wrong. Please try again.'; });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

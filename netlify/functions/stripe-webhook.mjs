@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong, isStudentSub } from "../lib/billing.mjs";
+import { stripe, getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, applySubscription, verifyStripeSignature, reactivationLink, sendEmail, mail, enforcedFor, fmtLong, isStudentSub } from "../lib/billing.mjs";
 import { markCardSaved } from "../lib/student-flow.mjs";
 import { STUDENT_PRICE_ID, STUDENT_PRICE_TEXT, getStudent, setStudent, reviewInbox } from "../lib/student.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
@@ -39,6 +39,13 @@ async function handleEvent(ev) {
     }
     case "customer.subscription.created":
     case "customer.subscription.updated": {
+      // Cancelling during the free trial ends the trial straight away (complimentary plans excluded).
+      const prevA = (ev.data && ev.data.previous_attributes) || {};
+      const nowCancelling = !!(o.cancel_at_period_end || o.cancel_at);
+      const justCancelled = ev.type === "customer.subscription.updated" && nowCancelling && ("cancel_at_period_end" in prevA || "cancel_at" in prevA);
+      if (justCancelled && o.status === "trialing" && !(o.metadata && o.metadata.comp === "true")) {
+        try { await stripe("DELETE", "subscriptions/" + o.id); return; } catch (e) { console.error("end trial on cancel", o.id, e); }
+      }
       const r = await applySubscription(o);
       if (r && isStudentSub(o) && ["trialing", "active"].includes(o.status)) {
         const st = await getStudent(r.email).catch(() => null);
@@ -64,11 +71,15 @@ async function handleEvent(ev) {
       const student = isStudentSub(o);
       // Member chose to cancel (not a failed payment, not a complimentary plan running out): close the account and send the exit feedback form.
       const comp = o.metadata && o.metadata.comp === "true";
-      if (reason === "cancellation_requested" && !comp) {
+      // Exit flow when the member cancelled, or when a free trial ended without the first payment going through.
+      const neverPaid = !(r.saved && r.saved.lastChargedAt);
+      const memberCancelled = !["payment_failed", "payment_disputed"].includes(reason);
+      const trialEndedUnpaid = reason === "payment_failed" && neverPaid;
+      if ((memberCancelled || trialEndedUnpaid) && !comp) {
         const live = await membershipFor(r.email).catch(() => null);
         if (!(live && live.active && live.billing)) {
-          await startExitFlow(r.email, sendEmail);
-          await setBilling(r.email, { lastCancelEmailFor: o.id, cancelReason: reason, cancelledAt: new Date().toISOString(), exitFlow: true });
+          await startExitFlow(r.email, sendEmail, trialEndedUnpaid ? "ended" : "cancelled");
+          await setBilling(r.email, { lastCancelEmailFor: o.id, cancelReason: reason || "cancelled", cancelledAt: new Date().toISOString(), exitFlow: true });
           return;
         }
       }
@@ -84,7 +95,7 @@ async function handleEvent(ev) {
       return;
     }
     case "invoice.paid": {
-      if (o.customer) { const email = await emailForCustomer(o.customer); if (email) await setBilling(email, { lastPaidAt: new Date().toISOString() }); }
+      if (o.customer) { const email = await emailForCustomer(o.customer); if (email) await setBilling(email, { lastPaidAt: new Date().toISOString(), ...(o.amount_paid > 0 ? { lastChargedAt: new Date().toISOString() } : {}) }); }
       return;
     }
     default: return;

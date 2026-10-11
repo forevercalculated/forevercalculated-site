@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { getStore } from "@netlify/blobs";
-import { emailFromRequest } from "../lib/common.mjs";
+import { siteEmail } from "../lib/common.mjs";
 
 const MODEL = "claude-haiku-4-5-20251001";
 const MAX_MSGS = 12, MAX_CHARS = 800, PER_HOUR = 40, DAVID_PER_DAY = 8;
@@ -94,7 +94,7 @@ export default async (req, context) => {
 
   let remaining = null;
   if (agent === "david") {
-    const email = emailFromRequest(req);
+    const email = (await siteEmail(req));
     if (!email) return json({ needLogin: true, reply: "David is here for Forever Careers members. Please log in to chat with him, or speak to Christal any time." });
     if (CRISIS.test(last)) return json({ reply: CRISIS_REPLY, crisis: true });
     const r = await bump("david-" + hash(email) + "-" + new Date().toISOString().slice(0, 10), DAVID_PER_DAY);

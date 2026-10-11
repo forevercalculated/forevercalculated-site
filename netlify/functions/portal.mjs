@@ -1,10 +1,10 @@
-import { json, emailFromRequest } from "../lib/common.mjs";
+import { json, siteEmail } from "../lib/common.mjs";
 import { SITE, stripe, getBilling } from "../lib/billing.mjs";
 
 // Opens Stripe's customer portal (cancel, change card, invoices).
 async function handle(req) {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const email = emailFromRequest(req);
+  const email = (await siteEmail(req));
   if (!email) return json({ error: "Please sign in again." }, 401);
   const b = await getBilling(email);
   if (!b || !b.customerId) return json({ error: "No plan to manage yet." }, 404);

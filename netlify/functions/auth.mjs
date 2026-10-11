@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { json, normEmail, isEmail, userKey, hashPassword, verifyPassword, signToken } from "../lib/common.mjs";
+import { json, normEmail, isEmail, userKey, hashPassword, verifyPassword, signToken, isClosedAccount } from "../lib/common.mjs";
 
 async function handle(req) {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -39,6 +39,9 @@ async function handle(req) {
   } else if (body.action === "login") {
     if (!existing || !(await verifyPassword(password, existing.salt, existing.hash))) {
       return json({ error: "Email or password is incorrect." }, 401);
+    }
+    if (body.scope !== "feedback" && (await isClosedAccount(email))) {
+      return json({ error: "This account has been closed. If we've asked you for feedback, please use the link in our email.", closed: true }, 403);
     }
   } else {
     return json({ error: "Invalid request." }, 400);

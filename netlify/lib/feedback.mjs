@@ -77,7 +77,8 @@ export async function wipeUser(email) {
 // ---- automatic exit flow: used when a member's cancelled membership ends ----
 const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const niceName = (s) => String(s || "").toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
-export function exitEmail(firstName, expiresAt) {
+export function exitEmail(firstName, expiresAt, kind = "cancelled") {
+  const why = kind === "ended" ? "why you decided not to continue with us" : "why you decided to cancel";
   const n = esc(niceName(firstName));
   const hi = n ? `Hi ${n},` : "Hi there,";
   const until = new Date(expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });
@@ -91,7 +92,7 @@ export function exitEmail(firstName, expiresAt) {
 <tr><td style="padding:0 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#DCD8EA;">
 ${P(hi)}
 ${P("Your Forever Careers membership has now ended, so you won't receive any more job emails from us and you won't be charged. Thank you for giving us a try.")}
-${P("I'd really value hearing why you decided to cancel, so we can keep improving the service. I've put together a short feedback form of 10 multiple choice questions and a rating out of 10. It takes about three minutes. If anything went well for you, there's also space to share a few words as a testimonial, but only if you're happy for us to use them.")}
+${P("I'd really value hearing " + why + ", so we can keep improving the service. I've put together a short feedback form of 10 multiple choice questions and a rating out of 10. It takes about three minutes. If anything went well for you, there's also space to share a few words as a testimonial, but only if you're happy for us to use them.")}
 </td></tr>
 <tr><td style="padding:6px 8px 0;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#14111F" style="background:#14111F;border:1px solid #2A2540;border-radius:18px;"><tr><td style="padding:18px;font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.7;color:#DCD8EA;">
@@ -109,19 +110,19 @@ ${P(`Thank you again${n ? ", " + n : ""}, and I wish you every success with your
 <tr><td style="padding:10px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.6;color:#DCD8EA;">Kind regards,<br><b style="color:#FFFFFF;">Kenneth Nzegbulem</b><br>Founder, Forever Careers</td></tr>
 <tr><td style="padding:18px 8px 20px;"><div style="border-top:1px solid #221C38;padding-top:14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#7F789C;"><a href="https://forevercalculatedcareers.com" style="color:#8CF5E0;text-decoration:none;">forevercalculatedcareers.com</a></div></td></tr>
 </table></td></tr></table></body></html>`;
-  return { subject: `${n ? n + ", could" : "Could"} you tell us why you cancelled?`, html };
+  return { subject: kind === "ended" ? `${n ? n + ", could" : "Could"} you tell us how we did?` : `${n ? n + ", could" : "Could"} you tell us why you cancelled?`, html };
 }
 
 // Opens an exit feedback request (closing the account to everything except /feedback) and emails the member.
 // Returns false if a request already exists for this member, so nobody is asked twice.
-export async function startExitFlow(email, sendEmail) {
+export async function startExitFlow(email, sendEmail, kind = "cancelled") {
   email = normEmail(email);
   const k = userKey(email);
   if (await requests().get(k, { type: "json" })) return false;
   const u = await st("users").get(k, { type: "json" });
   if (!u) return false;
   const now = Date.now();
-  const r = await setRequest(email, { email, firstName: niceName(u.firstName), status: "pending", createdAt: new Date(now).toISOString(), expiresAt: new Date(now + REQUEST_DAYS * DAY).toISOString(), wipeAfter: true, auto: true });
-  await sendEmail({ to: email, ...exitEmail(u.firstName, r.expiresAt) });
+  const r = await setRequest(email, { email, firstName: niceName(u.firstName), status: "pending", createdAt: new Date(now).toISOString(), expiresAt: new Date(now + REQUEST_DAYS * DAY).toISOString(), wipeAfter: true, auto: kind });
+  await sendEmail({ to: email, ...exitEmail(u.firstName, r.expiresAt, kind) });
   return true;
 }

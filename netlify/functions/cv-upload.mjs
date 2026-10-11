@@ -1,10 +1,10 @@
 import { getStore } from "@netlify/blobs";
-import { json, emailFromRequest, userKey } from "../lib/common.mjs";
+import { json, siteEmail, userKey } from "../lib/common.mjs";
 
 // Optional CV upload at sign up. Stored privately in Netlify Blobs, one file per member.
 export default async (req) => {
   try {
-    const email = emailFromRequest(req);
+    const email = (await siteEmail(req));
     if (!email) return json({ error: "Please sign in again." }, 401);
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
     const fd = await req.formData();

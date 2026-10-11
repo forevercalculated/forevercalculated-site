@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { json, emailFromRequest, userKey } from "../lib/common.mjs";
+import { json, siteEmail, userKey } from "../lib/common.mjs";
 import jobs from "../lib/jobs-data.mjs";
 const BY_ID = new Map(jobs.map((j) => [j.id, j]));
 
@@ -7,7 +7,7 @@ const BY_ID = new Map(jobs.map((j) => [j.id, j]));
 export default async (req) => {
   try {
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-    const email = emailFromRequest(req);
+    const email = (await siteEmail(req));
     if (!email) return json({ error: "Please sign in again." }, 401);
     const { jobId } = await req.json().catch(() => ({}));
     const id = Number(jobId);

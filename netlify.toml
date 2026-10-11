@@ -19,3 +19,9 @@
   from = "/stats/*"
   to = "/stats/index.html"
   status = 200
+
+[[redirects]]
+  from = "/feedback"
+  to = "/feedback/"
+  status = 301
+  force = false

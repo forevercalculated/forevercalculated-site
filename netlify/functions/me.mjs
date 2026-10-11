@@ -1,10 +1,10 @@
 import { getStore } from "@netlify/blobs";
-import { json, emailFromRequest, getMembership, userKey } from "../lib/common.mjs";
+import { json, siteEmail, getMembership, userKey } from "../lib/common.mjs";
 import { getStudent, studentTrialUrl } from "../lib/student.mjs";
 import { reconcileStudent } from "../lib/student-flow.mjs";
 
 async function handle(req) {
-  const email = emailFromRequest(req);
+  const email = (await siteEmail(req));
   if (!email) return json({ error: "Please sign in again." }, 401);
   try {
     try {

@@ -1,10 +1,29 @@
 import crypto from "node:crypto";
 import { json, emailFromRequest, adminOk, normEmail, isEmail, userKey } from "../lib/common.mjs";
 import { getStore } from "@netlify/blobs";
+import { sendEmail } from "../lib/billing.mjs";
 import { QUESTIONS, REQUEST_DAYS, DAY, getRequest, setRequest, isOpen, responses, requests, wipeUser } from "../lib/feedback.mjs";
 
 const nice = (s) => String(s || "").toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
 const clean = (v, n) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, n);
+
+const NOTIFY_TO = "forevercalculated@gmail.com";
+const h = (v) => String(v == null ? "" : v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function responseEmail(rec) {
+  const who = `${rec.firstName}${rec.lastInitial ? " " + rec.lastInitial + "." : ""}`;
+  const rows = QUESTIONS.map((q, i) => `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee;color:#555;vertical-align:top;width:52%">${i + 1}. ${h(q.text)}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;font-weight:600;vertical-align:top">${h(rec.answers[q.id])}</td></tr>`).join("");
+  const block = (title, text) => text ? `<p style="margin:18px 0 4px;font-weight:700">${title}</p><div style="background:#f6f6f8;border-radius:8px;padding:10px 12px;white-space:pre-wrap">${h(text)}</div>` : "";
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#111;max-width:640px">
+<h2 style="margin:0 0 6px">${rec.test ? "[TEST] " : ""}New exit feedback from ${h(who)}</h2>
+<p style="margin:0 0 14px;color:#555">${h(rec.country || "Country not given")}${rec.industry ? " · " + h(rec.industry) : ""} · submitted ${h(new Date(rec.submittedAt).toLocaleString("en-GB", { timeZone: "Europe/London", dateStyle: "medium", timeStyle: "short" }))} UK time</p>
+<p style="font-size:18px;margin:0 0 14px"><b>Overall rating: ${rec.rating}/10</b></p>
+<table style="border-collapse:collapse;width:100%;font-size:14px">${rows}</table>
+${block("Other reason for cancelling", rec.otherReason)}
+${block("Further comments", rec.comments)}
+${rec.testimonialConsent ? block("Testimonial (permission given to use with first name, surname initial and country)", rec.testimonial) : `<p style="margin:18px 0 0;color:#555">No testimonial permission given.</p>`}
+<p style="margin:22px 0 0;color:#888;font-size:12px">The member's account and personal details have been deleted. All responses: https://forevercalculatedcareers.com/api/feedback?action=list (admin key needed).</p></div>`;
+  return { subject: `${rec.test ? "[TEST] " : ""}Exit feedback: ${who}, ${rec.rating}/10`, html };
+}
 
 async function admin(req, url) {
   const action = url.searchParams.get("action") || "list";
@@ -75,6 +94,7 @@ async function handle(req) {
     ...(claimed.test ? { test: true } : {}),
   };
   await responses().setJSON(`${claimed.test ? "test-" : ""}${Date.now()}-${record.id}`, record);
+  try { await sendEmail({ to: NOTIFY_TO, ...responseEmail(record) }); } catch (e) { console.error("feedback notify", e); }
   let wiped = [];
   try { wiped = await wipeUser(email); } catch (e) { console.error("feedback wipe", e); }
   // Keep only a minimal marker (no email address) so the request can't be reused.

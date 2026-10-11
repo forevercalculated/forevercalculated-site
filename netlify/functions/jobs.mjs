@@ -1,8 +1,8 @@
-import { json, emailFromRequest, getMembership } from "../lib/common.mjs";
+import { json, siteEmail, getMembership } from "../lib/common.mjs";
 import jobs from "../lib/jobs-data.mjs";
 
 async function handle(req) {
-  const email = emailFromRequest(req);
+  const email = (await siteEmail(req));
   if (!email) return json({ error: "Please sign in again." }, 401);
   let membership;
   try { membership = await getMembership(email); }

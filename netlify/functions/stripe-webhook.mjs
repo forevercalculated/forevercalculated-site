@@ -3,6 +3,7 @@ import { getBilling, membershipFor, setBilling, linkCustomer, emailForCustomer, 
 import { markCardSaved } from "../lib/student-flow.mjs";
 import { STUDENT_PRICE_ID, STUDENT_PRICE_TEXT, getStudent, setStudent, reviewInbox } from "../lib/student.mjs";
 import { userKey, normEmail } from "../lib/common.mjs";
+import { startExitFlow } from "../lib/feedback.mjs";
 
 const OK = (o = {}) => new Response(JSON.stringify({ received: true, ...o }), { status: 200, headers: { "content-type": "application/json" } });
 
@@ -61,6 +62,16 @@ async function handleEvent(ev) {
       if (r.saved.lastCancelEmailFor === o.id) return; // already emailed for this subscription
       const reason = o.cancellation_details && o.cancellation_details.reason;
       const student = isStudentSub(o);
+      // Member chose to cancel (not a failed payment, not a complimentary plan running out): close the account and send the exit feedback form.
+      const comp = o.metadata && o.metadata.comp === "true";
+      if (reason === "cancellation_requested" && !comp) {
+        const live = await membershipFor(r.email).catch(() => null);
+        if (!(live && live.active && live.billing)) {
+          await startExitFlow(r.email, sendEmail);
+          await setBilling(r.email, { lastCancelEmailFor: o.id, cancelReason: reason, cancelledAt: new Date().toISOString(), exitFlow: true });
+          return;
+        }
+      }
       const link = await reactivationLink(r.email, student ? STUDENT_PRICE_ID : undefined);
       const name = await nameFor(r.email);
       const m = reason === "payment_failed" ? mail.paymentCancelled(name, link, student ? STUDENT_PRICE_TEXT : undefined) : mail.userCancelled(name, link);

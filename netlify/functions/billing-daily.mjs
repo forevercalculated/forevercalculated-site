@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { normEmail, userKey } from "../lib/common.mjs";
 import { enforcedFor, launchMs, getBilling, setBilling, sendEmail, mail, fmtLong, DAY, TRIAL_DAYS } from "../lib/billing.mjs";
+import { startExitFlow } from "../lib/feedback.mjs";
 
 // Runs daily at 08:00 UTC. Reminders for existing members who have not added a card yet.
 const MAX_PER_RUN = 80; // stays inside a 100/day email plan
@@ -31,6 +32,13 @@ export default async () => {
       else if (daysLeft <= 7 && !done.d7 && !done.d3 && !done.d1) { key = "d7"; m = mail.graceReminder(u.firstName, daysLeft, fmtLong(deadline)); }
     } else if (!done.paused) { key = "paused"; m = mail.accessPaused(u.firstName); }
     if (!key) continue;
+    if (key === "paused") {
+      // Free trial ended without a card: close the account and send the exit feedback form instead.
+      await startExitFlow(email, sendEmail, "ended");
+      await setBilling(email, { reminders: { ...done, paused: new Date().toISOString() }, exitFlow: true });
+      sent++;
+      continue;
+    }
     await sendEmail({ to: email, ...m });
     await setBilling(email, { reminders: { ...done, [key]: new Date().toISOString() } });
     sent++;

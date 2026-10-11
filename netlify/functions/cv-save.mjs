@@ -1,10 +1,10 @@
 import { getStore } from "@netlify/blobs";
-import { json, emailFromRequest, userKey } from "../lib/common.mjs";
+import { json, siteEmail, userKey } from "../lib/common.mjs";
 
 // Saves a CV from the free scan, only when the signed in user ticks the consent box.
 export default async (req) => {
   try {
-    const email = emailFromRequest(req);
+    const email = (await siteEmail(req));
     if (!email) return json({ error: "Please sign in again." }, 401);
     const store = getStore({ name: "cvs", consistency: "strong" });
     const key = userKey(email);

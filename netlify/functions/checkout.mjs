@@ -1,11 +1,11 @@
 import { getStore } from "@netlify/blobs";
-import { json, emailFromRequest, userKey } from "../lib/common.mjs";
+import { json, siteEmail, userKey } from "../lib/common.mjs";
 import { SITE, stripe, enforcedFor, trialFor, setBilling, linkCustomer, membershipFor, PRICE_ID, TRIAL_DAYS } from "../lib/billing.mjs";
 import { getStudent, BLOCKING } from "../lib/student.mjs";
 
 async function handle(req) {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const email = emailFromRequest(req);
+  const email = (await siteEmail(req));
   if (!email) return json({ error: "Please sign in again." }, 401);
   if (!enforcedFor(email)) return json({ error: "Billing is not switched on for this account yet." }, 403);
 

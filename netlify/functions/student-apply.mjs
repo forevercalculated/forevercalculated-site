@@ -1,4 +1,4 @@
-import { json, emailFromRequest } from "../lib/common.mjs";
+import { json, siteEmail } from "../lib/common.mjs";
 import { SITE, stripe, getBilling, setBilling, linkCustomer, membershipFor } from "../lib/billing.mjs";
 import { getStudent, setStudent, studentKey, saveIdFile, sniffType, ID_TYPES, MAX_ID_BYTES } from "../lib/student.mjs";
 import { closeStudent, submitWithoutCard, isPermissionError } from "../lib/student-flow.mjs";
@@ -42,7 +42,7 @@ async function ensureCustomer(email, user) {
 
 async function handle(req) {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const email = emailFromRequest(req);
+  const email = (await siteEmail(req));
   if (!email) return json({ error: "Please sign in again." }, 401);
 
   const action = new URL(req.url).searchParams.get("action");

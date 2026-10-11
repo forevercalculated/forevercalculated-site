@@ -183,7 +183,7 @@ a{color:var(--mint)}
 
   $('loginForm').addEventListener('submit', function (e) {
     e.preventDefault(); $('loginErr').textContent = ''; $('loginBtn').disabled = true;
-    fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'login', email: $('em').value, password: $('pw').value }) })
+    fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'login', scope: 'feedback', email: $('em').value, password: $('pw').value }) })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (x) {
         $('loginBtn').disabled = false;

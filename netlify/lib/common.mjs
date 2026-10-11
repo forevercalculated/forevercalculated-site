@@ -1,3 +1,4 @@
+import { getStore } from "@netlify/blobs";
 import crypto from "node:crypto";
 
 const PRODUCT_ID = "prod_VJqkXOZscHXkIM"; // ForeverCalculated Job Access
@@ -82,4 +83,18 @@ export function adminOk(req) {
   if (!got) return false;
   return [process.env.ADMIN_KEY, process.env.ADMIN_KEY_2].filter(Boolean).some((key) =>
     got.length === key.length && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(key)));
+}
+
+// Accounts waiting on an exit feedback form are closed: they can only use /feedback, nothing else on the site.
+export async function isClosedAccount(email) {
+  try {
+    const r = await getStore({ name: "feedback-requests", consistency: "strong" }).get(userKey(normEmail(email)), { type: "json" });
+    return !!(r && r.status === "pending");
+  } catch (e) { console.error("isClosedAccount", e); return false; }
+}
+// Like emailFromRequest, but returns null for closed accounts (so the site treats them as signed out).
+export async function siteEmail(req) {
+  const email = emailFromRequest(req);
+  if (!email) return null;
+  return (await isClosedAccount(email)) ? null : email;
 }

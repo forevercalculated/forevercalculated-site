@@ -15,13 +15,14 @@ async function admin(req, url) {
     if (!u) return json({ error: "No account found for this email." }, 404);
     const days = Math.min(60, Math.max(1, Number(url.searchParams.get("days")) || REQUEST_DAYS));
     const now = Date.now();
-    const r = await setRequest(email, { email, firstName: nice(u.firstName), status: "pending", createdAt: new Date(now).toISOString(), expiresAt: new Date(now + days * DAY).toISOString(), wipeAfter: true });
+    const r = await setRequest(email, { email, firstName: nice(u.firstName), status: "pending", createdAt: new Date(now).toISOString(), expiresAt: new Date(now + days * DAY).toISOString(), wipeAfter: true, test: url.searchParams.get("test") === "1" });
     return json({ ok: true, request: r, url: "https://forevercalculatedcareers.com/feedback/" });
   }
   if (action === "list") {
     const s = responses(); const { blobs } = await s.list();
     const out = [];
-    for (const b of blobs || []) { const v = await s.get(b.key, { type: "json" }); if (v) out.push(v); }
+    const withTests = url.searchParams.get("tests") === "1";
+    for (const b of blobs || []) { if (!withTests && b.key.startsWith("test-")) continue; const v = await s.get(b.key, { type: "json" }); if (v) out.push(v); }
     out.sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
     const rq = requests(); const rl = await rq.list(); const reqs = [];
     for (const b of rl.blobs || []) { const v = await rq.get(b.key, { type: "json" }); if (v) reqs.push({ status: v.status, firstName: v.firstName, createdAt: v.createdAt, expiresAt: v.expiresAt, email: v.status === "pending" ? v.email : undefined }); }
@@ -71,8 +72,9 @@ async function handle(req) {
     comments: clean(body.comments, 1500),
     testimonial: consent ? testimonial : "",
     testimonialConsent: consent && !!testimonial,
+    ...(claimed.test ? { test: true } : {}),
   };
-  await responses().setJSON(`${Date.now()}-${record.id}`, record);
+  await responses().setJSON(`${claimed.test ? "test-" : ""}${Date.now()}-${record.id}`, record);
   let wiped = [];
   try { wiped = await wipeUser(email); } catch (e) { console.error("feedback wipe", e); }
   // Keep only a minimal marker (no email address) so the request can't be reused.

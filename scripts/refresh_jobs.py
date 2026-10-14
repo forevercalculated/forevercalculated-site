@@ -519,14 +519,8 @@ def load_current():
     s = open(os.path.join(ROOT, "netlify/lib/jobs-data.mjs"), encoding="utf-8").read()
     data = json.loads(re.match(r"export default (\[.*\]);?\s*$", s, re.S).group(1))
     h = open(os.path.join(ROOT, "public/index.html"), encoding="utf-8").read()
-    i = h.find("const JOBS = ["); st = i + len("const JOBS = "); d = 0; k = st
-    while True:
-        c = h[k]
-        if c == "[": d += 1
-        elif c == "]":
-            d -= 1
-            if d == 0: k += 1; break
-        k += 1
+    i = h.find("const JOBS = ["); st = i + len("const JOBS = ")
+    k = json.JSONDecoder().raw_decode(h, st)[1]  # string-aware end of the JOBS array
     pub = {j["id"]: j for j in json.loads(h[st:k])}
     for j in data:
         p = pub.get(j["id"], {}); j["posted"] = p.get("posted", ""); j["remote"] = p.get("remote", False)
@@ -543,14 +537,8 @@ def write_outputs(jobs, added, removed, member_q, keep_refreshed=None):
     open(os.path.join(ROOT, "netlify/lib/jobs-meta.mjs"), "w").write("export default " + json.dumps(meta) + ";\n")
     pub = [{k: v for k, v in j.items() if k not in ("url", "expires", "source")} for j in jobs]
     p = os.path.join(ROOT, "public/index.html"); h = open(p, encoding="utf-8").read()
-    i = h.find("const JOBS = ["); st = i + len("const JOBS = "); d = 0; k = st
-    while True:
-        c = h[k]
-        if c == "[": d += 1
-        elif c == "]":
-            d -= 1
-            if d == 0: k += 1; break
-        k += 1
+    i = h.find("const JOBS = ["); st = i + len("const JOBS = ")
+    k = json.JSONDecoder().raw_decode(h, st)[1]  # string-aware end of the JOBS array
     h = h[:st] + json.dumps(pub, ensure_ascii=False) + h[k:]
     if any(is_zr(j) for j in jobs) and ">ZipRecruiter</a>" not in h:
         bq = '"'

@@ -17,7 +17,7 @@ export const QUESTIONS = [
   { id: "q5", text: "How easy was our website to use?", options: ["Very easy", "Fairly easy", "Quite difficult", "Very difficult", "I didn't really use it"] },
   { id: "q6", text: "Did you apply for any of the roles we sent you?", options: ["Yes, several", "Yes, one or two", "No, none were right for me", "No, I didn't have time"] },
   { id: "q7", text: "Which part of Forever Careers was most useful to you?", options: ["CV matched job emails", "The job board", "The CV and career tools", "Personal support from the team", "None of them"] },
-  { id: "q8", text: "How did you feel about the price of £50 a month?", options: ["Good value", "About right", "A little too high", "Much too high", "I didn't reach the paid stage"] },
+  { id: "q8", text: "How did you feel about the price of £19.99 a month?", options: ["Good value", "About right", "A little too high", "Much too high", "I didn't reach the paid stage"] },
   { id: "q9", text: "What would be most likely to bring you back in future?", options: ["A lower price", "More roles open to people in my country", "More senior or specialist roles", "Better matched roles", "Fewer emails", "Nothing, I'm happy as I am"] },
   { id: "q10", text: "Would you recommend Forever Careers to a friend who is looking for work?", options: ["Yes, definitely", "Probably", "Not sure", "Probably not", "Definitely not"] },
 ];

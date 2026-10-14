@@ -1,7 +1,8 @@
 // Pure billing rules (no I/O) so they can be unit-tested.
 export const TRIAL_DAYS = 10;
 export const DAY = 86400000;
-export const PRICE_ID = "price_1UKaRHIzGjJjQQyt90AbANyc"; // £50 / month, Forever Careers - Monthly Job Access
+export const PRICE_ID = "price_1UQOevIzGjJjQQyt779TGwwZ"; // £19.99 / month (founding price, set 14 Oct 2026)
+export const OLD_PRICE_ID = "price_1UKaRHIzGjJjQQyt90AbANyc"; // legacy £50 / month, existing members stay on it
 const iso = (ms) => new Date(ms).toISOString();
 
 // mode: "off" (everyone free, current behaviour) | "test" (only BILLING_TEST_EMAILS) | "on" (everyone)

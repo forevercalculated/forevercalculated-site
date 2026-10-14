@@ -1,11 +1,12 @@
-// Student plan: £19.99/month, 3 free months (90 days) that only start once Kenneth approves the student ID. Card on file, charged only after the free months.
+// Student plan: £9.99/month, 3 free months (90 days) that only start once Kenneth approves the student ID. Card on file, charged only after the free months.
 // Records live in the private "students" store; ID files in the private "student-ids" store and are
 // deleted as soon as a decision is made (or after 30 days if never reviewed).
 import { getStore } from "@netlify/blobs";
 import { userKey, normEmail } from "./common.mjs";
 
-export const STUDENT_PRICE_ID = process.env.STUDENT_PRICE_ID || "price_1UOHWSIzGjJjQQytPDzjZr6h"; // £19.99 / month, same product as the £50 plan
-export const STUDENT_PRICE_TEXT = "£19.99";
+export const STUDENT_PRICE_ID = process.env.STUDENT_PRICE_ID || "price_1UQOewIzGjJjQQyther8rphc"; // £9.99 / month (founding price), same product as the member plan
+export const OLD_STUDENT_PRICE_IDS = ["price_1UOHWSIzGjJjQQytPDzjZr6h"]; // legacy £19.99 student price, still recognised
+export const STUDENT_PRICE_TEXT = "£9.99";
 export const STUDENT_TRIAL_DAYS = 90; // "3 months free"
 export const reviewInbox = () => process.env.STUDENT_REVIEW_EMAIL || "hello@forevercalculatedcareers.com";
 
@@ -13,8 +14,8 @@ export const reviewInbox = () => process.env.STUDENT_REVIEW_EMAIL || "hello@fore
 // If the site's Stripe key can't save cards (restricted key), the card is added AFTER approval instead:
 // pending_review (no card) -> approved_pending_card (emailed a student trial link) -> approved (when they start the trial)
 export const BLOCKING = ["awaiting_card", "pending_review", "approved_pending_card"];
-// £19.99/month Payment Link with the 3-month (90 day) free trial (made in Stripe on 9 Oct 2026; replaces the 14-day link). Only ever emailed to approved students.
-export const STUDENT_TRIAL_LINK = process.env.STUDENT_TRIAL_LINK || "https://buy.stripe.com/eVq9AU4hH0gY2KOeZDes00T";
+// £9.99/month Payment Link with the 3-month (90 day) free trial (made in Stripe on 14 Oct 2026; replaces the £19.99 link). Only ever emailed to approved students.
+export const STUDENT_TRIAL_LINK = process.env.STUDENT_TRIAL_LINK || "https://buy.stripe.com/14A6oI29ze7Oclog3Hes00U";
 export const studentTrialUrl = (email) => `${STUDENT_TRIAL_LINK}?${new URLSearchParams({ prefilled_email: String(email || "").toLowerCase(), client_reference_id: studentKey(email) }).toString()}`;
 export const ID_TYPES = { pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", heic: "image/heic", heif: "image/heif" };
 export const MAX_ID_BYTES = 4 * 1024 * 1024; // Netlify function bodies are capped at 6MB

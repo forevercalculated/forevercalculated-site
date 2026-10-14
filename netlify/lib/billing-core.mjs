@@ -1,5 +1,5 @@
 // Pure billing rules (no I/O) so they can be unit-tested.
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 10;
 export const DAY = 86400000;
 export const PRICE_ID = "price_1UKaRHIzGjJjQQyt90AbANyc"; // £50 / month, Forever Careers - Monthly Job Access
 const iso = (ms) => new Date(ms).toISOString();

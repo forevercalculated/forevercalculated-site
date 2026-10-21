@@ -1,28 +1,24 @@
 {
-  "total": 11713,
-  "reed_share": 0.68,
+  "total": 11114,
+  "reed_share": 0.7,
   "ziprecruiter_jobs": 0,
   "ziprecruiter_calls": 0,
   "ziprecruiter_blocked": true,
-  "jooble_jobs": 1134,
+  "jooble_jobs": 1044,
   "jooble_calls": 10,
-  "duplicates_removed": 3208,
-  "added": 11804,
-  "removed_stale": 1066,
+  "duplicates_removed": 3455,
+  "added": 11965,
+  "removed_stale": 1457,
   "adzuna_calls": 180,
-  "filtered_out": 7476,
-  "remote": 939,
-  "hybrid": 1097,
-  "onsite": 9677,
+  "filtered_out": 7644,
+  "remote": 642,
+  "hybrid": 1095,
+  "onsite": 9377,
   "reed_calls": 459,
-  "minutes": 22.0,
+  "minutes": 26.2,
   "per_country": {
-    "UK": 10542,
-    "US": 1157,
-    "CA": 1,
-    "ZA": 9,
-    "CH": 1,
-    "SG": 3
+    "UK": 10067,
+    "US": 1047
   },
   "member_queries": [
     "customer service advisor",
@@ -60,5 +56,5 @@
   "primary_countries": {
     "UK": 1.0
   },
-  "primary_share": 0.9
+  "primary_share": 0.906
 }

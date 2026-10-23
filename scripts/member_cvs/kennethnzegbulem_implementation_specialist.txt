@@ -1,0 +1,144 @@
+KENNETH NZEGBULEM
+IMPLEMENTATION SPECIALIST
+07404 921701 | kennethnzegbulem@gmail.com | London
+forevercalculatedcareers.com | forevercalculatedresumes.com | linkedin.com/in/kenneth-nzegbulem-71434b292
+
+(CV name: Kenneth Nzegbulem Implementation Specialist CV, received from Kenneth on 23 Oct 2026. This is now Kenneth's CURRENT CV: use it instead of the CV in the members feed and instead of the older AI and Customer Success CV (scripts/member_cvs/kennethnzegbulem_ai_customer_success.txt), which it replaces. In emails, call it "your Kenneth Nzegbulem Implementation Specialist CV".)
+
+PROFESSIONAL SUMMARY
+Founder and Business and Management graduate (BSc Hons, 2:1) who sets up, runs and fixes the systems behind a live
+subscription business on my own: sign up and billing flows, automated emails, a job board fed by four APIs and 15 scheduled
+AI workflows. I gather requirements from users, configure and connect tools such as Stripe, Resend and Netlify, test them,
+monitor quality and fix issues, without being a software developer. Before that I spent over four years in high volume
+operations and customer roles at Southeastern Railway, Apple, Ipsos and Transport for London, including 80 to 100 claims a
+day, escalations across the Refund, Assisted Travel and Complaints teams, and written communication with national rail
+operators. I write clearly, keep accurate records and work well with many stakeholders at once. I am looking for an
+Implementation Specialist role in London (hybrid).
+SKILLS
+Setting up and maintaining online systems: sign up flows, billing, automated email and job feeds | Gathering requirements
+and turning them into working configurations | Stakeholder management: customers, colleges, councils, partners and rail
+operators | Quality and accuracy: testing, monitoring, removing duplicates and fixing issues | Stripe subscription billing, Netlify
+Functions and Resend email | API integrations: Adzuna, Reed, Jooble, ZipRecruiter, Composio | Scheduled AI workflows and
+process automation (Claude Cowork) | AI assistants and prompt design (Claude API) | Customer onboarding, support and
+service recovery | Case handling, claims processing and escalations | Clear written communication to operators and
+customers | Accurate record keeping and process improvement | Data analysis and presentation building | Market research
+interviewing | Domains, DNS, hosting and business email | Generative AI for music and media (ElevenLabs Music, Stable
+Audio, fal.ai API) | Self directed, works well independently
+EXPERIENCE
+FOUNDER AND DIRECTOR | Forever Careers and ForeverCalculated Resumes | December 2024 to Present
+Hybrid, London
+Set up and run the systems behind forevercalculatedcareers.com, a subscription job matching platform with a global job
+board of around 15,000 live roles across 19 countries, including the domain, DNS, hosting and business email.
+Turned a manual service, where I sourced roles and emailed clients by hand, into an automated platform that sources jobs,
+matches CVs and emails members with little daily input.
+Connected Stripe, Resend, Netlify, Gmail and four job APIs so sign up, billing, emails and job matching run without manual
+steps, then monitor them and fix issues as they appear.
+Launched a 10 day free trial and monthly subscription through Stripe, a discounted student plan, and application Sprints
+(350 or 1,100 applications), which replaced the earlier done for you Agent service.
+Run the business day to day with 15 scheduled AI workflows covering client briefs, CV matched job alerts, student job
+matches, member follow ups, workshop outreach, social content drafts, a weekly business dashboard and the job board
+refresh.
+Designed and launched two AI assistants on the Forever Careers website, with usage limits and crisis safety responses
+built in that point anyone at risk to Samaritans, NHS 111 or 999, plus a "How are you?" check in on every page.
+Handle all customer onboarding and support myself by live chat, email and social media, including account set up, billing
+questions and service recovery for past clients.
+Work with colleges, councils and employment services through a free workshop outreach programme, and run Instagram,
+TikTok and LinkedIn content, an email and Instagram DM campaign that reached around 140 members and followers in
+one day, and printed flyers across North London.
+Launched ForeverCalculated Resumes (forevercalculatedresumes.com), a second business selling a CV and resume
+builder and paid CV services: one tailored CV for £49 or three for £99, each returned within 24 hours.
+Scripted and produced a three minute promotional video using real website footage, Descript's AI editor and three distinct
+AI voices, and added deep links to the site so any page or panel opens directly for demos and marketing.
+Gave a talk on AI adoption for a London events company in October 2026.
+OPERATIONS SPECIALIST | Apple | December 2025 to February 2026
+London
+Managed overnight stock logistics and restocking (9pm to 5am) so the store was fully prepared before opening.
+Checked incoming deliveries in accurately, kept inventory records up to date, and supported customers with advice,
+purchases and after sales queries on daytime shifts.
+Set up and reconfigured the shop floor ahead of product launches, making sure displays, demo devices and stock were
+ready for launch day.
+SPECIALIST | Apple | July 2025 to December 2025
+London
+Booked and managed Genius Bar appointments daily, assessing physical damage, software issues and hardware faults
+accurately.
+Delivered product storytelling on the shop floor and hosted live Apple Vision Pro demonstrations, explaining complex
+technology in an accessible way.
+Managed a high volume of customer interactions across sales, demonstrations and technical bookings at the same time.
+MARKET RESEARCH INTERVIEWER | Ipsos | February 2025 to March 2025
+Remote
+Conducted structured research interviews across the UK to strict quality and compliance standards, recording responses
+accurately and to deadline.
+Managed my own output targets independently while working remotely, building rapport quickly so people felt comfortable
+giving honest answers.
+CUSTOMER SERVICE AND DELAY REPAY SPECIALIST | Southeastern Railway | June 2022 to December 2024
+Remote
+Promoted into a dedicated Delay Repay role, processing 80 to 100 compensation claims a day against journey and delay
+records to consistent daily targets.
+Managed escalations across the Refund, Assisted Travel and Complaints teams, and produced written communications to
+rail operators including Network Rail, Thameslink and Southern.
+Handled inbound customer calls, resolving queries about journeys, tickets, refunds and compensation clearly and in line
+with company policy.
+Worked independently from home for two and a half years, balancing phone and written customer contact while keeping
+accuracy high.
+CUSTOMER SERVICE REPRESENTATIVE | Transport for London | August 2021 to February 2022
+London
+Processed a high volume of customer applications across multiple systems, focusing on accuracy and fast turnaround.
+Spotted delays and inefficiencies in processes and raised them with the team so they could be fixed.
+OPERATIONS LEAD | Dutchie & Grill | February 2021 to August 2021
+London
+Led kitchen operations and trained new colleagues, coordinating delivery orders across Uber Eats, Just Eat and Deliveroo
+at the same time.
+BUSINESS ADMINISTRATION ASSISTANT | London Energy | November 2019 to January 2020
+London
+Provided day to day administrative support, handled correspondence and kept records accurate, organised and up to date.
+KEY PROJECTS
+Subscription Billing System | Stripe, Resend, Netlify Functions
+Set up a 10 day free trial with card at sign up, automatic billing, retries on declined cards, and automated welcome, reminder
+and cancellation emails.
+Scheduled AI Workflows | Claude Cowork
+Replaced manual daily work with 15 scheduled AI workflows, including a client brief that drafts replies for my approval, job
+match alerts, student job matches, new member follow ups, unfinished checkout reminders, workshop outreach, a weekly
+business dashboard and the job board refresh.
+Automated Global Job Board | Adzuna, Reed, Jooble and ZipRecruiter APIs, scheduled AI tasks
+Built a job board pulling live roles from four job APIs, around 15,000 roles across 19 countries, that refreshes itself every three
+days, removes closed and duplicate listings, and weights new roles towards what members are most likely to land.
+CV Matched Job Alerts | Netlify, job APIs, email automation
+Created a sign up flow with mandatory CV upload that captures location, industry, working style and urgency, then emails
+members roles matched to their CV three times a day, each from a different company, with honest updates when nothing
+qualifies.
+AI Assistants and Member Wellbeing | Claude API, Netlify Functions, Resend
+Designed and launched two AI assistants on the Forever Careers website: Christal answers visitor questions and passes
+enquiries to me with the chat attached, and David is a members only confidence coach. Built in usage limits and crisis safety
+responses that point anyone at risk to Samaritans, NHS 111 or 999, plus a "How are you?" check in on every page.
+Tailored CV Service and House CV Template | Claude, HTML, PDF, Gmail
+Designed the Forever Standard CV: a plain black and white, single column layout with clickable links, built so every CV is
+tailored to the role, uses only facts from the client's own CV, and never invents tools or experience. Produce each client's CV
+as a ready to upload PDF with a matching cover letter.
+ForeverCalculated Resumes: CV and Resume Builder | Web build, Stripe, email delivery, HTML and PDF
+Launched a second business, forevercalculatedresumes.com, in October 2026 to sell CV and resume services alongside
+Forever Careers. Set up the site, domain and payments, and priced the service simply: one tailored CV for £49 or three for
+£99, each returned within 24 hours.
+AI Brand Team, Newsletter and Social Content | Claude, Claude Cowork, HTML, SVG
+Created four illustrated AI characters in code as a consistent brand team, launched The Forever Times, a weekly jobs
+newsletter presented by Zuri where subscribers choose their countries, and set up a daily task that drafts social captions and
+slide images for my approval.
+AI Promotional Video | Descript (AI speech and editing agent), HeyGen HyperFrames, Claude
+Scripted a three minute product video with three characters, captured real site screenshots through deep links, built scenes
+and timing with Descript's AI editor, and assigned a distinct AI voice to each character.
+Forever Calculated Music: AI Music Label | ElevenLabs Music, Stable Audio, fal.ai, Python, FFmpeg
+Launched an independent late night soul and neo soul instrumental label in October 2026. Built an AI assisted production
+workflow: my own voice memo ideas are analysed in Python for tempo, key and feel, then turned into original tracks with AI
+music models through the fal.ai API, kept distinct from the references to avoid copyright issues, and mastered to streaming
+loudness with FFmpeg. Created the logo, YouTube banner, thumbnails and social artwork in code, released Forever
+Corporate, White Benz and After The Break Up on YouTube with AI use disclosed, and run promotion across Instagram,
+TikTok and LinkedIn.
+EDUCATION
+BSC (HONS) BUSINESS AND MANAGEMENT | University of Kent | June 2024 | Grade: 2:1
+LEVEL 3 BTEC EXTENDED DIPLOMA IN BUSINESS | Haringey Sixth Form College | May 2021 | Grade: Distinction*
+Distinction (D*D)
+GCSES | Fortismere School | September 2018 | 5 GCSEs at grades 4 to 6, including English and Maths
+CERTIFICATIONS
+Google, September 2026
+AI Fundamentals | Design Prompts for Everyday Work Tasks | Use AI as a Creative or Expert Partner | AI for Writing and
+Communicating | AI for Research and Insights | AI for Brainstorming and Planning | AI for Data Analysis | Speed Up Data
+Analysis and Presentation Building | AI for Content Creation | AI for App Building | AI for App Deployment

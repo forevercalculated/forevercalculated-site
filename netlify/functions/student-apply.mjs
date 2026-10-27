@@ -78,7 +78,6 @@ async function handle(req) {
   if (institution.length < 2) return json({ error: "Please enter your university or college." }, 400);
   if (course.length < 2) return json({ error: "Please enter your course." }, 400);
   if (!Number.isInteger(gradYear) || gradYear < yr || gradYear > yr + 8) return json({ error: "Please choose the year you expect to finish your course." }, 400);
-  if (studentId.length < 3) return json({ error: "Please enter your student ID number." }, 400);
   if (fd.get("enrolled") !== "yes" || fd.get("idReview") !== "yes" || fd.get("trialTerms") !== "yes") return json({ error: "Please tick all three boxes to continue." }, 400);
 
   const f = fd.get("studentIdFile");

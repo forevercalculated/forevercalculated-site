@@ -19,7 +19,7 @@
   "cv_text": "scripts/member_cvs/kennethnzegbulem_implementation_specialist.txt",
   "min_salary": 29000,
   "salaried_only": true,
-  "work": "fully remote in the UK, or hybrid within a London commute",
+  "work": "AI stream: fully remote in the UK, or hybrid within a London commute (give hybrid London roles equal weight to remote ones). Customer service stream: 100% remote UK, or in person only at Tesco, Sainsbury's, Asda or Waitrose within about 15 miles of N10",
   "titles": [
    "AI automation specialist",
    "workflow automation specialist",
@@ -33,9 +33,36 @@
    "associate customer success manager",
    "technical support specialist SaaS",
    "operations analyst",
-   "business operations associate"
+   "business operations associate",
+   "AI specialist",
+   "AI implementation specialist",
+   "AI adoption specialist",
+   "AI enablement specialist",
+   "AI support specialist",
+   "AI product support specialist",
+   "automation coordinator",
+   "no code automation specialist",
+   "CRM automation specialist",
+   "digital transformation coordinator",
+   "AI customer success specialist",
+   "customer onboarding specialist AI"
   ],
-  "exclude": "AI or ML engineer, data scientist, software developer roles needing a CS degree or commercial coding experience; senior CSM roles asking 3+ years SaaS; sales, business development or commission only; freelance, contract, temporary or AI training gig work; anything under 29000 a year; on site or hybrid outside London"
+  "exclude": "AI or ML engineer, data scientist, software developer roles needing a CS degree or commercial coding experience; senior CSM roles asking 3+ years SaaS; sales, business development or commission only; freelance, contract, temporary or AI training gig work; anything under 29000 a year; on site or hybrid outside London",
+  "cs_titles": [
+   "customer service advisor remote",
+   "customer support advisor work from home",
+   "customer experience advisor remote",
+   "live chat advisor remote",
+   "contact centre advisor home based",
+   "customer care advisor remote",
+   "Tesco customer assistant",
+   "Sainsbury's customer assistant",
+   "Asda service colleague",
+   "Waitrose customer assistant",
+   "online grocery picker",
+   "customer service desk assistant"
+  ],
+  "cs_rules": "Kenneth's 28 Oct 2026 instruction: be versatile. Every email should mix both streams: AI roles (salaried, hybrid London or remote) AND easy win customer service roles he can realistically land (entry level, no niche experience or qualification required, his Southeastern Railway, Apple, Ipsos and TfL customer facing experience clearly covers them). Aim for at least 2 roles from each stream per email when they pass the checks. For the customer service stream the 29000 minimum and the 'sales' and 'anything under 29000' parts of exclude do not apply; still no commission only, self employed, gig or temporary agency roles."
  },
  "mannyade151@gmail.com": {
   "senior": false,

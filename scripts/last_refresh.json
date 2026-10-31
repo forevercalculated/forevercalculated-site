@@ -1,35 +1,35 @@
 {
-  "total": 10634,
-  "reed_share": 0.71,
+  "total": 10415,
+  "reed_share": 0.7,
   "ziprecruiter_jobs": 0,
   "ziprecruiter_calls": 0,
   "ziprecruiter_blocked": true,
-  "jooble_jobs": 1063,
+  "jooble_jobs": 1041,
   "jooble_calls": 9,
-  "duplicates_removed": 3320,
-  "added": 12310,
-  "removed_stale": 982,
+  "duplicates_removed": 3369,
+  "added": 12986,
+  "removed_stale": 1071,
   "adzuna_calls": 180,
-  "filtered_out": 7508,
-  "remote": 760,
-  "hybrid": 1082,
-  "onsite": 8792,
-  "reed_calls": 440,
-  "minutes": 21.9,
+  "filtered_out": 8167,
+  "remote": 796,
+  "hybrid": 1064,
+  "onsite": 8555,
+  "reed_calls": 442,
+  "minutes": 20.9,
   "per_country": {
-    "UK": 9571,
-    "US": 1063
+    "UK": 9374,
+    "US": 1041
   },
   "member_queries": [
     "administrator",
     "office assistant",
     "data entry",
-    "customer service advisor",
-    "call centre",
-    "customer support",
     "engineer",
     "electrician",
     "construction",
+    "customer service advisor",
+    "call centre",
+    "customer support",
     "entry level",
     "trainee",
     "no experience",
@@ -38,20 +38,20 @@
   ],
   "top_member_industries": {
     "Admin & Office": 6,
-    "Customer Service": 6,
     "Engineering & Construction": 3,
-    "Open to anything": 2,
-    "IT & Data": 1
+    "Customer Service": 3,
+    "Open to anything": 1,
+    "Education": 1
   },
   "cv_signals": {
     "retail": 2,
     "delivery": 2,
     "hr": 2,
     "operations": 2,
-    "admin": 1,
     "customer service": 1,
     "data entry": 1,
-    "sales": 1
+    "sales": 1,
+    "driver": 1
   },
   "primary_countries": {
     "UK": 1.0

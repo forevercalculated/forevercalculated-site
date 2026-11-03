@@ -9,7 +9,7 @@ const CRISIS = /suicid|kill(ing)? my ?self|end (my life|it all)|self[- ]?harm|ha
 const CRISIS_REPLY = "I'm really sorry you're going through this, and I'm glad you said something. I'm an AI, so I can't give you the support you deserve right now, but real people can, any time:\n\nSamaritans: call 116 123 (free, 24/7)\nShout: text SHOUT to 85258 (free, 24/7)\nNHS 111: call and choose the mental health option\n\nIf you're in immediate danger or have hurt yourself, call 999 or go to A&E now.\n\nPlease reach out to one of them, or to someone you trust. You don't have to go through this alone.";
 
 const FACTS = `ABOUT FOREVER CAREERS
-- UK-based career support service covering remote, hybrid and in-person roles. Director: Kenneth Nzegbulem. Contact: hello@forevercalculatedcareers.com, or Instagram/TikTok @forevercalculatedcareers.
+- UK-based career support service covering remote, hybrid and in-person roles. Director: Kenneth Nzegbulem. Contact: hello@forevercalculatedcareers.com, or Instagram @forevercalculatedcareers.
 - Live roles across 19 countries, including the UK, US, Canada, Australia, New Zealand, Singapore, South Africa, India and much of Europe and Latin America. Some roles can only be opened by people located in that country.
 - Browsing live roles and the free CV checker are free. The CV checker matches keywords in your CV against today's live roles; it's a starting point, not a guarantee of a match.
 

@@ -6,7 +6,10 @@ export const LEGACY_PRICE_IDS = ["price_1UKaRHIzGjJjQQyt90AbANyc"];
 const iso = (ms) => new Date(ms).toISOString();
 
 // mode: "off" (everyone free, current behaviour) | "test" (only BILLING_TEST_EMAILS) | "on" (everyone)
+// 3 Nov 2026: Forever Careers is free for everyone, so billing is never enforced whatever BILLING_MODE says.
 export function billingEnforced(env, email) {
+  return false;
+  // eslint-disable-next-line no-unreachable
   const mode = String((env && env.BILLING_MODE) || "off").toLowerCase();
   if (mode === "on") return true;
   if (mode === "test") {

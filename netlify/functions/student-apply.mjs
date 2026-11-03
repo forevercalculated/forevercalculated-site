@@ -50,6 +50,19 @@ async function handle(req) {
     const r = await closeStudent(studentKey(email), "withdrawn", "withdrawn by student");
     return json({ ok: true, status: r ? r.status : null });
   }
+  if (action === "free") {
+    // Free student sign up: no ID, no card. Just records the course so we can tailor matches.
+    let b = {}; try { b = await req.json(); } catch {}
+    const institution = clean(b.institution, 120), course = clean(b.course, 120), gradYear = Number(b.gradYear);
+    const yr = new Date().getFullYear();
+    if (institution.length < 2) return json({ error: "Please enter your university or college." }, 400);
+    if (course.length < 2) return json({ error: "Please enter your course." }, 400);
+    if (!Number.isInteger(gradYear) || gradYear < yr || gradYear > yr + 8) return json({ error: "Please choose the year you expect to finish your course." }, 400);
+    const u = (await getStore({ name: "users", consistency: "strong" }).get(studentKey(email), { type: "json" })) || {};
+    const now = new Date().toISOString();
+    await setStudent(email, { email, firstName: u.firstName || "", lastName: u.lastName || "", institution, course, gradYear, status: "free_student", submittedAt: now, decidedAt: now, hasFile: false }, "free student sign up");
+    return json({ ok: true, free: true });
+  }
   const m = await membershipFor(email);
   if (m.billing) return json({ error: "You already have an active plan, so you don't need the student plan.", alreadyActive: true }, 409);
   const prev = await getStudent(email);

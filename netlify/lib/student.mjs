@@ -67,6 +67,8 @@ export const maskId = (v) => { const t = String(v || ""); return t.length <= 4 ?
 // Applied on top of the normal membership rules: someone whose student ID is waiting for
 // review has no access (no roles, no job alerts) unless they already pay or trial on Stripe.
 export function studentGate(member, student, billing) {
+  return member; // free for everyone: nobody waits for a student ID review any more
+  // eslint-disable-next-line no-unreachable
   if (!student || !BLOCKING.includes(student.status)) return member;
   const st = billing && billing.status;
   if (st === "trialing" || st === "active" || st === "past_due") return member;
